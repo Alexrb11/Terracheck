@@ -7,10 +7,14 @@ import {
   deleteTerrarium,
   updateSensors
 } from '../controllers/terrarium.controller.js'
+import { protect } from '../middleware/auth.middleware.js'
 
 const router = Router()
 
-// GET /api/terrariums - Obtener todos los terrarios
+// Todas las rutas requieren autenticación
+router.use(protect)
+
+// GET /api/terrariums - Obtener todos los terrarios del usuario
 router.get('/', getAllTerrariums)
 
 // GET /api/terrariums/:id - Obtener un terrario por ID

@@ -1,10 +1,14 @@
 import Terrarium from '../models/Terrarium.js'
 import Animal from '../models/Animal.js'
 
-// GET /api/terrariums - Obtener todos los terrarios con sus animales
+// GET /api/terrariums - Obtener todos los terrarios del usuario con sus animales
 export const getAllTerrariums = async (req, res) => {
   try {
-    const terrariums = await Terrarium.find({ isActive: true })
+    // Filtrar por usuario autenticado
+    const terrariums = await Terrarium.find({ 
+      user: req.user._id, 
+      isActive: true 
+    })
       .populate({
         path: 'animals',
         match: { isActive: true },
@@ -39,7 +43,10 @@ export const getAllTerrariums = async (req, res) => {
 // GET /api/terrariums/:id - Obtener un terrario por ID
 export const getTerrariumById = async (req, res) => {
   try {
-    const terrarium = await Terrarium.findById(req.params.id)
+    const terrarium = await Terrarium.findOne({
+      _id: req.params.id,
+      user: req.user._id // Verificar propiedad
+    })
       .populate({
         path: 'animals',
         match: { isActive: true },
@@ -78,6 +85,7 @@ export const createTerrarium = async (req, res) => {
     const { name, dimensions, type, notes } = req.body
 
     const terrarium = await Terrarium.create({
+      user: req.user._id, // Asignar al usuario autenticado
       name,
       dimensions,
       type,
@@ -101,8 +109,12 @@ export const createTerrarium = async (req, res) => {
 // PUT /api/terrariums/:id - Actualizar un terrario
 export const updateTerrarium = async (req, res) => {
   try {
-    const terrarium = await Terrarium.findByIdAndUpdate(
-      req.params.id,
+    // Verificar que el terrario pertenece al usuario
+    const terrarium = await Terrarium.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        user: req.user._id // Verificar propiedad
+      },
       req.body,
       { new: true, runValidators: true }
     )
@@ -131,8 +143,12 @@ export const updateTerrarium = async (req, res) => {
 // DELETE /api/terrariums/:id - Eliminar un terrario (soft delete)
 export const deleteTerrarium = async (req, res) => {
   try {
-    const terrarium = await Terrarium.findByIdAndUpdate(
-      req.params.id,
+    // Verificar que el terrario pertenece al usuario
+    const terrarium = await Terrarium.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        user: req.user._id // Verificar propiedad
+      },
       { isActive: false },
       { new: true }
     )
@@ -168,8 +184,12 @@ export const updateSensors = async (req, res) => {
   try {
     const { temperature, humidity } = req.body
 
-    const terrarium = await Terrarium.findByIdAndUpdate(
-      req.params.id,
+    // Verificar que el terrario pertenece al usuario
+    const terrarium = await Terrarium.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        user: req.user._id // Verificar propiedad
+      },
       {
         sensors: {
           temperature,

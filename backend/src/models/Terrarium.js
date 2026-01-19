@@ -1,6 +1,13 @@
 import mongoose from 'mongoose'
 
 const terrariumSchema = new mongoose.Schema({
+  // Propietario del terrario
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'El usuario propietario es requerido']
+  },
+
   name: {
     type: String,
     required: [true, 'El nombre del terrario es requerido'],
@@ -89,6 +96,9 @@ terrariumSchema.virtual('animals', {
   localField: '_id',
   foreignField: 'terrarium'
 })
+
+// Índice para búsquedas eficientes por usuario
+terrariumSchema.index({ user: 1, isActive: 1 })
 
 const Terrarium = mongoose.model('Terrarium', terrariumSchema)
 

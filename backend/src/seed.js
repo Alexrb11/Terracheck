@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
+import User from './models/User.js'
 import Species from './models/Species.js'
 import Terrarium from './models/Terrarium.js'
 import Animal from './models/Animal.js'
@@ -7,6 +8,13 @@ import Animal from './models/Animal.js'
 dotenv.config()
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/terrarium-keeper'
+
+// Usuario de prueba
+const testUser = {
+  name: 'Admin TerraCheck',
+  email: 'admin@terracheck.com',
+  password: '123456'
+}
 
 // Datos de especies
 const speciesData = [
@@ -112,55 +120,6 @@ const speciesData = [
   }
 ]
 
-// Datos de terrarios
-const terrariumsData = [
-  {
-    name: 'Desértico 90cm',
-    dimensions: {
-      width: 90,
-      depth: 45,
-      height: 45
-    },
-    type: 'glass',
-    sensors: {
-      temperature: 28,
-      humidity: 35,
-      lastUpdated: new Date()
-    },
-    notes: 'Terrario para especies de clima árido con punto caliente y zona fría.'
-  },
-  {
-    name: 'Tropical Alto 45x45x60',
-    dimensions: {
-      width: 45,
-      depth: 45,
-      height: 60
-    },
-    type: 'glass',
-    sensors: {
-      temperature: 24,
-      humidity: 75,
-      lastUpdated: new Date()
-    },
-    notes: 'Terrario vertical ideal para especies arborícolas tropicales.'
-  },
-  {
-    name: 'Bioactivo Tropical',
-    dimensions: {
-      width: 60,
-      depth: 45,
-      height: 45
-    },
-    type: 'glass',
-    sensors: {
-      temperature: 25,
-      humidity: 85,
-      lastUpdated: new Date()
-    },
-    notes: 'Terrario con sustrato bioactivo y plantas vivas para ranas.'
-  }
-]
-
 async function seed() {
   try {
     console.log('🔄 Conectando a MongoDB...')
@@ -169,10 +128,16 @@ async function seed() {
 
     // Limpiar base de datos
     console.log('🗑️  Limpiando base de datos...')
+    await User.deleteMany({})
     await Species.deleteMany({})
     await Terrarium.deleteMany({})
     await Animal.deleteMany({})
     console.log('✅ Base de datos limpia')
+
+    // Crear usuario de prueba
+    console.log('👤 Creando usuario de prueba...')
+    const user = await User.create(testUser)
+    console.log(`✅ Usuario creado: ${user.email}`)
 
     // Insertar especies
     console.log('🦎 Insertando especies...')
@@ -184,6 +149,58 @@ async function seed() {
     species.forEach(s => {
       speciesMap[s.commonName] = s._id
     })
+
+    // Datos de terrarios (ahora con user)
+    const terrariumsData = [
+      {
+        user: user._id,
+        name: 'Desértico 90cm',
+        dimensions: {
+          width: 90,
+          depth: 45,
+          height: 45
+        },
+        type: 'glass',
+        sensors: {
+          temperature: 28,
+          humidity: 35,
+          lastUpdated: new Date()
+        },
+        notes: 'Terrario para especies de clima árido con punto caliente y zona fría.'
+      },
+      {
+        user: user._id,
+        name: 'Tropical Alto 45x45x60',
+        dimensions: {
+          width: 45,
+          depth: 45,
+          height: 60
+        },
+        type: 'glass',
+        sensors: {
+          temperature: 24,
+          humidity: 75,
+          lastUpdated: new Date()
+        },
+        notes: 'Terrario vertical ideal para especies arborícolas tropicales.'
+      },
+      {
+        user: user._id,
+        name: 'Bioactivo Tropical',
+        dimensions: {
+          width: 60,
+          depth: 45,
+          height: 45
+        },
+        type: 'glass',
+        sensors: {
+          temperature: 25,
+          humidity: 85,
+          lastUpdated: new Date()
+        },
+        notes: 'Terrario con sustrato bioactivo y plantas vivas para ranas.'
+      }
+    ]
 
     // Insertar terrarios
     console.log('📦 Insertando terrarios...')
@@ -251,9 +268,13 @@ async function seed() {
 
     console.log('\n✨ Seed completado exitosamente!\n')
     console.log('📊 Resumen:')
+    console.log(`   - 1 usuario (${testUser.email} / ${testUser.password})`)
     console.log(`   - ${species.length} especies`)
     console.log(`   - ${terrariums.length} terrarios`)
     console.log(`   - ${animals.length} animales`)
+    console.log('\n🔐 Credenciales de prueba:')
+    console.log(`   Email: ${testUser.email}`)
+    console.log(`   Password: ${testUser.password}`)
     console.log('\n🚀 Puedes iniciar el servidor con: npm run dev\n')
 
   } catch (error) {

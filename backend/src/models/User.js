@@ -1,0 +1,59 @@
+import mongoose from 'mongoose'
+import bcrypt from 'bcryptjs'
+
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'El nombre es requerido'],
+    trim: true,
+    maxlength: [100, 'El nombre no puede exceder 100 caracteres']
+  },
+  email: {
+    type: String,
+    required: [true, 'El email es requerido'],
+    unique: true,
+    trim: true,
+    lowercase: true,
+    match: [
+      /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+      'Por favor ingresa un email válido'
+    ]
+  },
+  password: {
+    type: String,
+    required: [true, 'La contraseña es requerida'],
+    minlength: [6, 'La contraseña debe tener al menos 6 caracteres'],
+    select: false // No incluir password en queries por defecto
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
+}, {
+  timestamps: true
+})
+
+// Middleware: Hashear password antes de guardar
+userSchema.pre('save', async function(next) {
+  // Solo hashear si el password fue modificado
+  if (!this.isModified('password')) {
+    return next()
+  }
+
+  // Generar salt y hashear
+  const salt = await bcrypt.genSalt(10)
+  this.password = await bcrypt.hash(this.password, salt)
+  next()
+})
+
+// Método: Comparar password ingresado con el hash
+userSchema.methods.matchPassword = async function(enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password)
+}
+
+// Índice para búsquedas por email
+userSchema.index({ email: 1 })
+
+const User = mongoose.model('User', userSchema)
+
+export default User

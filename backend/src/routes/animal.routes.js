@@ -7,8 +7,12 @@ import {
   deleteAnimal,
   moveAnimal
 } from '../controllers/animal.controller.js'
+import { protect } from '../middleware/auth.middleware.js'
 
 const router = Router()
+
+// Todas las rutas requieren autenticación
+router.use(protect)
 
 // GET /api/animals - Obtener todos los animales
 router.get('/', getAllAnimals)
