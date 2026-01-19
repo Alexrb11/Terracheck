@@ -19,6 +19,7 @@ export interface Terrarium {
   _id: string
   name: string
   type: 'mesh' | 'glass' | 'hybrid'
+  biome: 'tropical' | 'desert' | 'temperate'
   dimensions: {
     width: number
     height: number
@@ -85,6 +86,7 @@ export const useTerrariumStore = defineStore('terrarium', () => {
   const addTerrarium = async (terrarium: {
     name: string
     type: 'mesh' | 'glass' | 'hybrid'
+    biome: 'tropical' | 'desert' | 'temperate'
     dimensions: { width: number; height: number; depth: number }
     notes?: string
   }) => {

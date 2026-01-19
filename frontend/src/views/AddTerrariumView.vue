@@ -61,6 +61,101 @@
             </select>
           </div>
 
+          <!-- Bioma -->
+          <div>
+            <label class="block text-lg font-semibold text-slate-800 mb-3">
+              Bioma
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <!-- Tropical -->
+              <label
+                class="relative flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
+                :class="form.biome === 'tropical' ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200 hover:border-emerald-300 hover:bg-emerald-50/50'"
+              >
+                <input
+                  type="radio"
+                  v-model="form.biome"
+                  value="tropical"
+                  class="sr-only"
+                />
+                <div
+                  class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
+                  :class="form.biome === 'tropical' ? 'border-emerald-600 bg-emerald-600' : 'border-stone-300'"
+                >
+                  <div
+                    v-if="form.biome === 'tropical'"
+                    class="w-3 h-3 rounded-full bg-white"
+                  ></div>
+                </div>
+                <div class="flex-1">
+                  <p class="font-semibold text-slate-800">Tropical</p>
+                  <p class="text-sm text-slate-600">Selva</p>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center">
+                  <span class="text-emerald-700 text-lg">🌴</span>
+                </div>
+              </label>
+
+              <!-- Desierto -->
+              <label
+                class="relative flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
+                :class="form.biome === 'desert' ? 'border-amber-500 bg-amber-50' : 'border-stone-200 hover:border-amber-300 hover:bg-amber-50/50'"
+              >
+                <input
+                  type="radio"
+                  v-model="form.biome"
+                  value="desert"
+                  class="sr-only"
+                />
+                <div
+                  class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
+                  :class="form.biome === 'desert' ? 'border-amber-600 bg-amber-600' : 'border-stone-300'"
+                >
+                  <div
+                    v-if="form.biome === 'desert'"
+                    class="w-3 h-3 rounded-full bg-white"
+                  ></div>
+                </div>
+                <div class="flex-1">
+                  <p class="font-semibold text-slate-800">Desierto</p>
+                  <p class="text-sm text-slate-600">Árido</p>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center">
+                  <span class="text-amber-700 text-lg">🏜️</span>
+                </div>
+              </label>
+
+              <!-- Templado -->
+              <label
+                class="relative flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
+                :class="form.biome === 'temperate' ? 'border-blue-500 bg-blue-50' : 'border-stone-200 hover:border-blue-300 hover:bg-blue-50/50'"
+              >
+                <input
+                  type="radio"
+                  v-model="form.biome"
+                  value="temperate"
+                  class="sr-only"
+                />
+                <div
+                  class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
+                  :class="form.biome === 'temperate' ? 'border-blue-600 bg-blue-600' : 'border-stone-300'"
+                >
+                  <div
+                    v-if="form.biome === 'temperate'"
+                    class="w-3 h-3 rounded-full bg-white"
+                  ></div>
+                </div>
+                <div class="flex-1">
+                  <p class="font-semibold text-slate-800">Templado</p>
+                  <p class="text-sm text-slate-600">Bosque</p>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center">
+                  <span class="text-blue-700 text-lg">🌲</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
           <!-- Dimensiones -->
           <div>
             <label class="block text-lg font-semibold text-slate-800 mb-2">
@@ -165,6 +260,7 @@ const store = useTerrariumStore()
 const form = ref({
   name: '',
   type: 'glass' as 'glass' | 'mesh' | 'hybrid',
+  biome: 'tropical' as 'tropical' | 'desert' | 'temperate',
   dimensions: {
     width: 60,
     depth: 45,
@@ -193,6 +289,7 @@ const handleSubmit = async () => {
   const newTerrarium = await store.addTerrarium({
     name: form.value.name,
     type: form.value.type,
+    biome: form.value.biome,
     dimensions: form.value.dimensions,
     notes: form.value.notes || undefined
   })

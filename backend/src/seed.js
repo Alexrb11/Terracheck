@@ -196,6 +196,7 @@ async function seed() {
         name: 'Desértico 90cm',
         dimensions: { width: 90, depth: 45, height: 45 },
         type: 'glass',
+        biome: 'desert',
         sensors: { temperature: 28, humidity: 35, lastUpdated: new Date() },
         notes: 'Terrario para especies de clima árido con punto caliente y zona fría.'
       },
@@ -204,6 +205,7 @@ async function seed() {
         name: 'Tropical Alto 45x45x60',
         dimensions: { width: 45, depth: 45, height: 60 },
         type: 'glass',
+        biome: 'tropical',
         sensors: { temperature: 24, humidity: 75, lastUpdated: new Date() },
         notes: 'Terrario vertical ideal para especies arborícolas tropicales.'
       },
@@ -212,6 +214,7 @@ async function seed() {
         name: 'Bioactivo Tropical',
         dimensions: { width: 60, depth: 45, height: 45 },
         type: 'glass',
+        biome: 'tropical',
         sensors: { temperature: 25, humidity: 85, lastUpdated: new Date() },
         notes: 'Terrario con sustrato bioactivo y plantas vivas para ranas.'
       }

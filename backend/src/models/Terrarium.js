@@ -45,6 +45,17 @@ const terrariumSchema = new mongoose.Schema({
     default: 'glass'
   },
 
+  // Bioma del terrario
+  biome: {
+    type: String,
+    required: true,
+    enum: {
+      values: ['tropical', 'desert', 'temperate'],
+      message: 'El bioma debe ser tropical, desert o temperate'
+    },
+    default: 'tropical'
+  },
+
   // Sensores actuales (opcional)
   sensors: {
     temperature: {
