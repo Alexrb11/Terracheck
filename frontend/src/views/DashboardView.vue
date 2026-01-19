@@ -1,11 +1,6 @@
 <template>
-  <div class="min-h-screen pb-20 md:pb-0">
-    <!-- Header Desktop -->
-    <header class="hidden md:block bg-white shadow-sm border-b border-stone-200">
-      <div class="max-w-7xl mx-auto px-6 py-4">
-        <h1 class="text-3xl font-bold text-emerald-600">TerrariumKeeper</h1>
-      </div>
-    </header>
+  <div class="min-h-screen pb-20 md:pb-0 bg-stone-50">
+    <Navigation />
 
     <!-- Contenido Principal -->
     <main class="max-w-7xl mx-auto px-4 py-6 md:py-8">
@@ -70,9 +65,6 @@
         </button>
       </div>
     </main>
-
-    <!-- Navegación Móvil (Bottom Bar) -->
-    <Navigation />
   </div>
 </template>
 
