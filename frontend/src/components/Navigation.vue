@@ -112,13 +112,36 @@
             <span>Especies</span>
           </router-link>
 
+          <!-- Admin Panel (solo visible para admins) -->
+          <router-link
+            v-if="authStore.isAdmin"
+            to="/admin"
+            class="flex items-center gap-2 px-4 py-2 rounded-2xl font-medium transition-colors"
+            :class="
+              $route.path.startsWith('/admin')
+                ? 'text-purple-600 bg-purple-50'
+                : 'text-purple-600 hover:bg-purple-50'
+            "
+          >
+            <ShieldIcon :size="20" />
+            <span>Admin</span>
+          </router-link>
+
           <!-- Separador -->
           <div class="w-px h-8 bg-stone-200"></div>
 
           <!-- Usuario y Logout -->
           <div class="flex items-center gap-3">
             <div v-if="authStore.user" class="text-right">
-              <p class="text-sm font-medium text-slate-800">{{ authStore.user.name }}</p>
+              <div class="flex items-center gap-2 justify-end">
+                <p class="text-sm font-medium text-slate-800">{{ authStore.user.name }}</p>
+                <span
+                  v-if="authStore.isAdmin"
+                  class="px-2 py-0.5 text-[10px] font-bold uppercase bg-purple-100 text-purple-700 rounded-full"
+                >
+                  Admin
+                </span>
+              </div>
               <p class="text-xs text-slate-500">{{ authStore.user.email }}</p>
             </div>
             <button
@@ -142,7 +165,8 @@ import {
   LayoutGridIcon,
   PlusCircleIcon,
   BookOpenIcon,
-  LogOutIcon
+  LogOutIcon,
+  ShieldIcon
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()

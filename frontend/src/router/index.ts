@@ -41,6 +41,12 @@ const router = createRouter({
       component: () => import('@/views/SpeciesListView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('@/views/AdminView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
     // Ruta 404
     {
       path: '/:pathMatch(.*)*',
@@ -50,7 +56,7 @@ const router = createRouter({
 })
 
 // Navigation Guard
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const token = localStorage.getItem('token')
   const isAuthenticated = !!token
 
@@ -64,6 +70,23 @@ router.beforeEach((to, _from, next) => {
   if (to.meta.guestOnly && isAuthenticated) {
     next({ name: 'dashboard' })
     return
+  }
+
+  // Si la ruta requiere admin, verificar rol
+  if (to.meta.requiresAdmin && isAuthenticated) {
+    // Importar dinámicamente para evitar circular dependency
+    const { useAuthStore } = await import('@/stores/auth')
+    const authStore = useAuthStore()
+    
+    // Si el store no tiene usuario, intentar cargar
+    if (!authStore.user) {
+      await authStore.fetchCurrentUser()
+    }
+    
+    if (!authStore.isAdmin) {
+      next({ name: 'dashboard' })
+      return
+    }
   }
 
   next()

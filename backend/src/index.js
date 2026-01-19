@@ -8,6 +8,8 @@ import authRoutes from './routes/auth.routes.js'
 import speciesRoutes from './routes/species.routes.js'
 import terrariumRoutes from './routes/terrarium.routes.js'
 import animalRoutes from './routes/animal.routes.js'
+import adminRoutes from './routes/admin.routes.js'
+import roleRoutes from './routes/role.routes.js'
 
 // Load environment variables
 dotenv.config()
@@ -34,6 +36,8 @@ app.use('/api/auth', authRoutes)
 app.use('/api/species', speciesRoutes)
 app.use('/api/terrariums', terrariumRoutes)
 app.use('/api/animals', animalRoutes)
+app.use('/api/admin', adminRoutes)
+app.use('/api/admin/roles', roleRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -45,7 +49,9 @@ app.get('/api/health', (req, res) => {
       auth: '/api/auth',
       species: '/api/species',
       terrariums: '/api/terrariums',
-      animals: '/api/animals'
+      animals: '/api/animals',
+      admin: '/api/admin',
+      roles: '/api/admin/roles'
     }
   })
 })

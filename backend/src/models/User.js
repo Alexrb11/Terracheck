@@ -25,6 +25,11 @@ const userSchema = new mongoose.Schema({
     minlength: [6, 'La contraseña debe tener al menos 6 caracteres'],
     select: false // No incluir password en queries por defecto
   },
+  role: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Role',
+    required: [true, 'El rol es requerido']
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -51,8 +56,23 @@ userSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password)
 }
 
-// Índice para búsquedas por email
+// Método: Verificar si el usuario tiene un permiso específico
+userSchema.methods.hasPermission = async function(permissionSlug) {
+  await this.populate({
+    path: 'role',
+    populate: { path: 'permissions' }
+  })
+  
+  if (!this.role || !this.role.permissions) {
+    return false
+  }
+  
+  return this.role.permissions.some(p => p.slug === permissionSlug)
+}
+
+// Índice para búsquedas por email y rol
 userSchema.index({ email: 1 })
+userSchema.index({ role: 1 })
 
 const User = mongoose.model('User', userSchema)
 

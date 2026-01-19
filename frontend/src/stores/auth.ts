@@ -2,10 +2,18 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
+export interface UserRole {
+  id: string
+  name: string
+  slug: string
+}
+
 export interface User {
   id: string
   name: string
   email: string
+  role: UserRole | null
+  permissions: string[]
   createdAt: string
 }
 
@@ -31,6 +39,25 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Computed
   const isAuthenticated = computed(() => !!token.value)
+  
+  // El usuario es admin si tiene el rol super_admin o tiene permiso access_admin_panel
+  const isAdmin = computed(() => {
+    if (!user.value) return false
+    return user.value.role?.slug === 'super_admin' || 
+           user.value.permissions?.includes('access_admin_panel')
+  })
+
+  // Verificar si el usuario tiene un permiso específico
+  const hasPermission = (permissionSlug: string): boolean => {
+    if (!user.value?.permissions) return false
+    return user.value.permissions.includes(permissionSlug)
+  }
+
+  // Verificar si el usuario tiene alguno de los permisos
+  const hasAnyPermission = (permissionSlugs: string[]): boolean => {
+    if (!user.value?.permissions) return false
+    return permissionSlugs.some(slug => user.value!.permissions.includes(slug))
+  }
 
   // Actions
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -164,6 +191,10 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     // Computed
     isAuthenticated,
+    isAdmin,
+    // Methods
+    hasPermission,
+    hasAnyPermission,
     // Actions
     login,
     register,

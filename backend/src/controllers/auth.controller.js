@@ -1,4 +1,5 @@
 import User from '../models/User.js'
+import Role from '../models/Role.js'
 import { generateToken } from '../middleware/auth.middleware.js'
 
 // POST /api/auth/register - Registrar nuevo usuario
@@ -23,15 +24,35 @@ export const register = async (req, res) => {
       })
     }
 
-    // Crear usuario
+    // Buscar el rol de usuario por defecto
+    const defaultRole = await Role.findOne({ slug: 'user' })
+    if (!defaultRole) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error de configuración: rol de usuario no encontrado'
+      })
+    }
+
+    // Crear usuario con rol de usuario por defecto
     const user = await User.create({
       name,
       email,
-      password
+      password,
+      role: defaultRole._id
+    })
+
+    // Popular rol para la respuesta
+    await user.populate({
+      path: 'role',
+      select: 'name slug',
+      populate: { path: 'permissions', select: 'slug' }
     })
 
     // Generar token
     const token = generateToken(user._id)
+
+    // Extraer permisos del usuario
+    const permissions = user.role.permissions?.map(p => p.slug) || []
 
     res.status(201).json({
       success: true,
@@ -41,6 +62,12 @@ export const register = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          role: {
+            id: user.role._id,
+            name: user.role.name,
+            slug: user.role.slug
+          },
+          permissions,
           createdAt: user.createdAt
         },
         token
@@ -78,7 +105,13 @@ export const login = async (req, res) => {
     }
 
     // Buscar usuario e incluir password para verificar
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password')
+    const user = await User.findOne({ email: email.toLowerCase() })
+      .select('+password')
+      .populate({
+        path: 'role',
+        select: 'name slug',
+        populate: { path: 'permissions', select: 'slug' }
+      })
 
     if (!user) {
       return res.status(401).json({
@@ -108,6 +141,9 @@ export const login = async (req, res) => {
     // Generar token
     const token = generateToken(user._id)
 
+    // Extraer permisos del usuario
+    const permissions = user.role?.permissions?.map(p => p.slug) || []
+
     res.json({
       success: true,
       message: 'Inicio de sesión exitoso',
@@ -116,6 +152,12 @@ export const login = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role ? {
+            id: user.role._id,
+            name: user.role.name,
+            slug: user.role.slug
+          } : null,
+          permissions,
           createdAt: user.createdAt
         },
         token
@@ -134,7 +176,13 @@ export const login = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     // req.user ya está disponible gracias al middleware protect
-    const user = await User.findById(req.user._id)
+    const user = await User.findById(req.user._id).populate({
+      path: 'role',
+      select: 'name slug',
+      populate: { path: 'permissions', select: 'slug name' }
+    })
+
+    const permissions = user.role?.permissions?.map(p => p.slug) || []
 
     res.json({
       success: true,
@@ -142,6 +190,12 @@ export const getMe = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role ? {
+          id: user.role._id,
+          name: user.role.name,
+          slug: user.role.slug
+        } : null,
+        permissions,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }

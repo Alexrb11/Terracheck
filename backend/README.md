@@ -1,6 +1,6 @@
 # TerrariumKeeper Backend
 
-API REST para la gestión de terrarios de reptiles con autenticación JWT.
+API REST para la gestión de terrarios de reptiles con autenticación JWT y sistema de roles dinámico.
 
 ## Requisitos
 
@@ -48,132 +48,156 @@ La API usa JWT (JSON Web Tokens) para autenticación.
 ### Flujo de autenticación:
 1. Registrar usuario: `POST /api/auth/register`
 2. Iniciar sesión: `POST /api/auth/login`
-3. Usar token en headers: `Authorization: Bearer <token>`
+3. Usar token en header: `Authorization: Bearer <token>`
 
 ### Credenciales de prueba (después de ejecutar seed):
-- **Email:** `admin@terracheck.com`
-- **Password:** `123456`
+
+| Usuario | Email | Contraseña | Rol |
+|---------|-------|------------|-----|
+| Admin TerraCheck | admin@terracheck.com | admin123 | Super Admin |
+| Usuario Demo | user@terracheck.com | user123 | Usuario |
+
+## Sistema de Roles y Permisos
+
+El sistema implementa RBAC (Role-Based Access Control) dinámico gestionado desde base de datos.
+
+### Modelos
+
+- **Permission**: Define acciones específicas (ej: `manage_users`, `manage_roles`)
+- **Role**: Agrupa permisos y se asigna a usuarios (ej: "Super Admin", "Usuario")
+- **User**: Referencia a un Role
+
+### Permisos disponibles
+
+| Slug | Nombre | Categoría |
+|------|--------|-----------|
+| `manage_users` | Gestionar Usuarios | users |
+| `view_users` | Ver Usuarios | users |
+| `manage_roles` | Gestionar Roles | roles |
+| `manage_all_terrariums` | Gestionar Todos los Terrarios | terrariums |
+| `view_all_terrariums` | Ver Todos los Terrarios | terrariums |
+| `manage_all_animals` | Gestionar Todos los Animales | animals |
+| `manage_species` | Gestionar Especies | species |
+| `view_statistics` | Ver Estadísticas | system |
+| `access_admin_panel` | Acceso Panel Admin | system |
+
+### Roles de sistema
+
+- **Super Admin**: Todos los permisos (`isSystem: true`)
+- **Usuario**: Sin permisos especiales (`isSystem: true`)
+- **Moderador**: Permisos parciales (ejemplo de rol personalizado)
 
 ## Endpoints API
 
-### Auth (Públicas)
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Registrar nuevo usuario |
-| POST | `/api/auth/login` | Iniciar sesión |
+### Auth (`/api/auth`)
 
-### Auth (Protegidas)
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/auth/me` | Obtener usuario actual |
-| PUT | `/api/auth/me` | Actualizar perfil |
-| PUT | `/api/auth/password` | Cambiar contraseña |
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | `/register` | Registrar nuevo usuario | No |
+| POST | `/login` | Iniciar sesión | No |
+| GET | `/me` | Obtener usuario actual | Sí |
+| PUT | `/me` | Actualizar perfil | Sí |
+| PUT | `/password` | Cambiar contraseña | Sí |
 
-### Especies (Públicas)
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/species` | Lista todas las especies |
-| GET | `/api/species/:id` | Obtiene una especie |
-| POST | `/api/species` | Crea una especie |
+### Species (`/api/species`)
 
-### Terrarios (Protegidas - Multi-tenancy)
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/terrariums` | Lista terrarios del usuario |
-| GET | `/api/terrariums/:id` | Obtiene un terrario |
-| POST | `/api/terrariums` | Crea un terrario |
-| PUT | `/api/terrariums/:id` | Actualiza un terrario |
-| DELETE | `/api/terrariums/:id` | Elimina un terrario |
-| PUT | `/api/terrariums/:id/sensors` | Actualiza sensores |
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/` | Lista de especies | Sí |
+| GET | `/:id` | Detalle de especie | Sí |
 
-### Animales (Protegidas)
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/animals` | Lista todos los animales |
-| GET | `/api/animals/:id` | Obtiene un animal |
-| POST | `/api/animals` | Crea un animal |
-| PUT | `/api/animals/:id` | Actualiza un animal |
-| DELETE | `/api/animals/:id` | Elimina un animal |
-| PUT | `/api/animals/:id/move` | Mueve a otro terrario |
+### Terrariums (`/api/terrariums`)
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/` | Lista terrarios del usuario | Sí |
+| GET | `/:id` | Detalle de terrario | Sí |
+| POST | `/` | Crear terrario | Sí |
+| PUT | `/:id` | Actualizar terrario | Sí |
+| DELETE | `/:id` | Eliminar terrario | Sí |
+
+### Animals (`/api/animals`)
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/` | Lista animales del usuario | Sí |
+| GET | `/:id` | Detalle de animal | Sí |
+| POST | `/` | Crear animal | Sí |
+| PUT | `/:id` | Actualizar animal | Sí |
+| DELETE | `/:id` | Eliminar animal | Sí |
+
+### Admin - Usuarios (`/api/admin`)
+
+| Método | Ruta | Descripción | Permiso |
+|--------|------|-------------|---------|
+| GET | `/stats` | Estadísticas del sistema | `view_statistics` |
+| GET | `/users` | Lista de usuarios | `manage_users` |
+| GET | `/users/:id` | Detalle de usuario | `manage_users` |
+| PATCH | `/users/:id/role` | Cambiar rol de usuario | `manage_users` |
+| PATCH | `/users/:id/status` | Activar/desactivar usuario | `manage_users` |
+| DELETE | `/users/:id` | Eliminar usuario | `manage_users` |
+
+### Admin - Roles (`/api/admin/roles`)
+
+| Método | Ruta | Descripción | Permiso |
+|--------|------|-------------|---------|
+| GET | `/` | Lista de roles | `manage_roles` |
+| GET | `/:id` | Detalle de rol | `manage_roles` |
+| POST | `/` | Crear rol | `manage_roles` |
+| PUT | `/:id` | Actualizar rol | `manage_roles` |
+| DELETE | `/:id` | Eliminar rol | `manage_roles` |
+| GET | `/permissions` | Lista de permisos | `manage_roles` |
+| POST | `/permissions` | Crear permiso | `manage_roles` |
 
 ## Ejemplos de Uso
 
-### Registro
+### Registrar usuario
 ```bash
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"name":"Juan","email":"juan@example.com","password":"123456"}'
+  -d '{"name": "Juan", "email": "juan@test.com", "password": "123456"}'
 ```
 
-### Login
+### Iniciar sesión
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@terracheck.com","password":"123456"}'
+  -d '{"email": "admin@terracheck.com", "password": "admin123"}'
 ```
 
-### Obtener terrarios (con token)
+### Crear un rol nuevo (requiere admin)
 ```bash
-curl http://localhost:3000/api/terrariums \
-  -H "Authorization: Bearer <tu-token>"
-```
-
-### Crear terrario
-```bash
-curl -X POST http://localhost:3000/api/terrariums \
+curl -X POST http://localhost:3000/api/admin/roles \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <tu-token>" \
-  -d '{"name":"Mi Terrario","dimensions":{"width":60,"depth":45,"height":45},"type":"glass"}'
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "name": "Veterinario",
+    "description": "Acceso a gestión de especies",
+    "permissions": ["<permission_id>"]
+  }'
+```
+
+### Cambiar rol de usuario (requiere admin)
+```bash
+curl -X PATCH http://localhost:3000/api/admin/users/<user_id>/role \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"role": "<role_id>"}'
 ```
 
 ## Multi-tenancy
 
-El sistema implementa aislamiento por usuario:
-- Cada usuario solo ve sus propios terrarios
-- Los terrarios se asignan automáticamente al usuario que los crea
-- Las operaciones verifican que el recurso pertenezca al usuario
+Cada usuario solo puede ver y gestionar sus propios terrarios y animales. Los administradores con el permiso `manage_all_terrariums` pueden acceder a todos los recursos.
 
-## Validación de Compatibilidad
-
-Al añadir o mover un animal a un terrario, el sistema verifica:
-
-1. **Bioma**: Los animales deben ser del mismo bioma (Tropical, Arid, Temperate)
-2. **Múltiples machos**: Detecta si hay más de un macho de la misma especie
-
-Si hay incompatibilidad, devuelve error 400 con mensaje descriptivo.
-
-## Estructura
+## Arquitectura
 
 ```
-backend/
-├── src/
-│   ├── controllers/     # Lógica de negocio
-│   │   ├── auth.controller.js
-│   │   ├── animal.controller.js
-│   │   ├── species.controller.js
-│   │   └── terrarium.controller.js
-│   ├── middleware/      # Middleware de autenticación
-│   │   └── auth.middleware.js
-│   ├── models/          # Schemas de Mongoose
-│   │   ├── User.js
-│   │   ├── Animal.js
-│   │   ├── Species.js
-│   │   └── Terrarium.js
-│   ├── routes/          # Definición de rutas
-│   │   ├── auth.routes.js
-│   │   ├── animal.routes.js
-│   │   ├── species.routes.js
-│   │   └── terrarium.routes.js
-│   ├── index.js         # Entry point
-│   └── seed.js          # Script de datos iniciales
-├── env.example
-├── package.json
-└── README.md
+src/
+├── config/          # (eliminado - roles dinámicos en BD)
+├── controllers/     # Lógica de negocio
+├── middleware/      # Auth y permisos
+├── models/          # Schemas de Mongoose
+├── routes/          # Definición de rutas
+├── index.js         # Entry point
+└── seed.js          # Script de datos iniciales
 ```
-
-## Seguridad
-
-- Passwords hasheados con bcrypt (salt rounds: 10)
-- JWT con expiración de 30 días
-- Verificación de propiedad en todas las operaciones CRUD
-- Validación de datos con Mongoose

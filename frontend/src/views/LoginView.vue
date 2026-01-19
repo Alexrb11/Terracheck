@@ -106,10 +106,58 @@
       </div>
 
       <!-- Credenciales de demo -->
-      <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
-        <p class="text-sm text-amber-800 text-center">
-          <strong>Demo:</strong> admin@terracheck.com / 123456
-        </p>
+      <div class="mt-6 space-y-3">
+        <p class="text-xs text-slate-500 text-center uppercase font-medium">Cuentas de demostración</p>
+        
+        <!-- Admin -->
+        <div 
+          class="p-4 bg-purple-50 border border-purple-200 rounded-2xl cursor-pointer hover:bg-purple-100 transition-colors group"
+          @click="fillCredentials('admin@terracheck.com', 'admin123')"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 bg-purple-200 rounded-full flex items-center justify-center">
+                <ShieldIcon :size="16" class="text-purple-700" />
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-purple-800">Admin</p>
+                <p class="text-xs text-purple-600">Acceso completo</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-mono text-purple-700">admin@terracheck.com</p>
+              <p class="text-xs font-mono text-purple-600">admin123</p>
+            </div>
+          </div>
+          <p class="text-[10px] text-purple-500 mt-2 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+            Click para rellenar
+          </p>
+        </div>
+
+        <!-- User -->
+        <div 
+          class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl cursor-pointer hover:bg-emerald-100 transition-colors group"
+          @click="fillCredentials('user@terracheck.com', 'user123')"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 bg-emerald-200 rounded-full flex items-center justify-center">
+                <UserIcon :size="16" class="text-emerald-700" />
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-emerald-800">Usuario</p>
+                <p class="text-xs text-emerald-600">Acceso limitado</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-mono text-emerald-700">user@terracheck.com</p>
+              <p class="text-xs font-mono text-emerald-600">user123</p>
+            </div>
+          </div>
+          <p class="text-[10px] text-emerald-500 mt-2 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+            Click para rellenar
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -127,7 +175,9 @@ import {
   EyeOffIcon,
   AlertCircleIcon,
   XIcon,
-  LoaderIcon
+  LoaderIcon,
+  ShieldIcon,
+  UserIcon
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -152,5 +202,10 @@ const handleLogin = async () => {
   if (success) {
     router.push('/')
   }
+}
+
+const fillCredentials = (email: string, password: string) => {
+  form.value.email = email
+  form.value.password = password
 }
 </script>
