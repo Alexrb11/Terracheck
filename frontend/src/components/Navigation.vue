@@ -7,7 +7,7 @@
     <div class="flex justify-around items-center h-16">
       <router-link
         to="/"
-        class="flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-2xl transition-colors"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-colors"
         :class="
           $route.path === '/'
             ? 'text-emerald-600 bg-emerald-50'
@@ -15,13 +15,13 @@
         "
         aria-label="Mis Terrarios"
       >
-        <LayoutGridIcon :size="28" />
+        <LayoutGridIcon :size="24" />
         <span class="text-xs font-medium">Terrarios</span>
       </router-link>
 
       <router-link
         to="/add"
-        class="flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-2xl transition-colors"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-colors"
         :class="
           $route.path === '/add'
             ? 'text-emerald-600 bg-emerald-50'
@@ -29,17 +29,26 @@
         "
         aria-label="Agregar Terrario"
       >
-        <PlusCircleIcon :size="28" />
+        <PlusCircleIcon :size="24" />
         <span class="text-xs font-medium">Agregar</span>
       </router-link>
 
       <button
-        class="flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-2xl transition-colors text-slate-600 hover:text-emerald-600"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-colors text-slate-600 hover:text-emerald-600"
         aria-label="Especies"
         @click="handleSpeciesClick"
       >
-        <FishIcon :size="28" />
+        <FishIcon :size="24" />
         <span class="text-xs font-medium">Especies</span>
+      </button>
+
+      <button
+        class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-colors text-slate-600 hover:text-red-600"
+        aria-label="Cerrar Sesión"
+        @click="handleLogout"
+      >
+        <LogOutIcon :size="24" />
+        <span class="text-xs font-medium">Salir</span>
       </button>
     </div>
   </nav>
@@ -58,7 +67,7 @@
           TerrariumKeeper
         </router-link>
 
-        <div class="flex items-center gap-6">
+        <div class="flex items-center gap-4">
           <router-link
             to="/"
             class="flex items-center gap-2 px-4 py-2 rounded-2xl font-medium transition-colors"
@@ -92,6 +101,25 @@
             <FishIcon :size="20" />
             <span>Especies</span>
           </button>
+
+          <!-- Separador -->
+          <div class="w-px h-8 bg-stone-200"></div>
+
+          <!-- Usuario y Logout -->
+          <div class="flex items-center gap-3">
+            <div v-if="authStore.user" class="text-right">
+              <p class="text-sm font-medium text-slate-800">{{ authStore.user.name }}</p>
+              <p class="text-xs text-slate-500">{{ authStore.user.email }}</p>
+            </div>
+            <button
+              @click="handleLogout"
+              class="flex items-center gap-2 px-4 py-2 rounded-2xl font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 transition-colors"
+              title="Cerrar Sesión"
+            >
+              <LogOutIcon :size="20" />
+              <span>Salir</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -99,14 +127,24 @@
 </template>
 
 <script setup lang="ts">
+import { useAuthStore } from '@/stores/auth'
 import {
   LayoutGridIcon,
   PlusCircleIcon,
-  FishIcon
+  FishIcon,
+  LogOutIcon
 } from 'lucide-vue-next'
+
+const authStore = useAuthStore()
 
 const handleSpeciesClick = () => {
   // TODO: Implementar vista de especies
   alert('Vista de especies próximamente')
+}
+
+const handleLogout = () => {
+  if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+    authStore.logout()
+  }
 }
 </script>

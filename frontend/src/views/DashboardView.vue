@@ -18,14 +18,34 @@
         </p>
       </div>
 
+      <!-- Loading -->
+      <div v-if="store.loading" class="flex items-center justify-center py-16">
+        <LoaderIcon :size="48" class="text-emerald-600 animate-spin" />
+      </div>
+
+      <!-- Error -->
+      <div
+        v-else-if="store.error"
+        class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center"
+      >
+        <AlertCircleIcon :size="48" class="text-red-500 mx-auto mb-4" />
+        <p class="text-red-700">{{ store.error }}</p>
+        <button
+          @click="store.fetchTerrariums()"
+          class="mt-4 px-6 py-2 bg-red-600 text-white rounded-2xl hover:bg-red-700 transition-colors"
+        >
+          Reintentar
+        </button>
+      </div>
+
       <!-- Grid de Terrarios -->
       <div
-        v-if="terrariums.length > 0"
+        v-else-if="store.terrariums.length > 0"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         <TerrariumCard
-          v-for="terrarium in terrariums"
-          :key="terrarium.id"
+          v-for="terrarium in store.terrariums"
+          :key="terrarium._id"
           :terrarium="terrarium"
         />
       </div>
@@ -57,11 +77,15 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useTerrariumStore } from '@/stores/terrarium'
 import TerrariumCard from '@/components/TerrariumCard.vue'
 import Navigation from '@/components/Navigation.vue'
-import { BoxIcon } from 'lucide-vue-next'
+import { BoxIcon, LoaderIcon, AlertCircleIcon } from 'lucide-vue-next'
 
 const store = useTerrariumStore()
-const terrariums = store.terrariums
+
+onMounted(() => {
+  store.fetchTerrariums()
+})
 </script>

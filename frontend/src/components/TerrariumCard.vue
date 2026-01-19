@@ -4,10 +4,10 @@
       'bg-white rounded-3xl shadow-lg p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer',
       terrarium.hasCompatibilityIssue ? 'border-4 border-red-300' : 'border-4 border-transparent'
     ]"
-    @click="$router.push(`/terrarium/${terrarium.id}`)"
+    @click="$router.push(`/terrarium/${terrarium._id}`)"
     role="button"
     tabindex="0"
-    @keyup.enter="$router.push(`/terrarium/${terrarium.id}`)"
+    @keyup.enter="$router.push(`/terrarium/${terrarium._id}`)"
     aria-label="Ver detalles del terrario"
   >
     <!-- Header con nombre y tipo -->
@@ -38,7 +38,7 @@
         <div>
           <p class="text-xs text-slate-500">Temperatura</p>
           <p class="text-lg font-semibold text-slate-800">
-            {{ terrarium.temperature }}°C
+            {{ terrarium.sensors?.temperature ?? '--' }}°C
           </p>
         </div>
       </div>
@@ -47,21 +47,32 @@
         <div>
           <p class="text-xs text-slate-500">Humedad</p>
           <p class="text-lg font-semibold text-slate-800">
-            {{ terrarium.humidity }}%
+            {{ terrarium.sensors?.humidity ?? '--' }}%
           </p>
         </div>
       </div>
     </div>
 
+    <!-- Dimensiones -->
+    <div class="flex items-center gap-2 mb-4 text-sm text-slate-600">
+      <RulerIcon :size="16" />
+      <span>
+        {{ terrarium.dimensions.width }} x {{ terrarium.dimensions.depth }} x {{ terrarium.dimensions.height }} cm
+      </span>
+      <span v-if="terrarium.liters" class="text-slate-400">
+        ({{ terrarium.liters }}L)
+      </span>
+    </div>
+
     <!-- Animales -->
     <div class="mt-4 pt-4 border-t border-stone-200">
       <p class="text-sm font-medium text-slate-600 mb-2">
-        Animales ({{ terrarium.animals.length }})
+        Animales ({{ terrarium.animals?.length || 0 }})
       </p>
-      <div class="flex flex-wrap gap-2">
+      <div v-if="terrarium.animals && terrarium.animals.length > 0" class="flex flex-wrap gap-2">
         <div
           v-for="animal in terrarium.animals"
-          :key="animal.id"
+          :key="animal._id"
           class="flex items-center gap-2 px-3 py-2 bg-emerald-50 rounded-2xl"
         >
           <div
@@ -74,6 +85,9 @@
           <span class="text-sm font-medium text-slate-700">{{ animal.name }}</span>
         </div>
       </div>
+      <p v-else class="text-sm text-slate-400 italic">
+        Sin animales asignados
+      </p>
     </div>
   </div>
 </template>
@@ -85,7 +99,8 @@ import {
   Grid3x3Icon,
   AlertTriangleIcon,
   ThermometerIcon,
-  DropletIcon
+  DropletIcon,
+  RulerIcon
 } from 'lucide-vue-next'
 
 defineProps<{

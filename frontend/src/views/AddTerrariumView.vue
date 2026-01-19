@@ -3,8 +3,26 @@
     <Navigation />
 
     <main class="max-w-2xl mx-auto px-4 py-6">
+      <!-- Botón volver -->
+      <button
+        @click="$router.push('/')"
+        class="flex items-center gap-2 text-slate-600 hover:text-emerald-600 transition-colors mb-6"
+      >
+        <ArrowLeftIcon :size="20" />
+        <span class="font-medium">Volver</span>
+      </button>
+
       <div class="bg-white rounded-3xl shadow-lg p-6 md:p-8">
         <h1 class="text-3xl font-bold text-slate-800 mb-6">Agregar Terrario</h1>
+
+        <!-- Error -->
+        <div
+          v-if="store.error"
+          class="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3"
+        >
+          <AlertCircleIcon :size="20" class="text-red-600 flex-shrink-0" />
+          <p class="text-red-700 text-sm">{{ store.error }}</p>
+        </div>
 
         <form @submit.prevent="handleSubmit" class="space-y-6">
           <div>
@@ -39,44 +57,76 @@
             >
               <option value="glass">Cristal</option>
               <option value="mesh">Malla</option>
+              <option value="hybrid">Híbrido</option>
             </select>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label
-                for="temperature"
-                class="block text-lg font-semibold text-slate-800 mb-2"
-              >
-                Temperatura (°C)
-              </label>
-              <input
-                id="temperature"
-                v-model.number="form.temperature"
-                type="number"
-                required
-                min="0"
-                max="50"
-                class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
-              />
+          <!-- Dimensiones -->
+          <div>
+            <label class="block text-lg font-semibold text-slate-800 mb-2">
+              Dimensiones (cm)
+            </label>
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label for="width" class="block text-sm text-slate-600 mb-1">
+                  Ancho
+                </label>
+                <input
+                  id="width"
+                  v-model.number="form.dimensions.width"
+                  type="number"
+                  required
+                  min="10"
+                  class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
+                />
+              </div>
+              <div>
+                <label for="depth" class="block text-sm text-slate-600 mb-1">
+                  Fondo
+                </label>
+                <input
+                  id="depth"
+                  v-model.number="form.dimensions.depth"
+                  type="number"
+                  required
+                  min="10"
+                  class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
+                />
+              </div>
+              <div>
+                <label for="height" class="block text-sm text-slate-600 mb-1">
+                  Alto
+                </label>
+                <input
+                  id="height"
+                  v-model.number="form.dimensions.height"
+                  type="number"
+                  required
+                  min="10"
+                  class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
+                />
+              </div>
             </div>
-            <div>
-              <label
-                for="humidity"
-                class="block text-lg font-semibold text-slate-800 mb-2"
-              >
-                Humedad (%)
-              </label>
-              <input
-                id="humidity"
-                v-model.number="form.humidity"
-                type="number"
-                required
-                min="0"
-                max="100"
-                class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
-              />
-            </div>
+            <p class="mt-2 text-sm text-slate-500">
+              Capacidad aproximada: {{ calculatedLiters }}L
+            </p>
+          </div>
+
+          <!-- Notas -->
+          <div>
+            <label
+              for="notes"
+              class="block text-lg font-semibold text-slate-800 mb-2"
+            >
+              Notas (opcional)
+            </label>
+            <textarea
+              id="notes"
+              v-model="form.notes"
+              rows="3"
+              class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg resize-none"
+              placeholder="Observaciones sobre el terrario..."
+            ></textarea>
           </div>
 
           <div class="flex gap-4">
@@ -89,9 +139,11 @@
             </button>
             <button
               type="submit"
-              class="flex-1 px-6 py-3 rounded-2xl bg-emerald-600 text-white font-semibold text-lg hover:bg-emerald-700 transition-colors shadow-lg"
+              :disabled="store.loading || !isFormValid"
+              class="flex-1 px-6 py-3 rounded-2xl bg-emerald-600 text-white font-semibold text-lg hover:bg-emerald-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Crear Terrario
+              <LoaderIcon v-if="store.loading" :size="20" class="animate-spin" />
+              <span>{{ store.loading ? 'Creando...' : 'Crear Terrario' }}</span>
             </button>
           </div>
         </form>
@@ -101,29 +153,52 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTerrariumStore } from '@/stores/terrarium'
 import Navigation from '@/components/Navigation.vue'
+import { ArrowLeftIcon, AlertCircleIcon, LoaderIcon } from 'lucide-vue-next'
 
 const router = useRouter()
 const store = useTerrariumStore()
 
 const form = ref({
   name: '',
-  type: 'glass' as 'glass' | 'mesh',
-  temperature: 25,
-  humidity: 50,
-  width: 60,
-  height: 40,
-  depth: 30
+  type: 'glass' as 'glass' | 'mesh' | 'hybrid',
+  dimensions: {
+    width: 60,
+    depth: 45,
+    height: 45
+  },
+  notes: ''
 })
 
-const handleSubmit = () => {
-  const newTerrarium = store.addTerrarium({
-    ...form.value,
-    animals: []
+const calculatedLiters = computed(() => {
+  const { width, depth, height } = form.value.dimensions
+  return Math.round((width * depth * height) / 1000)
+})
+
+const isFormValid = computed(() => {
+  return (
+    form.value.name.trim() !== '' &&
+    form.value.dimensions.width >= 10 &&
+    form.value.dimensions.depth >= 10 &&
+    form.value.dimensions.height >= 10
+  )
+})
+
+const handleSubmit = async () => {
+  if (!isFormValid.value) return
+
+  const newTerrarium = await store.addTerrarium({
+    name: form.value.name,
+    type: form.value.type,
+    dimensions: form.value.dimensions,
+    notes: form.value.notes || undefined
   })
-  router.push(`/terrarium/${newTerrarium.id}`)
+
+  if (newTerrarium) {
+    router.push(`/terrarium/${newTerrarium._id}`)
+  }
 }
 </script>
