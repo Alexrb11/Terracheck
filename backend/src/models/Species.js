@@ -1,0 +1,109 @@
+import mongoose from 'mongoose'
+
+const speciesSchema = new mongoose.Schema({
+  // Información general
+  scientificName: {
+    type: String,
+    required: [true, 'El nombre científico es requerido'],
+    unique: true,
+    trim: true
+  },
+  commonName: {
+    type: String,
+    required: [true, 'El nombre común es requerido'],
+    trim: true
+  },
+  family: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  biome: {
+    type: String,
+    required: true,
+    enum: {
+      values: ['Tropical', 'Arid', 'Temperate'],
+      message: 'Bioma debe ser Tropical, Arid o Temperate'
+    }
+  },
+
+  // Parámetros ambientales requeridos
+  parameters: {
+    tempMin: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 50
+    },
+    tempMax: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 50
+    },
+    humidityMin: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 100
+    },
+    humidityMax: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 100
+    },
+    uvIndex: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 14
+    }
+  },
+
+  // Requerimientos de espacio
+  requirements: {
+    minLiters: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+    minHeight: {
+      type: Number,
+      required: true,
+      min: 10
+    },
+    arboreal: {
+      type: Boolean,
+      default: false
+    }
+  },
+
+  // Compatibilidad
+  compatibility: {
+    type: [String],
+    default: []
+  },
+
+  // Imagen (URL opcional)
+  imageUrl: {
+    type: String,
+    default: null
+  },
+
+  // Descripción
+  description: {
+    type: String,
+    default: ''
+  }
+}, {
+  timestamps: true
+})
+
+// Índices para búsquedas eficientes
+speciesSchema.index({ commonName: 'text', scientificName: 'text' })
+speciesSchema.index({ biome: 1 })
+
+const Species = mongoose.model('Species', speciesSchema)
+
+export default Species
