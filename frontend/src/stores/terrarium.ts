@@ -174,6 +174,91 @@ export const useTerrariumStore = defineStore('terrarium', () => {
     }
   }
 
+  const addAnimalToTerrarium = async (
+    terrariumId: string,
+    animalData: {
+      name: string
+      sex: 'male' | 'female' | 'unknown'
+      species: string // ID de la especie
+      birthDate?: string
+      weight?: number
+      notes?: string
+    }
+  ): Promise<{ success: boolean; message?: string }> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch('/api/animals', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          ...animalData,
+          terrarium: terrariumId
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        // Capturar warnings de compatibilidad
+        if (data.warnings && data.warnings.length > 0) {
+          return {
+            success: true,
+            message: data.warnings.join('. ')
+          }
+        }
+        throw new Error(data.message || 'Error al añadir animal')
+      }
+
+      // Refrescar la lista de terrarios para obtener el nuevo animal
+      await fetchTerrariums()
+
+      // Verificar si hay warnings
+      if (data.warnings && data.warnings.length > 0) {
+        return {
+          success: true,
+          message: data.warnings.join('. ')
+        }
+      }
+
+      return { success: true }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error desconocido'
+      error.value = message
+      return { success: false, message }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const removeAnimalFromTerrarium = async (animalId: string): Promise<boolean> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch(`/api/animals/${animalId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al eliminar animal')
+      }
+
+      // Refrescar la lista de terrarios
+      await fetchTerrariums()
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error desconocido'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   const clearError = () => {
     error.value = null
   }
@@ -190,6 +275,8 @@ export const useTerrariumStore = defineStore('terrarium', () => {
     addTerrarium,
     updateTerrarium,
     deleteTerrarium,
+    addAnimalToTerrarium,
+    removeAnimalFromTerrarium,
     clearError
   }
 })

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen pb-20 md:pb-0">
+  <div class="min-h-screen pb-20 md:pb-0 bg-stone-50">
     <Navigation />
 
     <main class="max-w-4xl mx-auto px-4 py-6">
@@ -80,15 +80,24 @@
 
         <!-- Animales -->
         <div class="bg-white rounded-3xl shadow-lg p-6">
-          <h2 class="text-2xl font-bold text-slate-800 mb-4">
-            Animales ({{ terrarium.animals?.length || 0 }})
-          </h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-slate-800">
+              Animales ({{ terrarium.animals?.length || 0 }})
+            </h2>
+            <button
+              @click="showAddAnimalModal = true"
+              class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-2xl font-medium hover:bg-emerald-700 transition-colors shadow-md"
+            >
+              <PlusIcon :size="20" />
+              <span>Añadir Animal</span>
+            </button>
+          </div>
           
           <div v-if="terrarium.animals && terrarium.animals.length > 0" class="space-y-3">
             <div
               v-for="animal in terrarium.animals"
               :key="animal._id"
-              class="flex items-center gap-4 p-4 bg-emerald-50 rounded-2xl"
+              class="flex items-center gap-4 p-4 bg-emerald-50 rounded-2xl group"
             >
               <div
                 class="w-12 h-12 rounded-full bg-emerald-200 flex items-center justify-center"
@@ -100,8 +109,11 @@
               <div class="flex-1">
                 <p class="font-semibold text-slate-800 text-lg">{{ animal.name }}</p>
                 <p class="text-slate-600">{{ animal.species?.commonName || 'Especie desconocida' }}</p>
+                <p v-if="animal.species?.scientificName" class="text-slate-400 text-sm italic">
+                  {{ animal.species.scientificName }}
+                </p>
               </div>
-              <div class="text-right">
+              <div class="flex items-center gap-3">
                 <span
                   class="inline-block px-3 py-1 text-xs font-medium rounded-full"
                   :class="{
@@ -112,12 +124,29 @@
                 >
                   {{ animal.sex === 'male' ? 'Macho' : animal.sex === 'female' ? 'Hembra' : 'Desconocido' }}
                 </span>
+                <!-- Botón eliminar -->
+                <button
+                  @click="handleDeleteAnimal(animal._id, animal.name)"
+                  class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                  title="Eliminar animal"
+                >
+                  <TrashIcon :size="18" />
+                </button>
               </div>
             </div>
           </div>
           
           <div v-else class="text-center py-8">
-            <p class="text-slate-500">No hay animales asignados a este terrario</p>
+            <div class="w-16 h-16 mx-auto mb-4 bg-emerald-100 rounded-full flex items-center justify-center">
+              <PawPrintIcon :size="32" class="text-emerald-600" />
+            </div>
+            <p class="text-slate-500 mb-4">No hay animales asignados a este terrario</p>
+            <button
+              @click="showAddAnimalModal = true"
+              class="px-6 py-3 bg-emerald-600 text-white rounded-2xl font-semibold hover:bg-emerald-700 transition-colors shadow-lg"
+            >
+              Añadir tu primer animal
+            </button>
           </div>
         </div>
       </div>
@@ -132,6 +161,14 @@
         </button>
       </div>
     </main>
+
+    <!-- Modal Añadir Animal -->
+    <AddAnimalModal
+      :is-open="showAddAnimalModal"
+      :terrarium-id="terrariumId"
+      @close="showAddAnimalModal = false"
+      @success="handleAnimalAdded"
+    />
   </div>
 </template>
 
@@ -140,6 +177,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTerrariumStore } from '@/stores/terrarium'
 import Navigation from '@/components/Navigation.vue'
+import AddAnimalModal from '@/components/AddAnimalModal.vue'
 import {
   ArrowLeftIcon,
   SquareIcon,
@@ -148,16 +186,34 @@ import {
   DropletIcon,
   RulerIcon,
   AlertTriangleIcon,
-  LoaderIcon
+  LoaderIcon,
+  PlusIcon,
+  PawPrintIcon,
+  TrashIcon
 } from 'lucide-vue-next'
 
 const route = useRoute()
 const store = useTerrariumStore()
 const loading = ref(true)
+const showAddAnimalModal = ref(false)
+
+const terrariumId = computed(() => route.params.id as string)
 
 const terrarium = computed(() =>
-  store.getTerrariumById(route.params.id as string)
+  store.getTerrariumById(terrariumId.value)
 )
+
+const handleAnimalAdded = () => {
+  // El modal ya recarga los datos, no necesitamos hacer nada extra
+}
+
+const handleDeleteAnimal = async (animalId: string, animalName: string) => {
+  if (!confirm(`¿Estás seguro de que deseas eliminar a ${animalName}?`)) {
+    return
+  }
+
+  await store.removeAnimalFromTerrarium(animalId)
+}
 
 onMounted(async () => {
   // Si no tenemos terrarios cargados, cargarlos

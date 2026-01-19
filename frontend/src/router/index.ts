@@ -35,6 +35,12 @@ const router = createRouter({
       component: () => import('@/views/AddTerrariumView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/species',
+      name: 'species',
+      component: () => import('@/views/SpeciesListView.vue'),
+      meta: { requiresAuth: true }
+    },
     // Ruta 404
     {
       path: '/:pathMatch(.*)*',

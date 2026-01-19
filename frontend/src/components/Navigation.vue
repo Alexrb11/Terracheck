@@ -33,14 +33,19 @@
         <span class="text-xs font-medium">Agregar</span>
       </router-link>
 
-      <button
-        class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-colors text-slate-600 hover:text-emerald-600"
+      <router-link
+        to="/species"
+        class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-colors"
+        :class="
+          $route.path === '/species'
+            ? 'text-emerald-600 bg-emerald-50'
+            : 'text-slate-600 hover:text-emerald-600'
+        "
         aria-label="Especies"
-        @click="handleSpeciesClick"
       >
-        <FishIcon :size="24" />
+        <BookOpenIcon :size="24" />
         <span class="text-xs font-medium">Especies</span>
-      </button>
+      </router-link>
 
       <button
         class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-colors text-slate-600 hover:text-red-600"
@@ -94,13 +99,18 @@
             <span>Agregar</span>
           </router-link>
 
-          <button
-            class="flex items-center gap-2 px-4 py-2 rounded-2xl font-medium text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
-            @click="handleSpeciesClick"
+          <router-link
+            to="/species"
+            class="flex items-center gap-2 px-4 py-2 rounded-2xl font-medium transition-colors"
+            :class="
+              $route.path === '/species'
+                ? 'text-emerald-600 bg-emerald-50'
+                : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50'
+            "
           >
-            <FishIcon :size="20" />
+            <BookOpenIcon :size="20" />
             <span>Especies</span>
-          </button>
+          </router-link>
 
           <!-- Separador -->
           <div class="w-px h-8 bg-stone-200"></div>
@@ -131,16 +141,11 @@ import { useAuthStore } from '@/stores/auth'
 import {
   LayoutGridIcon,
   PlusCircleIcon,
-  FishIcon,
+  BookOpenIcon,
   LogOutIcon
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
-
-const handleSpeciesClick = () => {
-  // TODO: Implementar vista de especies
-  alert('Vista de especies próximamente')
-}
 
 const handleLogout = () => {
   if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {

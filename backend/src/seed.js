@@ -36,7 +36,8 @@ const speciesData = [
       arboreal: false
     },
     compatibility: ['solitary', 'female-groups'],
-    description: 'Gecko nocturno originario de Afganistán, Pakistán e India. Ideal para principiantes.'
+    description: 'Gecko nocturno originario de Afganistán, Pakistán e India. Ideal para principiantes.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Eublepharis_macularius_01.jpg/250px-Eublepharis_macularius_01.jpg'
   },
   {
     scientificName: 'Correlophus ciliatus',
@@ -56,7 +57,8 @@ const speciesData = [
       arboreal: true
     },
     compatibility: ['communal', 'female-groups'],
-    description: 'Gecko arborícola de Nueva Caledonia. No requiere iluminación especial y es muy dócil.'
+    description: 'Gecko arborícola de Nueva Caledonia. No requiere iluminación especial y es muy dócil.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Gekkoninae_Rhacodactylus_ciliatus_tete.png/250px-Gekkoninae_Rhacodactylus_ciliatus_tete.png'
   },
   {
     scientificName: 'Python regius',
@@ -76,7 +78,8 @@ const speciesData = [
       arboreal: false
     },
     compatibility: ['solitary'],
-    description: 'Serpiente africana conocida por enrollarse en bola cuando se siente amenazada.'
+    description: 'Serpiente africana conocida por enrollarse en bola cuando se siente amenazada.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Ball_python_lucy.JPG/250px-Ball_python_lucy.JPG'
   },
   {
     scientificName: 'Pogona vitticeps',
@@ -96,7 +99,8 @@ const speciesData = [
       arboreal: false
     },
     compatibility: ['solitary', 'male-female-pair'],
-    description: 'Lagarto australiano muy popular por su carácter sociable y apariencia única.'
+    description: 'Lagarto australiano muy popular por su carácter sociable y apariencia única.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Bartagame_%28fcm%29.jpg/250px-Bartagame_%28fcm%29.jpg'
   },
   {
     scientificName: 'Dendrobates tinctorius',
@@ -116,7 +120,8 @@ const speciesData = [
       arboreal: false
     },
     compatibility: ['communal', 'same-species-groups'],
-    description: 'Rana venenosa de Surinam con colores vibrantes. En cautividad pierde su toxicidad.'
+    description: 'Rana venenosa de Surinam con colores vibrantes. En cautividad pierde su toxicidad.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Dendrobates_azureus_qtl1.jpg/250px-Dendrobates_azureus_qtl1.jpg'
   }
 ]
 
