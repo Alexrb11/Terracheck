@@ -140,10 +140,10 @@ const handleLogout = () => {
 
 <style scoped>
 .nav-bar {
-  background-color: var(--surface-card);
-  border-bottom: 1px solid var(--border-light);
+  background-color: var(--color-surface);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: var(--shadow-sm);
-  z-index: var(--z-fixed);
+  z-index: 1030;
 }
 
 /* Navegación Móvil */
@@ -152,10 +152,10 @@ const handleLogout = () => {
   bottom: 0;
   left: 0;
   right: 0;
-  border-top: 1px solid var(--border-light);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
   border-bottom: none;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
 .nav-bar--mobile .nav-bar__container {
@@ -165,47 +165,50 @@ const handleLogout = () => {
   height: 64px;
 }
 
-/* Navegación Desktop */
+/* Navegación Desktop - Barra flotante con glass-bg (versión clara) */
 .nav-bar--desktop {
   display: none;
   position: sticky;
   top: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .nav-bar__content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-md) 0;
+  padding: 1rem 0;
 }
 
 .nav-bar__logo {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--color-primary);
   transition: color var(--transition-fast);
 }
 
 .nav-bar__logo:hover {
-  color: var(--primary-dark);
+  opacity: 0.8;
 }
 
 .nav-bar__menu {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: 1rem;
 }
 
 .nav-bar__separator {
   width: 1px;
   height: 32px;
-  background-color: var(--border-light);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .nav-bar__user {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: 1rem;
 }
 
 .nav-bar__user-info {
@@ -215,12 +218,12 @@ const handleLogout = () => {
 .nav-bar__user-name {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--text-main);
+  color: var(--color-text-main);
 }
 
 .nav-bar__user-email {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 /* Enlaces de navegación */
@@ -229,10 +232,10 @@ const handleLogout = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-xl);
-  color: var(--text-muted);
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
   transition: all var(--transition-fast);
   text-decoration: none;
   cursor: pointer;
@@ -240,20 +243,20 @@ const handleLogout = () => {
 
 .nav-link--horizontal {
   flex-direction: row;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
   font-weight: 500;
 }
 
 .nav-link:hover {
-  color: var(--primary);
-  background-color: var(--primary-light);
-  background-color: rgba(134, 239, 172, 0.2);
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
 }
 
 .nav-link--active {
-  color: var(--primary);
-  background-color: rgba(134, 239, 172, 0.2);
+  color: var(--color-primary);
+  font-weight: 700;
+  background-color: var(--color-primary-light);
 }
 
 .nav-link--admin {
@@ -263,15 +266,16 @@ const handleLogout = () => {
 .nav-link--admin:hover,
 .nav-link--admin.nav-link--active {
   background-color: #f3e8ff;
+  font-weight: 700;
 }
 
 .nav-link--danger {
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 .nav-link--danger:hover {
-  color: var(--danger);
-  background-color: var(--danger-light);
+  color: var(--color-accent);
+  background-color: rgba(239, 108, 0, 0.1);
 }
 
 .nav-link__text {

@@ -1,5 +1,5 @@
-/* Importar estilos en orden correcto */
+/* Importar estilos en orden correcto - Terracheck Organic Design System */
 @import './styles/variables.css';
-@import './styles/base.css';
+@import './styles/reset.css';
 @import './styles/layout.css';
 @import './styles/components.css';

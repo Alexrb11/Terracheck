@@ -1,65 +1,28 @@
 :root {
-  /* Colores - Material Nature */
-  --primary: #15803d; /* Verde Selva Profundo */
-  --primary-light: #86efac; /* Brote tierno */
-  --primary-dark: #166534; /* Verde más oscuro para hover */
-  --secondary: #d97706; /* Tierra/Ámbar */
-  --secondary-light: #fbbf24;
-  --danger: #dc2626; /* Rojo para errores */
-  --danger-light: #fee2e2;
+  /* Brand Colors - Terracheck Organic */
+  --color-primary: #2E7D32; /* Verde Musgo Intenso (Material Green 800) */
+  --color-primary-light: #E8F5E9; /* Fondo suave */
+  --color-accent: #EF6C00; /* Naranja Arcilla (Para acciones/alertas) */
+  --color-surface: #FFFFFF; /* Tarjetas */
+  --color-background: #F2F1EE; /* Gris Piedra Cálido (No blanco clínico) */
+  --color-text-main: #1A1C18;
+  --color-text-muted: #757575;
+  --glass-bg: rgba(30, 41, 59, 0.85); /* Para terrarios de cristal */
   
-  /* Superficies */
-  --surface-ground: #e7e5e4; /* Stone-200 - Fondo App */
-  --surface-card: #ffffff; /* Blanco puro */
-  --surface-glass: #1e293b; /* Slate-800 - Modo Cristal Oscuro */
-  --surface-glass-overlay: rgba(255, 255, 255, 0.1);
+  /* Typography */
+  --font-family: 'Nunito', sans-serif;
   
-  /* Texto */
-  --text-main: #1c1917; /* Stone-900 - Casi negro */
-  --text-muted: #57534e; /* Stone-600 - Gris piedra */
-  --text-light: #a8a29e; /* Stone-400 */
-  --text-on-glass: #ffffff;
+  /* Border Radius */
+  --radius-md: 12px;
+  --radius-lg: 24px; /* Material standard */
+  --radius-xl: 32px; /* Contenedores grandes */
   
-  /* Bordes */
-  --border-light: #e7e5e4; /* Stone-200 */
-  --border-medium: #d6d3d1; /* Stone-300 */
-  --border-glass: rgba(255, 255, 255, 0.2);
-  
-  /* Espaciado */
-  --spacing-xs: 0.25rem; /* 4px */
-  --spacing-sm: 0.5rem; /* 8px */
-  --spacing-md: 1rem; /* 16px */
-  --spacing-lg: 1.5rem; /* 24px */
-  --spacing-xl: 2rem; /* 32px */
-  --spacing-2xl: 3rem; /* 48px */
-  
-  /* Radio de borde */
-  --radius-sm: 0.5rem; /* 8px */
-  --radius-md: 1rem; /* 16px */
-  --radius-xl: 1.5rem; /* 24px */
-  --radius-2xl: 2rem; /* 32px */
-  --radius-full: 9999px;
-  
-  /* Sombras */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-glass: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  /* Elevation (Sombras Material) */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-float: 0 8px 24px rgba(46, 125, 50, 0.15);
   
   /* Transiciones */
-  --transition-fast: 150ms ease-in-out;
   --transition-base: 300ms ease-in-out;
-  --transition-slow: 500ms ease-in-out;
-  
-  /* Z-index */
-  --z-base: 0;
-  --z-dropdown: 1000;
-  --z-sticky: 1020;
-  --z-fixed: 1030;
-  --z-modal-backdrop: 1040;
-  --z-modal: 1050;
-  --z-popover: 1060;
-  --z-tooltip: 1070;
+  --transition-fast: 150ms ease-in-out;
 }

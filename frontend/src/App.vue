@@ -7,8 +7,8 @@
 <style scoped>
 .app-layout {
   min-height: 100vh;
-  background-color: var(--surface-ground);
-  color: var(--text-main);
+  background-color: var(--color-background);
+  color: var(--color-text-main);
 }
 </style>
 

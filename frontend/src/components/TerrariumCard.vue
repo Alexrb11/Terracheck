@@ -86,7 +86,7 @@
         `terrarium-card__footer--${terrarium.biome || 'tropical'}`
       ]"
     >
-      <!-- Overlay oscuro para mejorar contraste del texto -->
+      <!-- Overlay degradado para mejorar legibilidad del texto sobre la imagen -->
       <div class="terrarium-card__footer-overlay"></div>
       
       <!-- Contenido de los sensores (sobre el overlay) -->
@@ -139,19 +139,16 @@ const props = defineProps<{
 
 const router = useRouter()
 
-// Mapa de texturas fotográficas por bioma con configuración de posición
+// Mapa de texturas fotográficas por bioma - FIX: Siempre usar center bottom para ver el suelo
 const biomeTextures = {
   desert: {
-    url: '/images/sand-footer.png',
-    position: 'bottom center'
+    url: '/images/sand-footer.png'
   },
   tropical: {
-    url: '/images/tropical-footer.png',
-    position: 'center center'
+    url: '/images/tropical-footer.png'
   },
   temperate: {
-    url: '/images/forest-footer.png',
-    position: 'bottom center'
+    url: '/images/forest-footer.png'
   }
 }
 
@@ -160,6 +157,7 @@ const handleClick = () => {
 }
 
 // Obtener estilo de textura para el footer según el bioma
+// FIX: background-position: center bottom para que siempre se vea el suelo
 const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: string; backgroundPosition: string } => {
   const biome = props.terrarium.biome || 'tropical'
   const biomeConfig = biomeTextures[biome] || biomeTextures.tropical
@@ -167,7 +165,7 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
   return {
     backgroundImage: `url(${biomeConfig.url})`,
     backgroundSize: 'cover',
-    backgroundPosition: biomeConfig.position
+    backgroundPosition: 'center bottom' // Siempre mostrar el suelo, no el cielo
   }
 }
 </script>
@@ -180,8 +178,8 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
   flex-direction: column;
   justify-content: space-between;
   height: 256px;
-  border: 2px solid;
-  border-radius: var(--radius-2xl);
+  border: 1px solid;
+  border-radius: var(--radius-xl);
   transition: all var(--transition-base);
   cursor: pointer;
   overflow: hidden;
@@ -192,29 +190,29 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
 }
 
 .terrarium-card:focus {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /* Modo Estándar */
 .terrarium-card--standard {
-  background-color: var(--surface-card);
-  border-color: var(--border-medium);
-  color: var(--text-main);
-  box-shadow: var(--shadow-lg);
+  background-color: var(--color-surface);
+  border-color: rgba(0, 0, 0, 0.05);
+  color: var(--color-text-main);
+  box-shadow: var(--shadow-sm);
 }
 
 .terrarium-card--standard:hover {
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--shadow-md);
 }
 
 /* Modo Glass (Glassmorphism) */
 .terrarium-card--glass {
-  background-color: var(--surface-glass);
-  border-color: var(--border-glass);
-  color: var(--text-on-glass);
-  box-shadow: var(--shadow-glass);
-  backdrop-filter: blur(12px);
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  box-shadow: var(--shadow-float);
 }
 
 .terrarium-card--glass .terrarium-card__glass-overlay {
@@ -227,8 +225,8 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
 
 /* Modo Warning */
 .terrarium-card--warning {
-  border-color: rgba(220, 38, 38, 0.6);
-  background-color: rgba(254, 226, 226, 0.3);
+  border-color: var(--color-accent);
+  background-color: rgba(239, 108, 0, 0.1);
 }
 
 /* Header */
@@ -238,19 +236,18 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-md);
-  border-bottom: 1px solid;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(8px);
 }
 
 .terrarium-card--standard .terrarium-card__header {
-  background-color: rgba(231, 229, 228, 0.5);
-  border-bottom-color: var(--border-light);
+  background-color: rgba(242, 241, 238, 0.5);
 }
 
 .terrarium-card--glass .terrarium-card__header {
-  background-color: rgba(30, 41, 59, 0.5);
-  border-bottom-color: var(--border-glass);
+  background-color: rgba(30, 41, 59, 0.3);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
 .terrarium-card__title {
@@ -265,28 +262,28 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
 .terrarium-card__header-actions {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  margin-left: var(--spacing-sm);
+  gap: 0.5rem;
+  margin-left: 0.5rem;
   flex-shrink: 0;
 }
 
 .terrarium-card__alert {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background-color: rgba(220, 38, 38, 0.2);
-  border-radius: var(--radius-full);
-  border: 1px solid rgba(220, 38, 38, 0.5);
-  color: var(--danger);
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: rgba(239, 108, 0, 0.2);
+  border-radius: 9999px;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
 }
 
 .terrarium-card__type-icon {
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 .terrarium-card--glass .terrarium-card__type-icon {
-  color: rgba(147, 197, 253, 0.8);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Contenido */
@@ -294,12 +291,12 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
   flex: 1;
   position: relative;
   z-index: 20;
-  padding: var(--spacing-md);
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-md);
+  gap: 1rem;
   overflow: hidden;
 }
 
@@ -308,7 +305,7 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-md);
+  gap: 1rem;
 }
 
 .terrarium-card__animal-avatar {
@@ -322,12 +319,12 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
 .terrarium-card__avatar-circle {
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(to bottom right, #4ade80, #16a34a);
+  border-radius: 9999px;
+  background: linear-gradient(to bottom right, #4ade80, var(--color-primary));
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   border: 2px solid rgba(255, 255, 255, 0.5);
   transition: transform var(--transition-base);
 }
@@ -347,12 +344,12 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  margin-bottom: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0.5rem;
   background-color: #1e293b;
   color: white;
   font-size: 0.75rem;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   opacity: 0;
   transition: opacity var(--transition-fast);
   pointer-events: none;
@@ -374,26 +371,26 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-sm);
-  color: var(--text-muted);
+  gap: 0.5rem;
+  color: var(--color-text-muted);
 }
 
 .terrarium-card--glass .terrarium-card__empty {
-  color: rgba(147, 197, 253, 0.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .terrarium-card__empty-icon {
   width: 64px;
   height: 64px;
-  border-radius: var(--radius-full);
-  background-color: rgba(231, 229, 228, 0.5);
+  border-radius: 9999px;
+  background-color: rgba(242, 241, 238, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .terrarium-card--glass .terrarium-card__empty-icon {
-  background-color: rgba(59, 130, 246, 0.2);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .terrarium-card__empty-text {
@@ -403,69 +400,63 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
 
 .terrarium-card__dimensions {
   position: absolute;
-  bottom: var(--spacing-sm);
+  bottom: 0.5rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: 0.25rem;
   font-size: 0.75rem;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-full);
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
   backdrop-filter: blur(4px);
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   background-color: rgba(255, 255, 255, 0.3);
 }
 
 .terrarium-card--glass .terrarium-card__dimensions {
-  color: rgba(147, 197, 253, 0.7);
-  background-color: rgba(59, 130, 246, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .terrarium-card__liters {
-  color: var(--text-light);
+  color: var(--color-text-muted);
+  opacity: 0.7;
 }
 
 .terrarium-card--glass .terrarium-card__liters {
-  color: rgba(147, 197, 253, 0.5);
+  color: rgba(255, 255, 255, 0.5);
 }
 
-/* Footer con textura */
+/* Footer con textura - FIX DE IMÁGENES */
 .terrarium-card__footer {
   position: relative;
   z-index: 20;
   margin-top: auto;
-  padding: var(--spacing-md);
+  padding: 1rem;
   backdrop-filter: blur(4px);
-  border-top: 1px solid;
-  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
   display: flex;
   justify-content: space-around;
   align-items: center;
   overflow: hidden;
-  box-shadow: var(--shadow-inner);
-}
-
-.terrarium-card__footer--tropical {
-  border-top-color: rgba(16, 185, 129, 0.5);
-}
-
-.terrarium-card__footer--desert {
-  border-top-color: rgba(251, 191, 36, 0.5);
-}
-
-.terrarium-card__footer--temperate {
-  border-top-color: var(--border-light);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  /* FIX: background-position siempre center bottom para ver el suelo */
+  background-position: center bottom !important;
+  background-size: cover !important;
 }
 
 .terrarium-card--glass .terrarium-card__footer {
-  border-top-color: var(--border-glass);
+  border-top-color: rgba(255, 255, 255, 0.2);
 }
 
+/* Overlay degradado para legibilidad del texto sobre la imagen */
 .terrarium-card__footer-overlay {
   position: absolute;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  /* Gradiente lineal de arriba (transparente) a abajo (oscuro) para legibilidad */
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
   pointer-events: none;
 }
 
@@ -481,11 +472,11 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
 .terrarium-card__sensor {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
   background-color: rgba(30, 41, 59, 0.9);
-  border-radius: var(--radius-full);
-  box-shadow: var(--shadow-lg);
+  border-radius: 9999px;
+  box-shadow: var(--shadow-md);
   border: 1px solid rgba(51, 65, 85, 0.5);
   backdrop-filter: blur(4px);
 }
