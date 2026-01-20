@@ -1,86 +1,61 @@
 <template>
   <!-- Navegación Móvil (Bottom Bar) -->
-  <nav
-    class="fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 shadow-lg md:hidden z-50"
-    aria-label="Navegación principal"
-  >
-    <div class="flex justify-around items-center h-16">
+  <nav class="nav-bar nav-bar--mobile" aria-label="Navegación principal">
+    <div class="nav-bar__container">
       <router-link
         to="/"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-colors"
-        :class="
-          $route.path === '/'
-            ? 'text-emerald-600 bg-emerald-50'
-            : 'text-slate-600 hover:text-emerald-600'
-        "
+        class="nav-link"
+        :class="{ 'nav-link--active': $route.path === '/' }"
         aria-label="Mis Terrarios"
       >
         <LayoutGridIcon :size="24" />
-        <span class="text-xs font-medium">Terrarios</span>
+        <span class="nav-link__text">Terrarios</span>
       </router-link>
 
       <router-link
         to="/add"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-colors"
-        :class="
-          $route.path === '/add'
-            ? 'text-emerald-600 bg-emerald-50'
-            : 'text-slate-600 hover:text-emerald-600'
-        "
+        class="nav-link"
+        :class="{ 'nav-link--active': $route.path === '/add' }"
         aria-label="Agregar Terrario"
       >
         <PlusCircleIcon :size="24" />
-        <span class="text-xs font-medium">Agregar</span>
+        <span class="nav-link__text">Agregar</span>
       </router-link>
 
       <router-link
         to="/species"
-        class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-colors"
-        :class="
-          $route.path === '/species'
-            ? 'text-emerald-600 bg-emerald-50'
-            : 'text-slate-600 hover:text-emerald-600'
-        "
+        class="nav-link"
+        :class="{ 'nav-link--active': $route.path === '/species' }"
         aria-label="Especies"
       >
         <BookOpenIcon :size="24" />
-        <span class="text-xs font-medium">Especies</span>
+        <span class="nav-link__text">Especies</span>
       </router-link>
 
       <button
-        class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-2xl transition-colors text-slate-600 hover:text-red-600"
+        class="nav-link nav-link--danger"
         aria-label="Cerrar Sesión"
         @click="handleLogout"
       >
         <LogOutIcon :size="24" />
-        <span class="text-xs font-medium">Salir</span>
+        <span class="nav-link__text">Salir</span>
       </button>
     </div>
   </nav>
 
   <!-- Navegación Desktop (Top Bar) -->
-  <nav
-    class="hidden md:block bg-white shadow-sm border-b border-stone-200"
-    aria-label="Navegación principal"
-  >
-    <div class="max-w-7xl mx-auto px-6 py-4">
-      <div class="flex items-center justify-between">
-        <router-link
-          to="/"
-          class="text-2xl font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
-        >
+  <nav class="nav-bar nav-bar--desktop" aria-label="Navegación principal">
+    <div class="container">
+      <div class="nav-bar__content">
+        <router-link to="/" class="nav-bar__logo">
           TerrariumKeeper
         </router-link>
 
-        <div class="flex items-center gap-4">
+        <div class="nav-bar__menu">
           <router-link
             to="/"
-            class="flex items-center gap-2 px-4 py-2 rounded-2xl font-medium transition-colors"
-            :class="
-              $route.path === '/'
-                ? 'text-emerald-600 bg-emerald-50'
-                : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50'
-            "
+            class="nav-link nav-link--horizontal"
+            :class="{ 'nav-link--active': $route.path === '/' }"
           >
             <LayoutGridIcon :size="20" />
             <span>Mis Terrarios</span>
@@ -88,12 +63,8 @@
 
           <router-link
             to="/add"
-            class="flex items-center gap-2 px-4 py-2 rounded-2xl font-medium transition-colors"
-            :class="
-              $route.path === '/add'
-                ? 'text-emerald-600 bg-emerald-50'
-                : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50'
-            "
+            class="nav-link nav-link--horizontal"
+            :class="{ 'nav-link--active': $route.path === '/add' }"
           >
             <PlusCircleIcon :size="20" />
             <span>Agregar</span>
@@ -101,12 +72,8 @@
 
           <router-link
             to="/species"
-            class="flex items-center gap-2 px-4 py-2 rounded-2xl font-medium transition-colors"
-            :class="
-              $route.path === '/species'
-                ? 'text-emerald-600 bg-emerald-50'
-                : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50'
-            "
+            class="nav-link nav-link--horizontal"
+            :class="{ 'nav-link--active': $route.path === '/species' }"
           >
             <BookOpenIcon :size="20" />
             <span>Especies</span>
@@ -116,37 +83,30 @@
           <router-link
             v-if="authStore.isAdmin"
             to="/admin"
-            class="flex items-center gap-2 px-4 py-2 rounded-2xl font-medium transition-colors"
-            :class="
-              $route.path.startsWith('/admin')
-                ? 'text-purple-600 bg-purple-50'
-                : 'text-purple-600 hover:bg-purple-50'
-            "
+            class="nav-link nav-link--horizontal nav-link--admin"
+            :class="{ 'nav-link--active': $route.path.startsWith('/admin') }"
           >
             <ShieldIcon :size="20" />
             <span>Admin</span>
           </router-link>
 
           <!-- Separador -->
-          <div class="w-px h-8 bg-stone-200"></div>
+          <div class="nav-bar__separator"></div>
 
           <!-- Usuario y Logout -->
-          <div class="flex items-center gap-3">
-            <div v-if="authStore.user" class="text-right">
-              <div class="flex items-center gap-2 justify-end">
-                <p class="text-sm font-medium text-slate-800">{{ authStore.user.name }}</p>
-                <span
-                  v-if="authStore.isAdmin"
-                  class="px-2 py-0.5 text-[10px] font-bold uppercase bg-purple-100 text-purple-700 rounded-full"
-                >
+          <div class="nav-bar__user">
+            <div v-if="authStore.user" class="nav-bar__user-info">
+              <div class="flex items-center gap-sm justify-end">
+                <p class="nav-bar__user-name">{{ authStore.user.name }}</p>
+                <span v-if="authStore.isAdmin" class="badge badge-primary">
                   Admin
                 </span>
               </div>
-              <p class="text-xs text-slate-500">{{ authStore.user.email }}</p>
+              <p class="nav-bar__user-email">{{ authStore.user.email }}</p>
             </div>
             <button
+              class="nav-link nav-link--horizontal nav-link--danger"
               @click="handleLogout"
-              class="flex items-center gap-2 px-4 py-2 rounded-2xl font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 transition-colors"
               title="Cerrar Sesión"
             >
               <LogOutIcon :size="20" />
@@ -177,3 +137,155 @@ const handleLogout = () => {
   }
 }
 </script>
+
+<style scoped>
+.nav-bar {
+  background-color: var(--surface-card);
+  border-bottom: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  z-index: var(--z-fixed);
+}
+
+/* Navegación Móvil */
+.nav-bar--mobile {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--border-light);
+  border-bottom: none;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+}
+
+.nav-bar--mobile .nav-bar__container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 64px;
+}
+
+/* Navegación Desktop */
+.nav-bar--desktop {
+  display: none;
+  position: sticky;
+  top: 0;
+}
+
+.nav-bar__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) 0;
+}
+
+.nav-bar__logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  transition: color var(--transition-fast);
+}
+
+.nav-bar__logo:hover {
+  color: var(--primary-dark);
+}
+
+.nav-bar__menu {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.nav-bar__separator {
+  width: 1px;
+  height: 32px;
+  background-color: var(--border-light);
+}
+
+.nav-bar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.nav-bar__user-info {
+  text-align: right;
+}
+
+.nav-bar__user-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.nav-bar__user-email {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Enlaces de navegación */
+.nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-xl);
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-link--horizontal {
+  flex-direction: row;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  color: var(--primary);
+  background-color: var(--primary-light);
+  background-color: rgba(134, 239, 172, 0.2);
+}
+
+.nav-link--active {
+  color: var(--primary);
+  background-color: rgba(134, 239, 172, 0.2);
+}
+
+.nav-link--admin {
+  color: #9333ea;
+}
+
+.nav-link--admin:hover,
+.nav-link--admin.nav-link--active {
+  background-color: #f3e8ff;
+}
+
+.nav-link--danger {
+  color: var(--text-muted);
+}
+
+.nav-link--danger:hover {
+  color: var(--danger);
+  background-color: var(--danger-light);
+}
+
+.nav-link__text {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+@media (min-width: 768px) {
+  .nav-bar--mobile {
+    display: none;
+  }
+
+  .nav-bar--desktop {
+    display: block;
+  }
+}
+</style>

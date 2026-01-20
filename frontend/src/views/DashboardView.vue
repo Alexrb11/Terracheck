@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen pb-20 md:pb-0 bg-stone-50">
+  <div class="min-h-screen pb-20 md:pb-0">
     <Navigation />
 
     <!-- Contenido Principal -->

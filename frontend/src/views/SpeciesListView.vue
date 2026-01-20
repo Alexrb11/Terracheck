@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen pb-20 md:pb-0 bg-stone-50">
+  <div class="min-h-screen pb-20 md:pb-0">
     <Navigation />
 
     <main class="max-w-7xl mx-auto px-4 py-6 md:py-8">

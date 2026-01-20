@@ -1,10 +1,10 @@
 <template>
   <div
     :class="[
-      'group relative flex flex-col justify-between h-64 border-2 rounded-3xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer overflow-hidden',
-      terrarium.hasCompatibilityIssue ? 'border-red-300/60' : getBiomeBorder(),
-      getBiomeBackground(),
-      terrarium.type === 'glass' ? 'backdrop-blur-md' : ''
+      'terrarium-card',
+      terrarium.hasCompatibilityIssue && 'terrarium-card--warning',
+      terrarium.type === 'glass' && 'terrarium-card--glass',
+      terrarium.type !== 'glass' && 'terrarium-card--standard'
     ]"
     @click="handleClick"
     role="button"
@@ -13,95 +13,68 @@
     @keydown.space.prevent="handleClick"
     aria-label="Ver detalles del terrario"
   >
-    <!-- Efecto Cristal: Reflejo superior (más pronunciado si es glass) -->
-    <div 
-      :class="[
-        'absolute top-0 right-0 w-3/4 h-3/4 bg-gradient-to-bl rounded-tr-3xl pointer-events-none z-10',
-        terrarium.type === 'glass' 
-          ? 'from-white/60 to-transparent' 
-          : 'from-white/40 to-transparent'
-      ]"
-    ></div>
-    
-    <!-- Efecto Cristal: Gradiente de fondo (más transparente si es glass) -->
-    <div 
-      :class="[
-        'absolute inset-0 bg-gradient-to-b backdrop-blur-sm pointer-events-none z-0',
-        terrarium.type === 'glass'
-          ? 'from-white/60 to-stone-50/60'
-          : 'from-white/80 to-stone-50/80'
-      ]"
-    ></div>
-
-    <!-- Efecto Cristal adicional: Reflejos laterales (solo para glass) -->
+    <!-- Efecto Glass: Gradiente overlay para simular reflejo de luz -->
     <div 
       v-if="terrarium.type === 'glass'"
-      class="absolute inset-0 pointer-events-none z-5"
-    >
-      <!-- Reflejo izquierdo -->
-      <div class="absolute left-0 top-1/4 bottom-1/4 w-1/3 bg-gradient-to-r from-white/20 to-transparent rounded-l-3xl"></div>
-      <!-- Reflejo derecho -->
-      <div class="absolute right-0 top-1/3 bottom-1/3 w-1/4 bg-gradient-to-l from-white/15 to-transparent rounded-r-3xl"></div>
-    </div>
+      class="terrarium-card__glass-overlay"
+    ></div>
 
     <!-- La "Tapa" (Header) -->
-    <div class="relative z-20 flex justify-between items-center p-3 bg-stone-100/50 backdrop-blur-md border-b border-stone-200/50">
-      <h3 class="text-lg font-bold text-slate-800 truncate flex-1">{{ terrarium.name }}</h3>
-      <div class="flex items-center gap-2 ml-2 flex-shrink-0">
+    <div class="terrarium-card__header">
+      <h3 class="terrarium-card__title">{{ terrarium.name }}</h3>
+      <div class="terrarium-card__header-actions">
         <!-- Alerta de compatibilidad -->
         <div
           v-if="terrarium.hasCompatibilityIssue"
-          class="flex items-center gap-1 px-2 py-1 bg-red-500/20 rounded-full border border-red-300/50"
+          class="terrarium-card__alert"
           title="Problema de compatibilidad"
         >
-          <AlertTriangleIcon :size="14" class="text-red-600" />
+          <AlertTriangleIcon :size="14" />
         </div>
         <!-- Icono de tipo -->
         <component
           :is="terrarium.type === 'glass' ? SquareIcon : Grid3x3Icon"
           :size="18"
-          class="text-slate-600"
+          class="terrarium-card__type-icon"
         />
       </div>
     </div>
 
     <!-- Contenido Principal (Los "Habitantes") -->
-    <div class="flex-1 relative z-20 p-4 flex flex-col items-center justify-center gap-3 overflow-hidden">
+    <div class="terrarium-card__content">
       <!-- Animales como avatares flotantes -->
-      <div v-if="terrarium.animals && terrarium.animals.length > 0" class="flex flex-wrap items-center justify-center gap-3">
+      <div v-if="terrarium.animals && terrarium.animals.length > 0" class="terrarium-card__animals">
         <div
           v-for="animal in terrarium.animals"
           :key="animal._id"
-          class="relative group/avatar"
+          class="terrarium-card__animal-avatar"
         >
-          <div
-            class="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg border-2 border-white/50 transition-transform duration-300 group-hover/avatar:scale-110"
-          >
-            <span class="text-white font-bold text-lg">
+          <div class="terrarium-card__avatar-circle">
+            <span class="terrarium-card__avatar-letter">
               {{ animal.name.charAt(0) }}
             </span>
           </div>
           <!-- Tooltip con nombre -->
-          <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover/avatar:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+          <div class="terrarium-card__tooltip">
             {{ animal.name }}
-            <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+            <div class="terrarium-card__tooltip-arrow"></div>
           </div>
         </div>
       </div>
       
       <!-- Estado vacío -->
-      <div v-else class="flex flex-col items-center justify-center gap-2 text-slate-400">
-        <div class="w-16 h-16 rounded-full bg-stone-200/50 flex items-center justify-center">
-          <PawPrintIcon :size="24" class="text-stone-400" />
+      <div v-else class="terrarium-card__empty">
+        <div class="terrarium-card__empty-icon">
+          <PawPrintIcon :size="24" />
         </div>
-        <p class="text-xs italic">Sin habitantes</p>
+        <p class="terrarium-card__empty-text">Sin habitantes</p>
       </div>
 
       <!-- Dimensiones discretas en el centro -->
-      <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 text-xs text-slate-500/70 bg-white/30 px-2 py-1 rounded-full backdrop-blur-sm">
+      <div class="terrarium-card__dimensions">
         <RulerIcon :size="12" />
         <span>{{ terrarium.dimensions.width }}×{{ terrarium.dimensions.depth }}×{{ terrarium.dimensions.height }}cm</span>
-        <span v-if="terrarium.liters" class="text-slate-400">· {{ terrarium.liters }}L</span>
+        <span v-if="terrarium.liters" class="terrarium-card__liters">· {{ terrarium.liters }}L</span>
       </div>
     </div>
 
@@ -109,32 +82,32 @@
     <div
       :style="getBiomeTextureStyle()"
       :class="[
-        'relative z-20 mt-auto p-3 backdrop-blur-sm border-t rounded-b-3xl flex justify-around items-center overflow-hidden shadow-inner',
-        getBiomeFooterBorder()
+        'terrarium-card__footer',
+        `terrarium-card__footer--${terrarium.biome || 'tropical'}`
       ]"
     >
       <!-- Overlay oscuro para mejorar contraste del texto -->
-      <div class="absolute inset-0 bg-black/30 pointer-events-none"></div>
+      <div class="terrarium-card__footer-overlay"></div>
       
       <!-- Contenido de los sensores (sobre el overlay) -->
-      <div class="relative z-10 flex justify-around items-center w-full">
+      <div class="terrarium-card__sensors">
         <!-- Sensor de Temperatura (Termómetro Digital) -->
-        <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/90 rounded-full shadow-lg border border-slate-700/50 backdrop-blur-sm">
-          <ThermometerIcon :size="16" class="text-amber-300 flex-shrink-0" />
-          <div class="flex flex-col">
-            <span class="text-[10px] text-slate-300 uppercase tracking-wide leading-none">Temp</span>
-            <span class="text-sm font-bold text-amber-300 leading-tight drop-shadow-lg">
+        <div class="terrarium-card__sensor">
+          <ThermometerIcon :size="16" />
+          <div class="terrarium-card__sensor-content">
+            <span class="terrarium-card__sensor-label">Temp</span>
+            <span class="terrarium-card__sensor-value terrarium-card__sensor-value--temp">
               {{ terrarium.sensors?.temperature ?? '--' }}°C
             </span>
           </div>
         </div>
 
         <!-- Sensor de Humedad (Termómetro Digital) -->
-        <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/90 rounded-full shadow-lg border border-slate-700/50 backdrop-blur-sm">
-          <DropletIcon :size="16" class="text-sky-300 flex-shrink-0" />
-          <div class="flex flex-col">
-            <span class="text-[10px] text-slate-300 uppercase tracking-wide leading-none">Hum</span>
-            <span class="text-sm font-bold text-sky-300 leading-tight drop-shadow-lg">
+        <div class="terrarium-card__sensor">
+          <DropletIcon :size="16" />
+          <div class="terrarium-card__sensor-content">
+            <span class="terrarium-card__sensor-label">Hum</span>
+            <span class="terrarium-card__sensor-value terrarium-card__sensor-value--hum">
               {{ terrarium.sensors?.humidity ?? '--' }}%
             </span>
           </div>
@@ -142,15 +115,8 @@
       </div>
     </div>
 
-    <!-- Efecto de brillo al hover (más intenso si es glass) -->
-    <div 
-      :class="[
-        'absolute inset-0 bg-gradient-to-tr opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-15',
-        terrarium.type === 'glass'
-          ? 'from-white/0 via-white/10 to-white/30'
-          : 'from-white/0 via-white/0 to-white/20'
-      ]"
-    ></div>
+    <!-- Efecto de brillo al hover -->
+    <div class="terrarium-card__hover-effect"></div>
   </div>
 </template>
 
@@ -174,69 +140,23 @@ const props = defineProps<{
 const router = useRouter()
 
 // Mapa de texturas fotográficas por bioma con configuración de posición
-// Las imágenes están en la carpeta public/images/ y se acceden desde /images/
 const biomeTextures = {
   desert: {
     url: '/images/sand-footer.png',
-    position: 'bottom center' // Forzar que se vea la arena de abajo
+    position: 'bottom center'
   },
   tropical: {
     url: '/images/tropical-footer.png',
-    position: 'center center' // Se ve bien centrado
+    position: 'center center'
   },
   temperate: {
     url: '/images/forest-footer.png',
-    position: 'bottom center' // Por si acaso es un paisaje con cielo
+    position: 'bottom center'
   }
 }
 
 const handleClick = () => {
   router.push(`/terrarium/${props.terrarium._id}`)
-}
-
-// Determinar color de fondo según el bioma del terrario
-const getBiomeBackground = (): string => {
-  if (props.terrarium.hasCompatibilityIssue) {
-    return 'bg-red-50/30'
-  }
-  
-  const biome = props.terrarium.biome
-  if (biome === 'tropical') {
-    return 'bg-emerald-50/20'
-  } else if (biome === 'desert') {
-    return 'bg-amber-50/20'
-  } else if (biome === 'temperate') {
-    return 'bg-blue-50/20'
-  }
-  
-  // Color neutro por defecto
-  return 'bg-stone-50/30'
-}
-
-// Determinar color del borde según el bioma y tipo
-const getBiomeBorder = (): string => {
-  if (props.terrarium.hasCompatibilityIssue) {
-    return 'border-red-300/60'
-  }
-  
-  // Si es glass, añadir un borde más brillante y translúcido
-  const isGlass = props.terrarium.type === 'glass'
-  const glassEffect = isGlass ? 'border-sky-200/70 shadow-[0_0_20px_rgba(56,189,248,0.2)]' : ''
-  
-  const biome = props.terrarium.biome
-  let biomeBorder = ''
-  
-  if (biome === 'tropical') {
-    biomeBorder = isGlass ? 'border-emerald-200/70' : 'border-emerald-200/50'
-  } else if (biome === 'desert') {
-    biomeBorder = isGlass ? 'border-amber-200/70' : 'border-amber-200/50'
-  } else if (biome === 'temperate') {
-    biomeBorder = isGlass ? 'border-stone-200/70' : 'border-stone-200/50'
-  } else {
-    biomeBorder = isGlass ? 'border-sky-200/70' : 'border-sky-100/50'
-  }
-  
-  return `${biomeBorder} ${glassEffect}`.trim()
 }
 
 // Obtener estilo de textura para el footer según el bioma
@@ -250,18 +170,366 @@ const getBiomeTextureStyle = (): { backgroundImage: string; backgroundSize: stri
     backgroundPosition: biomeConfig.position
   }
 }
-
-// Determinar color del borde del footer según el bioma
-const getBiomeFooterBorder = (): string => {
-  const biome = props.terrarium.biome
-  if (biome === 'tropical') {
-    return 'border-emerald-200/50'
-  } else if (biome === 'desert') {
-    return 'border-amber-200/50'
-  } else if (biome === 'temperate') {
-    return 'border-stone-200/50'
-  }
-  
-  return 'border-stone-200/50'
-}
 </script>
+
+<style scoped>
+/* Tarjeta base */
+.terrarium-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 256px;
+  border: 2px solid;
+  border-radius: var(--radius-2xl);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.terrarium-card:hover {
+  transform: translateY(-4px);
+}
+
+.terrarium-card:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Modo Estándar */
+.terrarium-card--standard {
+  background-color: var(--surface-card);
+  border-color: var(--border-medium);
+  color: var(--text-main);
+  box-shadow: var(--shadow-lg);
+}
+
+.terrarium-card--standard:hover {
+  box-shadow: var(--shadow-xl);
+}
+
+/* Modo Glass (Glassmorphism) */
+.terrarium-card--glass {
+  background-color: var(--surface-glass);
+  border-color: var(--border-glass);
+  color: var(--text-on-glass);
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: blur(12px);
+}
+
+.terrarium-card--glass .terrarium-card__glass-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Modo Warning */
+.terrarium-card--warning {
+  border-color: rgba(220, 38, 38, 0.6);
+  background-color: rgba(254, 226, 226, 0.3);
+}
+
+/* Header */
+.terrarium-card__header {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid;
+  backdrop-filter: blur(8px);
+}
+
+.terrarium-card--standard .terrarium-card__header {
+  background-color: rgba(231, 229, 228, 0.5);
+  border-bottom-color: var(--border-light);
+}
+
+.terrarium-card--glass .terrarium-card__header {
+  background-color: rgba(30, 41, 59, 0.5);
+  border-bottom-color: var(--border-glass);
+}
+
+.terrarium-card__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terrarium-card__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.terrarium-card__alert {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: rgba(220, 38, 38, 0.2);
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  color: var(--danger);
+}
+
+.terrarium-card__type-icon {
+  color: var(--text-muted);
+}
+
+.terrarium-card--glass .terrarium-card__type-icon {
+  color: rgba(147, 197, 253, 0.8);
+}
+
+/* Contenido */
+.terrarium-card__content {
+  flex: 1;
+  position: relative;
+  z-index: 20;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  overflow: hidden;
+}
+
+.terrarium-card__animals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+}
+
+.terrarium-card__animal-avatar {
+  position: relative;
+}
+
+.terrarium-card__animal-avatar:hover .terrarium-card__tooltip {
+  opacity: 1;
+}
+
+.terrarium-card__avatar-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(to bottom right, #4ade80, #16a34a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  transition: transform var(--transition-base);
+}
+
+.terrarium-card__animal-avatar:hover .terrarium-card__avatar-circle {
+  transform: scale(1.1);
+}
+
+.terrarium-card__avatar-letter {
+  color: white;
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.terrarium-card__tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: #1e293b;
+  color: white;
+  font-size: 0.75rem;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 30;
+}
+
+.terrarium-card__tooltip-arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #1e293b;
+}
+
+.terrarium-card__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  color: var(--text-muted);
+}
+
+.terrarium-card--glass .terrarium-card__empty {
+  color: rgba(147, 197, 253, 0.7);
+}
+
+.terrarium-card__empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background-color: rgba(231, 229, 228, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.terrarium-card--glass .terrarium-card__empty-icon {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.terrarium-card__empty-text {
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.terrarium-card__dimensions {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.75rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(4px);
+  color: var(--text-muted);
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.terrarium-card--glass .terrarium-card__dimensions {
+  color: rgba(147, 197, 253, 0.7);
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.terrarium-card__liters {
+  color: var(--text-light);
+}
+
+.terrarium-card--glass .terrarium-card__liters {
+  color: rgba(147, 197, 253, 0.5);
+}
+
+/* Footer con textura */
+.terrarium-card__footer {
+  position: relative;
+  z-index: 20;
+  margin-top: auto;
+  padding: var(--spacing-md);
+  backdrop-filter: blur(4px);
+  border-top: 1px solid;
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: var(--shadow-inner);
+}
+
+.terrarium-card__footer--tropical {
+  border-top-color: rgba(16, 185, 129, 0.5);
+}
+
+.terrarium-card__footer--desert {
+  border-top-color: rgba(251, 191, 36, 0.5);
+}
+
+.terrarium-card__footer--temperate {
+  border-top-color: var(--border-light);
+}
+
+.terrarium-card--glass .terrarium-card__footer {
+  border-top-color: var(--border-glass);
+}
+
+.terrarium-card__footer-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.terrarium-card__sensors {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+}
+
+.terrarium-card__sensor {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: rgba(30, 41, 59, 0.9);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.terrarium-card__sensor-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.terrarium-card__sensor-label {
+  font-size: 10px;
+  color: rgba(203, 213, 225, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.terrarium-card__sensor-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.terrarium-card__sensor-value--temp {
+  color: #fcd34d;
+}
+
+.terrarium-card__sensor-value--hum {
+  color: #7dd3fc;
+}
+
+/* Efecto hover */
+.terrarium-card__hover-effect {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top right, transparent, rgba(255, 255, 255, 0.2));
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  pointer-events: none;
+  z-index: 15;
+}
+
+.terrarium-card:hover .terrarium-card__hover-effect {
+  opacity: 1;
+}
+</style>
