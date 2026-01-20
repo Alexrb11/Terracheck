@@ -5,9 +5,19 @@
     <!-- Contenido Principal -->
     <main class="container dashboard-view__main">
       <div class="dashboard-view__header">
-        <h2 class="dashboard-view__title">
-          Mis Terrarios
-        </h2>
+        <div class="dashboard-view__header-top">
+          <h2 class="dashboard-view__title">
+            Mis Terrarios
+          </h2>
+          <button
+            @click="$router.push('/add')"
+            class="btn btn-primary dashboard-view__add-button"
+          >
+            <PlusIcon :size="20" />
+            <span class="dashboard-view__add-text--desktop">Nuevo Terrario</span>
+            <span class="dashboard-view__add-text--mobile">Crear</span>
+          </button>
+        </div>
         <p class="dashboard-view__subtitle">
           Gestiona y monitorea tus terrarios
         </p>
@@ -73,7 +83,7 @@ import { onMounted } from 'vue'
 import { useTerrariumStore } from '@/stores/terrarium'
 import TerrariumCard from '@/components/TerrariumCard.vue'
 import Navigation from '@/components/Navigation.vue'
-import { BoxIcon, LoaderIcon, AlertCircleIcon } from 'lucide-vue-next'
+import { BoxIcon, LoaderIcon, AlertCircleIcon, PlusIcon } from 'lucide-vue-next'
 
 const store = useTerrariumStore()
 
@@ -115,16 +125,46 @@ onMounted(() => {
   }
 }
 
+.dashboard-view__header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  gap: 1rem;
+}
+
 .dashboard-view__title {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-text-main);
-  margin-bottom: 0.5rem;
+  margin: 0;
 }
 
 @media (min-width: 768px) {
   .dashboard-view__title {
     font-size: 1.875rem;
+  }
+}
+
+.dashboard-view__add-button {
+  flex-shrink: 0;
+}
+
+.dashboard-view__add-text--mobile {
+  display: inline;
+}
+
+.dashboard-view__add-text--desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .dashboard-view__add-text--mobile {
+    display: none;
+  }
+
+  .dashboard-view__add-text--desktop {
+    display: inline;
   }
 }
 

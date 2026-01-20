@@ -1,35 +1,33 @@
 <template>
-  <div class="min-h-screen pb-20 md:pb-0">
+  <div class="add-terrarium-view">
     <Navigation />
 
-    <main class="max-w-2xl mx-auto px-4 py-6">
+    <main class="container container--narrow">
       <!-- Botón volver -->
       <button
         @click="$router.push('/')"
-        class="flex items-center gap-2 text-slate-600 hover:text-emerald-600 transition-colors mb-6"
+        class="btn-back"
       >
         <ArrowLeftIcon :size="20" />
-        <span class="font-medium">Volver</span>
+        <span>Volver</span>
       </button>
 
-      <div class="bg-white rounded-3xl shadow-lg p-6 md:p-8">
-        <h1 class="text-3xl font-bold text-slate-800 mb-6">Agregar Terrario</h1>
+      <div class="card add-terrarium-view__form-card">
+        <h1 class="add-terrarium-view__title">Agregar Terrario</h1>
 
         <!-- Error -->
         <div
           v-if="store.error"
-          class="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3"
+          class="alert alert-danger add-terrarium-view__error"
         >
-          <AlertCircleIcon :size="20" class="text-red-600 flex-shrink-0" />
-          <p class="text-red-700 text-sm">{{ store.error }}</p>
+          <AlertCircleIcon :size="20" />
+          <p>{{ store.error }}</p>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-          <div>
-            <label
-              for="name"
-              class="block text-lg font-semibold text-slate-800 mb-2"
-            >
+        <form @submit.prevent="handleSubmit" class="add-terrarium-view__form">
+          <!-- Nombre -->
+          <div class="form-section">
+            <label for="name" class="form-label">
               Nombre del Terrario
             </label>
             <input
@@ -37,23 +35,21 @@
               v-model="form.name"
               type="text"
               required
-              class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
+              class="input-field"
               placeholder="Ej: Terrario Desierto"
             />
           </div>
 
-          <div>
-            <label
-              for="type"
-              class="block text-lg font-semibold text-slate-800 mb-2"
-            >
+          <!-- Tipo -->
+          <div class="form-section">
+            <label for="type" class="form-label">
               Tipo
             </label>
             <select
               id="type"
               v-model="form.type"
               required
-              class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
+              class="input-field"
             >
               <option value="glass">Cristal</option>
               <option value="mesh">Malla</option>
@@ -62,108 +58,89 @@
           </div>
 
           <!-- Bioma -->
-          <div>
-            <label class="block text-lg font-semibold text-slate-800 mb-3">
-              Bioma
-            </label>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="form-section">
+            <label class="form-label">Bioma</label>
+            <div class="biome-grid">
               <!-- Tropical -->
               <label
-                class="relative flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
-                :class="form.biome === 'tropical' ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200 hover:border-emerald-300 hover:bg-emerald-50/50'"
+                class="biome-card biome-card--tropical"
+                :class="{ 'biome-card--active': form.biome === 'tropical' }"
               >
                 <input
                   type="radio"
                   v-model="form.biome"
                   value="tropical"
-                  class="sr-only"
+                  class="biome-card__input"
                 />
-                <div
-                  class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
-                  :class="form.biome === 'tropical' ? 'border-emerald-600 bg-emerald-600' : 'border-stone-300'"
-                >
+                <div class="biome-card__radio">
                   <div
                     v-if="form.biome === 'tropical'"
-                    class="w-3 h-3 rounded-full bg-white"
+                    class="biome-card__radio-dot"
                   ></div>
                 </div>
-                <div class="flex-1">
-                  <p class="font-semibold text-slate-800">Tropical</p>
-                  <p class="text-sm text-slate-600">Selva</p>
-                </div>
-                <div class="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center">
-                  <span class="text-emerald-700 text-lg">🌴</span>
+                <div class="biome-card__content">
+                  <span class="biome-icon">🌴</span>
+                  <p class="biome-card__name">Tropical</p>
+                  <p class="biome-card__subtitle">Selva</p>
                 </div>
               </label>
 
               <!-- Desierto -->
               <label
-                class="relative flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
-                :class="form.biome === 'desert' ? 'border-amber-500 bg-amber-50' : 'border-stone-200 hover:border-amber-300 hover:bg-amber-50/50'"
+                class="biome-card biome-card--desert"
+                :class="{ 'biome-card--active': form.biome === 'desert' }"
               >
                 <input
                   type="radio"
                   v-model="form.biome"
                   value="desert"
-                  class="sr-only"
+                  class="biome-card__input"
                 />
-                <div
-                  class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
-                  :class="form.biome === 'desert' ? 'border-amber-600 bg-amber-600' : 'border-stone-300'"
-                >
+                <div class="biome-card__radio">
                   <div
                     v-if="form.biome === 'desert'"
-                    class="w-3 h-3 rounded-full bg-white"
+                    class="biome-card__radio-dot"
                   ></div>
                 </div>
-                <div class="flex-1">
-                  <p class="font-semibold text-slate-800">Desierto</p>
-                  <p class="text-sm text-slate-600">Árido</p>
-                </div>
-                <div class="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center">
-                  <span class="text-amber-700 text-lg">🏜️</span>
+                <div class="biome-card__content">
+                  <span class="biome-icon">🏜️</span>
+                  <p class="biome-card__name">Desierto</p>
+                  <p class="biome-card__subtitle">Árido</p>
                 </div>
               </label>
 
               <!-- Templado -->
               <label
-                class="relative flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all"
-                :class="form.biome === 'temperate' ? 'border-blue-500 bg-blue-50' : 'border-stone-200 hover:border-blue-300 hover:bg-blue-50/50'"
+                class="biome-card biome-card--temperate"
+                :class="{ 'biome-card--active': form.biome === 'temperate' }"
               >
                 <input
                   type="radio"
                   v-model="form.biome"
                   value="temperate"
-                  class="sr-only"
+                  class="biome-card__input"
                 />
-                <div
-                  class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
-                  :class="form.biome === 'temperate' ? 'border-blue-600 bg-blue-600' : 'border-stone-300'"
-                >
+                <div class="biome-card__radio">
                   <div
                     v-if="form.biome === 'temperate'"
-                    class="w-3 h-3 rounded-full bg-white"
+                    class="biome-card__radio-dot"
                   ></div>
                 </div>
-                <div class="flex-1">
-                  <p class="font-semibold text-slate-800">Templado</p>
-                  <p class="text-sm text-slate-600">Bosque</p>
-                </div>
-                <div class="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center">
-                  <span class="text-blue-700 text-lg">🌲</span>
+                <div class="biome-card__content">
+                  <span class="biome-icon">🌲</span>
+                  <p class="biome-card__name">Templado</p>
+                  <p class="biome-card__subtitle">Bosque</p>
                 </div>
               </label>
             </div>
           </div>
 
           <!-- Dimensiones -->
-          <div>
-            <label class="block text-lg font-semibold text-slate-800 mb-2">
-              Dimensiones (cm)
-            </label>
-            <div class="grid grid-cols-3 gap-4">
+          <div class="form-section">
+            <label class="form-label">Dimensiones (cm)</label>
+            <div class="dimensions-grid">
               <div>
-                <label for="width" class="block text-sm text-slate-600 mb-1">
+                <label for="width" class="dimensions-grid__label">
                   Ancho
                 </label>
                 <input
@@ -172,11 +149,11 @@
                   type="number"
                   required
                   min="10"
-                  class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
+                  class="input-field"
                 />
               </div>
               <div>
-                <label for="depth" class="block text-sm text-slate-600 mb-1">
+                <label for="depth" class="dimensions-grid__label">
                   Fondo
                 </label>
                 <input
@@ -185,11 +162,11 @@
                   type="number"
                   required
                   min="10"
-                  class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
+                  class="input-field"
                 />
               </div>
               <div>
-                <label for="height" class="block text-sm text-slate-600 mb-1">
+                <label for="height" class="dimensions-grid__label">
                   Alto
                 </label>
                 <input
@@ -198,46 +175,44 @@
                   type="number"
                   required
                   min="10"
-                  class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
+                  class="input-field"
                 />
               </div>
             </div>
-            <p class="mt-2 text-sm text-slate-500">
+            <p class="add-terrarium-view__capacity">
               Capacidad aproximada: {{ calculatedLiters }}L
             </p>
           </div>
 
           <!-- Notas -->
-          <div>
-            <label
-              for="notes"
-              class="block text-lg font-semibold text-slate-800 mb-2"
-            >
+          <div class="form-section">
+            <label for="notes" class="form-label">
               Notas (opcional)
             </label>
             <textarea
               id="notes"
               v-model="form.notes"
               rows="3"
-              class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg resize-none"
+              class="input-field"
               placeholder="Observaciones sobre el terrario..."
             ></textarea>
           </div>
 
-          <div class="flex gap-4">
+          <!-- Botones de Acción -->
+          <div class="add-terrarium-view__actions">
             <button
               type="button"
               @click="$router.push('/')"
-              class="flex-1 px-6 py-3 rounded-2xl border-2 border-stone-300 text-slate-700 font-semibold text-lg hover:bg-stone-50 transition-colors"
+              class="btn btn-secondary"
             >
               Cancelar
             </button>
             <button
               type="submit"
               :disabled="store.loading || !isFormValid"
-              class="flex-1 px-6 py-3 rounded-2xl bg-emerald-600 text-white font-semibold text-lg hover:bg-emerald-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              class="btn btn-primary"
             >
-              <LoaderIcon v-if="store.loading" :size="20" class="animate-spin" />
+              <LoaderIcon v-if="store.loading" :size="20" class="add-terrarium-view__loader" />
               <span>{{ store.loading ? 'Creando...' : 'Crear Terrario' }}</span>
             </button>
           </div>
@@ -299,3 +274,252 @@ const handleSubmit = async () => {
   }
 }
 </script>
+
+<style scoped>
+.add-terrarium-view {
+  min-height: 100vh;
+  padding-bottom: 80px; /* Espacio para la navegación móvil */
+}
+
+@media (min-width: 768px) {
+  .add-terrarium-view {
+    padding-bottom: 0;
+  }
+}
+
+.container--narrow {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .container--narrow {
+    padding: 0 2rem;
+  }
+}
+
+/* Botón Volver */
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  transition: color var(--transition-fast);
+}
+
+.btn-back:hover {
+  color: var(--color-primary);
+}
+
+/* Form Card */
+.add-terrarium-view__form-card {
+  padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .add-terrarium-view__form-card {
+    padding: 2rem;
+  }
+}
+
+.add-terrarium-view__title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin-bottom: 1.5rem;
+}
+
+.add-terrarium-view__error {
+  margin-bottom: 1.5rem;
+  flex-direction: row;
+  text-align: left;
+  gap: 0.75rem;
+}
+
+.add-terrarium-view__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Form Section */
+.form-section {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-main);
+  font-size: 1.125rem;
+}
+
+/* Dimensions Grid */
+.dimensions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.dimensions-grid__label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.add-terrarium-view__capacity {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* Biome Grid */
+.biome-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .biome-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Biome Card */
+.biome-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.biome-card:hover {
+  border-color: var(--color-primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.biome-card__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.biome-card__radio {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-text-muted);
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.biome-card__radio-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background-color: white;
+}
+
+.biome-card__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.biome-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.biome-card__name {
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.biome-card__subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Biome Card Active States */
+.biome-card--active {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+
+.biome-card--active .biome-card__radio {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+}
+
+.biome-card--active .biome-card__name {
+  color: var(--color-primary);
+}
+
+/* Biome Card Variants (colores específicos en hover) */
+.biome-card--tropical:hover {
+  border-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.biome-card--desert:hover {
+  border-color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+.biome-card--temperate:hover {
+  border-color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Actions */
+.add-terrarium-view__actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.add-terrarium-view__actions .btn {
+  flex: 1;
+}
+
+.add-terrarium-view__loader {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>

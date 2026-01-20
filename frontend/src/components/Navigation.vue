@@ -13,16 +13,6 @@
       </router-link>
 
       <router-link
-        to="/add"
-        class="nav-link"
-        :class="{ 'nav-link--active': $route.path === '/add' }"
-        aria-label="Agregar Terrario"
-      >
-        <PlusCircleIcon :size="24" />
-        <span class="nav-link__text">Agregar</span>
-      </router-link>
-
-      <router-link
         to="/species"
         class="nav-link"
         :class="{ 'nav-link--active': $route.path === '/species' }"
@@ -59,15 +49,6 @@
           >
             <LayoutGridIcon :size="20" />
             <span>Mis Terrarios</span>
-          </router-link>
-
-          <router-link
-            to="/add"
-            class="nav-link nav-link--horizontal"
-            :class="{ 'nav-link--active': $route.path === '/add' }"
-          >
-            <PlusCircleIcon :size="20" />
-            <span>Agregar</span>
           </router-link>
 
           <router-link
@@ -123,7 +104,6 @@
 import { useAuthStore } from '@/stores/auth'
 import {
   LayoutGridIcon,
-  PlusCircleIcon,
   BookOpenIcon,
   LogOutIcon,
   ShieldIcon

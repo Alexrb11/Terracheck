@@ -1,41 +1,41 @@
 <template>
-  <div class="min-h-screen pb-20 md:pb-0">
+  <div class="admin-view">
     <Navigation />
 
-    <main class="max-w-7xl mx-auto px-4 py-6 md:py-8">
+    <main class="container admin-view__main">
       <!-- Header -->
-      <div class="mb-6 md:mb-8">
-        <div class="flex items-center gap-3 mb-2">
-          <ShieldIcon :size="32" class="text-purple-600" />
-          <h1 class="text-2xl md:text-3xl font-bold text-slate-800">
+      <header class="view-header">
+        <div class="view-header__top">
+          <ShieldIcon :size="32" class="view-header__icon" />
+          <h1 class="view-header__title">
             Panel de Administración
           </h1>
         </div>
-        <p class="text-slate-600 text-lg">
+        <p class="view-header__subtitle">
           Gestiona usuarios, roles y visualiza estadísticas del sistema
         </p>
-      </div>
+      </header>
 
       <!-- Tabs -->
-      <div class="flex gap-2 mb-6">
+      <div class="admin-tabs">
         <button
           @click="activeTab = 'stats'"
-          class="px-4 py-2 rounded-xl font-medium transition-colors"
-          :class="activeTab === 'stats' ? 'bg-purple-600 text-white' : 'bg-white text-slate-600 hover:bg-stone-100'"
+          class="tab-btn"
+          :class="{ active: activeTab === 'stats' }"
         >
           Estadísticas
         </button>
         <button
           @click="activeTab = 'users'"
-          class="px-4 py-2 rounded-xl font-medium transition-colors"
-          :class="activeTab === 'users' ? 'bg-purple-600 text-white' : 'bg-white text-slate-600 hover:bg-stone-100'"
+          class="tab-btn"
+          :class="{ active: activeTab === 'users' }"
         >
           Usuarios
         </button>
         <button
           @click="activeTab = 'roles'"
-          class="px-4 py-2 rounded-xl font-medium transition-colors"
-          :class="activeTab === 'roles' ? 'bg-purple-600 text-white' : 'bg-white text-slate-600 hover:bg-stone-100'"
+          class="tab-btn"
+          :class="{ active: activeTab === 'roles' }"
         >
           Roles y Permisos
         </button>
@@ -44,91 +44,83 @@
       <!-- Stats Tab -->
       <div v-if="activeTab === 'stats'">
         <!-- Stats Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div class="bg-white rounded-2xl shadow-sm p-5">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <UsersIcon :size="20" class="text-blue-600" />
-              </div>
-              <div>
-                <p class="text-2xl font-bold text-slate-800">{{ stats?.users?.total ?? '-' }}</p>
-                <p class="text-xs text-slate-500">Usuarios</p>
-              </div>
+        <div class="stats-grid">
+          <div class="card stat-card">
+            <div class="stat-icon-wrapper stat-icon-wrapper--blue">
+              <UsersIcon :size="20" />
+            </div>
+            <div>
+              <p class="stat-value">{{ stats?.users?.total ?? '-' }}</p>
+              <p class="stat-label">Usuarios</p>
             </div>
           </div>
-          <div class="bg-white rounded-2xl shadow-sm p-5">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                <BoxIcon :size="20" class="text-emerald-600" />
-              </div>
-              <div>
-                <p class="text-2xl font-bold text-slate-800">{{ stats?.terrariums ?? '-' }}</p>
-                <p class="text-xs text-slate-500">Terrarios</p>
-              </div>
+          <div class="card stat-card">
+            <div class="stat-icon-wrapper stat-icon-wrapper--green">
+              <BoxIcon :size="20" />
+            </div>
+            <div>
+              <p class="stat-value">{{ stats?.terrariums ?? '-' }}</p>
+              <p class="stat-label">Terrarios</p>
             </div>
           </div>
-          <div class="bg-white rounded-2xl shadow-sm p-5">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <PawPrintIcon :size="20" class="text-amber-600" />
-              </div>
-              <div>
-                <p class="text-2xl font-bold text-slate-800">{{ stats?.animals ?? '-' }}</p>
-                <p class="text-xs text-slate-500">Animales</p>
-              </div>
+          <div class="card stat-card">
+            <div class="stat-icon-wrapper stat-icon-wrapper--amber">
+              <PawPrintIcon :size="20" />
+            </div>
+            <div>
+              <p class="stat-value">{{ stats?.animals ?? '-' }}</p>
+              <p class="stat-label">Animales</p>
             </div>
           </div>
-          <div class="bg-white rounded-2xl shadow-sm p-5">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                <KeyIcon :size="20" class="text-purple-600" />
-              </div>
-              <div>
-                <p class="text-2xl font-bold text-slate-800">{{ stats?.roles ?? '-' }}</p>
-                <p class="text-xs text-slate-500">Roles</p>
-              </div>
+          <div class="card stat-card">
+            <div class="stat-icon-wrapper stat-icon-wrapper--purple">
+              <KeyIcon :size="20" />
+            </div>
+            <div>
+              <p class="stat-value">{{ stats?.roles ?? '-' }}</p>
+              <p class="stat-label">Roles</p>
             </div>
           </div>
         </div>
 
         <!-- Quick Stats -->
-        <div class="grid md:grid-cols-2 gap-6">
-          <div class="bg-white rounded-3xl shadow-sm p-6">
-            <h3 class="text-lg font-bold text-slate-800 mb-4">Usuarios Activos</h3>
-            <div class="space-y-3">
-              <div class="flex justify-between">
-                <span class="text-slate-600">Total registrados</span>
-                <span class="font-semibold">{{ stats?.users?.total ?? 0 }}</span>
+        <div class="admin-view__quick-stats">
+          <div class="card">
+            <h3 class="card__title">Usuarios Activos</h3>
+            <div class="card__stats-list">
+              <div class="card__stats-item">
+                <span>Total registrados</span>
+                <span class="card__stats-value">{{ stats?.users?.total ?? 0 }}</span>
               </div>
-              <div class="flex justify-between">
-                <span class="text-slate-600">Activos</span>
-                <span class="font-semibold text-green-600">{{ stats?.users?.active ?? 0 }}</span>
+              <div class="card__stats-item">
+                <span>Activos</span>
+                <span class="card__stats-value card__stats-value--green">{{ stats?.users?.active ?? 0 }}</span>
               </div>
-              <div class="flex justify-between">
-                <span class="text-slate-600">Administradores</span>
-                <span class="font-semibold text-purple-600">{{ stats?.users?.admins ?? 0 }}</span>
+              <div class="card__stats-item">
+                <span>Administradores</span>
+                <span class="card__stats-value card__stats-value--purple">{{ stats?.users?.admins ?? 0 }}</span>
               </div>
-              <div class="flex justify-between">
-                <span class="text-slate-600">Nuevos (últimos 30 días)</span>
-                <span class="font-semibold text-blue-600">{{ stats?.users?.newLast30Days ?? 0 }}</span>
+              <div class="card__stats-item">
+                <span>Nuevos (últimos 30 días)</span>
+                <span class="card__stats-value card__stats-value--blue">{{ stats?.users?.newLast30Days ?? 0 }}</span>
               </div>
             </div>
           </div>
 
-          <div class="bg-white rounded-3xl shadow-sm p-6">
-            <h3 class="text-lg font-bold text-slate-800 mb-4">Contenido</h3>
-            <div class="space-y-3">
-              <div class="flex justify-between">
-                <span class="text-slate-600">Terrarios</span>
-                <span class="font-semibold">{{ stats?.terrariums ?? 0 }}</span>
+          <div class="card">
+            <h3 class="card__title">Contenido</h3>
+            <div class="card__stats-list">
+              <div class="card__stats-item">
+                <span>Terrarios</span>
+                <span class="card__stats-value">{{ stats?.terrariums ?? 0 }}</span>
               </div>
-              <div class="flex justify-between">
-                <span class="text-slate-600">Animales</span>
-                <span class="font-semibold">{{ stats?.animals ?? 0 }}</span>
+              <div class="card__stats-item">
+                <span>Animales</span>
+                <span class="card__stats-value">{{ stats?.animals ?? 0 }}</span>
               </div>
-              <div class="flex justify-between">
-                <span class="text-slate-600">Especies en catálogo</span>
-                <span class="font-semibold">{{ stats?.species ?? 0 }}</span>
+              <div class="card__stats-item">
+                <span>Especies en catálogo</span>
+                <span class="card__stats-value">{{ stats?.species ?? 0 }}</span>
               </div>
             </div>
           </div>
@@ -136,91 +128,87 @@
       </div>
 
       <!-- Users Tab -->
-      <div v-if="activeTab === 'users'" class="bg-white rounded-3xl shadow-sm overflow-hidden">
-        <div class="p-5 border-b border-stone-200">
-          <div class="flex items-center justify-between flex-wrap gap-4">
-            <h2 class="text-xl font-bold text-slate-800">Usuarios</h2>
-            <!-- Search -->
-            <div class="relative">
-              <SearchIcon :size="18" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Buscar usuarios..."
-                class="pl-10 pr-4 py-2 rounded-xl border border-stone-200 focus:border-purple-500 focus:outline-none"
-                @input="debouncedSearch"
-              />
-            </div>
+      <div v-if="activeTab === 'users'" class="card table-card">
+        <div class="table-card__header">
+          <h2 class="table-card__title">Usuarios</h2>
+          <!-- Search -->
+          <div class="table-card__search">
+            <SearchIcon :size="18" class="table-card__search-icon" />
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Buscar usuarios..."
+              class="input-field table-card__search-input"
+              @input="debouncedSearch"
+            />
           </div>
         </div>
 
         <!-- Loading -->
-        <div v-if="loading" class="flex items-center justify-center py-12">
-          <LoaderIcon :size="32" class="text-purple-600 animate-spin" />
+        <div v-if="loading" class="admin-view__loading">
+          <LoaderIcon :size="32" class="admin-view__loader-icon" />
         </div>
 
         <!-- Table -->
-        <div v-else class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-stone-50 text-left">
+        <div v-else class="table-responsive">
+          <table class="admin-table">
+            <thead>
               <tr>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-600 uppercase">Usuario</th>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-600 uppercase">Rol</th>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-600 uppercase">Estado</th>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-600 uppercase">Terrarios</th>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-600 uppercase">Registro</th>
-                <th class="px-5 py-3 text-xs font-semibold text-slate-600 uppercase">Acciones</th>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Terrarios</th>
+                <th>Registro</th>
+                <th>Acciones</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-stone-100">
-              <tr v-for="user in users" :key="user._id" class="hover:bg-stone-50">
-                <td class="px-5 py-4">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                      <span class="text-purple-700 font-semibold">{{ user.name.charAt(0) }}</span>
+            <tbody>
+              <tr v-for="user in users" :key="user._id" class="admin-table__row">
+                <td>
+                  <div class="admin-table__user">
+                    <div class="admin-table__avatar">
+                      <span>{{ user.name.charAt(0) }}</span>
                     </div>
                     <div>
-                      <p class="font-medium text-slate-800">{{ user.name }}</p>
-                      <p class="text-sm text-slate-500">{{ user.email }}</p>
+                      <p class="admin-table__user-name">{{ user.name }}</p>
+                      <p class="admin-table__user-email">{{ user.email }}</p>
                     </div>
                   </div>
                 </td>
-                <td class="px-5 py-4">
+                <td>
                   <select
                     :value="user.role?._id"
                     @change="handleRoleChange(user._id, ($event.target as HTMLSelectElement).value)"
                     :disabled="user._id === authStore.user?.id"
-                    class="px-3 py-1 rounded-lg text-sm font-medium border-0 focus:ring-2 focus:ring-purple-500"
-                    :class="getRoleColorClass(user.role?.slug)"
+                    class="admin-table__role-select"
+                    :class="getRoleSelectClass(user.role?.slug)"
                   >
                     <option v-for="role in availableRoles" :key="role._id" :value="role._id">
                       {{ role.name }}
                     </option>
                   </select>
                 </td>
-                <td class="px-5 py-4">
+                <td>
                   <span
-                    :class="[
-                      'px-2 py-1 rounded-full text-xs font-medium',
-                      user.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    ]"
+                    class="status-badge"
+                    :class="user.isActive ? 'status-badge--active' : 'status-badge--inactive'"
                   >
                     {{ user.isActive ? 'Activo' : 'Inactivo' }}
                   </span>
                 </td>
-                <td class="px-5 py-4 text-slate-600">
+                <td class="admin-table__text-muted">
                   {{ user.stats?.terrariums ?? 0 }}
                 </td>
-                <td class="px-5 py-4 text-sm text-slate-500">
+                <td class="admin-table__text-muted admin-table__date">
                   {{ formatDate(user.createdAt) }}
                 </td>
-                <td class="px-5 py-4">
-                  <div class="flex items-center gap-2">
+                <td>
+                  <div class="admin-table__actions">
                     <button
                       @click="toggleUserStatus(user._id, user.isActive)"
                       :disabled="user._id === authStore.user?.id"
-                      class="p-2 rounded-lg transition-colors disabled:opacity-50"
-                      :class="user.isActive ? 'hover:bg-amber-50 text-amber-600' : 'hover:bg-green-50 text-green-600'"
+                      class="admin-table__action-btn"
+                      :class="user.isActive ? 'admin-table__action-btn--warning' : 'admin-table__action-btn--success'"
                       :title="user.isActive ? 'Desactivar' : 'Activar'"
                     >
                       <UserXIcon v-if="user.isActive" :size="18" />
@@ -229,7 +217,7 @@
                     <button
                       @click="deleteUserConfirm(user)"
                       :disabled="user._id === authStore.user?.id"
-                      class="p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors disabled:opacity-50"
+                      class="admin-table__action-btn admin-table__action-btn--danger"
                       title="Eliminar"
                     >
                       <TrashIcon :size="18" />
@@ -242,24 +230,24 @@
         </div>
 
         <!-- Pagination -->
-        <div v-if="pagination.pages > 1" class="p-5 border-t border-stone-200 flex items-center justify-between">
-          <p class="text-sm text-slate-500">
+        <div v-if="pagination.pages > 1" class="table-card__pagination">
+          <p class="table-card__pagination-info">
             Mostrando {{ (pagination.page - 1) * pagination.limit + 1 }} - 
             {{ Math.min(pagination.page * pagination.limit, pagination.total) }} de {{ pagination.total }}
           </p>
-          <div class="flex items-center gap-2">
+          <div class="table-card__pagination-controls">
             <button
               @click="changePage(pagination.page - 1)"
               :disabled="pagination.page <= 1"
-              class="px-3 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 disabled:opacity-50 transition-colors"
+              class="btn btn-secondary btn-sm"
             >
               Anterior
             </button>
-            <span class="px-3 py-1 text-sm">{{ pagination.page }} / {{ pagination.pages }}</span>
+            <span class="table-card__pagination-page">{{ pagination.page }} / {{ pagination.pages }}</span>
             <button
               @click="changePage(pagination.page + 1)"
               :disabled="pagination.page >= pagination.pages"
-              class="px-3 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 disabled:opacity-50 transition-colors"
+              class="btn btn-secondary btn-sm"
             >
               Siguiente
             </button>
@@ -268,101 +256,101 @@
       </div>
 
       <!-- Roles Tab -->
-      <div v-if="activeTab === 'roles'" class="space-y-6">
+      <div v-if="activeTab === 'roles'" class="admin-view__roles">
         <!-- Roles List -->
-        <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
-          <div class="p-5 border-b border-stone-200 flex items-center justify-between">
-            <h2 class="text-xl font-bold text-slate-800">Roles del Sistema</h2>
+        <div class="card table-card">
+          <div class="table-card__header">
+            <h2 class="table-card__title">Roles del Sistema</h2>
             <button
               @click="openCreateRoleModal"
-              class="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors flex items-center gap-2"
+              class="btn btn-primary"
             >
               <PlusIcon :size="18" />
               Nuevo Rol
             </button>
           </div>
 
-          <div v-if="rolesStore.loading" class="flex items-center justify-center py-12">
-            <LoaderIcon :size="32" class="text-purple-600 animate-spin" />
+          <div v-if="rolesStore.loading" class="admin-view__loading">
+            <LoaderIcon :size="32" class="admin-view__loader-icon" />
           </div>
 
-          <div v-else class="divide-y divide-stone-100">
+          <div v-else class="admin-view__roles-list">
             <div
               v-for="role in rolesStore.roles"
               :key="role._id"
-              class="p-5 hover:bg-stone-50 transition-colors"
+              class="admin-view__role-item"
             >
-              <div class="flex items-start justify-between gap-4">
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <h3 class="font-bold text-slate-800">{{ role.name }}</h3>
-                    <span
-                      v-if="role.isSystem"
-                      class="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full"
-                    >
-                      Sistema
-                    </span>
-                    <span class="px-2 py-0.5 bg-stone-100 text-slate-600 text-xs rounded-full">
-                      {{ role.userCount ?? 0 }} usuarios
-                    </span>
-                  </div>
-                  <p class="text-sm text-slate-500 mb-3">{{ role.description || 'Sin descripción' }}</p>
-                  <div class="flex flex-wrap gap-1">
-                    <span
-                      v-for="permission in role.permissions"
-                      :key="permission._id"
-                      class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs rounded-full"
-                    >
-                      {{ permission.name }}
-                    </span>
-                    <span
-                      v-if="!role.permissions?.length"
-                      class="text-xs text-slate-400 italic"
-                    >
-                      Sin permisos especiales
-                    </span>
-                  </div>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button
-                    @click="openEditRoleModal(role)"
-                    class="p-2 rounded-lg hover:bg-stone-100 text-slate-600 transition-colors"
-                    title="Editar"
+              <div class="admin-view__role-content">
+                <div class="admin-view__role-header">
+                  <h3 class="admin-view__role-name">{{ role.name }}</h3>
+                  <span
+                    v-if="role.isSystem"
+                    class="badge badge-primary"
                   >
-                    <EditIcon :size="18" />
-                  </button>
-                  <button
-                    v-if="!role.isSystem"
-                    @click="handleDeleteRole(role)"
-                    class="p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
-                    title="Eliminar"
-                  >
-                    <TrashIcon :size="18" />
-                  </button>
+                    Sistema
+                  </span>
+                  <span class="badge badge-secondary">
+                    {{ role.userCount ?? 0 }} usuarios
+                  </span>
                 </div>
+                <p class="admin-view__role-description">{{ role.description || 'Sin descripción' }}</p>
+                <div class="admin-view__role-permissions">
+                  <span
+                    v-for="permission in role.permissions"
+                    :key="permission._id"
+                    class="admin-view__permission-tag"
+                  >
+                    {{ permission.name }}
+                  </span>
+                  <span
+                    v-if="!role.permissions?.length"
+                    class="admin-view__permission-empty"
+                  >
+                    Sin permisos especiales
+                  </span>
+                </div>
+              </div>
+              <div class="admin-view__role-actions">
+                <button
+                  @click="openEditRoleModal(role)"
+                  class="admin-table__action-btn"
+                  title="Editar"
+                >
+                  <EditIcon :size="18" />
+                </button>
+                <button
+                  v-if="!role.isSystem"
+                  @click="handleDeleteRole(role)"
+                  class="admin-table__action-btn admin-table__action-btn--danger"
+                  title="Eliminar"
+                >
+                  <TrashIcon :size="18" />
+                </button>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Permissions Reference -->
-        <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
-          <div class="p-5 border-b border-stone-200">
-            <h2 class="text-xl font-bold text-slate-800">Permisos Disponibles</h2>
-            <p class="text-sm text-slate-500 mt-1">Referencia de todos los permisos que pueden asignarse a roles</p>
+        <div class="card">
+          <div class="table-card__header">
+            <div>
+              <h2 class="table-card__title">Permisos Disponibles</h2>
+              <p class="table-card__subtitle">Referencia de todos los permisos que pueden asignarse a roles</p>
+            </div>
           </div>
 
-          <div class="p-5">
-            <div v-for="(perms, category) in rolesStore.groupedPermissions" :key="category" class="mb-6 last:mb-0">
-              <h4 class="text-sm font-semibold text-slate-600 uppercase mb-2">{{ getCategoryLabel(category) }}</h4>
-              <div class="grid md:grid-cols-2 gap-2">
+          <div class="admin-view__permissions">
+            <div v-for="(perms, category) in rolesStore.groupedPermissions" :key="category" class="admin-view__permission-category">
+              <h4 class="admin-view__permission-category-title">{{ getCategoryLabel(category) }}</h4>
+              <div class="admin-view__permissions-grid">
                 <div
                   v-for="permission in perms"
                   :key="permission._id"
-                  class="p-3 bg-stone-50 rounded-xl"
+                  class="admin-view__permission-card"
                 >
-                  <p class="font-medium text-slate-800 text-sm">{{ permission.name }}</p>
-                  <p class="text-xs text-slate-500">{{ permission.description }}</p>
+                  <p class="admin-view__permission-card-name">{{ permission.name }}</p>
+                  <p class="admin-view__permission-card-desc">{{ permission.description }}</p>
                 </div>
               </div>
             </div>
@@ -375,21 +363,20 @@
     <Teleport to="body">
       <div
         v-if="showRoleModal"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        class="modal-overlay"
         @click.self="closeRoleModal"
       >
-        <div class="absolute inset-0 bg-black/50"></div>
-        <div class="relative bg-white rounded-3xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-          <div class="p-6 border-b border-stone-200">
-            <h2 class="text-xl font-bold text-slate-800">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-header__title">
               {{ editingRole ? 'Editar Rol' : 'Nuevo Rol' }}
             </h2>
           </div>
 
-          <form @submit.prevent="handleSaveRole" class="p-6 space-y-5">
+          <form @submit.prevent="handleSaveRole" class="modal-body">
             <!-- Name -->
-            <div>
-              <label for="role-name" class="block text-sm font-medium text-slate-700 mb-2">
+            <div class="form-section">
+              <label for="role-name" class="form-label">
                 Nombre del Rol
               </label>
               <input
@@ -398,63 +385,62 @@
                 type="text"
                 required
                 :disabled="editingRole?.isSystem"
-                class="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-purple-600 focus:outline-none disabled:bg-stone-100"
+                class="input-field"
+                :class="{ 'input-field--disabled': editingRole?.isSystem }"
                 placeholder="Ej: Moderador"
               />
             </div>
 
             <!-- Description -->
-            <div>
-              <label for="role-description" class="block text-sm font-medium text-slate-700 mb-2">
+            <div class="form-section">
+              <label for="role-description" class="form-label">
                 Descripción
               </label>
               <textarea
                 id="role-description"
                 v-model="roleForm.description"
                 rows="2"
-                class="w-full px-4 py-3 rounded-xl border-2 border-stone-200 focus:border-purple-600 focus:outline-none resize-none"
+                class="input-field"
                 placeholder="Describe el propósito de este rol..."
               ></textarea>
             </div>
 
             <!-- Permissions -->
-            <div>
-              <p class="block text-sm font-medium text-slate-700 mb-2">
-                Permisos
-              </p>
-              <div class="max-h-60 overflow-y-auto border border-stone-200 rounded-xl p-3 space-y-2">
+            <div class="form-section">
+              <p class="form-label">Permisos</p>
+              <div class="modal-body__permissions">
                 <label
                   v-for="permission in rolesStore.permissions"
                   :key="permission._id"
-                  class="flex items-center gap-3 p-2 rounded-lg hover:bg-stone-50 cursor-pointer"
+                  class="modal-body__permission-item"
                 >
                   <input
                     type="checkbox"
                     :value="permission._id"
                     v-model="roleForm.permissions"
-                    class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                    class="modal-body__checkbox"
                   />
                   <div>
-                    <p class="text-sm font-medium text-slate-800">{{ permission.name }}</p>
-                    <p class="text-xs text-slate-500">{{ permission.description }}</p>
+                    <p class="modal-body__permission-name">{{ permission.name }}</p>
+                    <p class="modal-body__permission-desc">{{ permission.description }}</p>
                   </div>
                 </label>
               </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex gap-3 pt-4">
+            <div class="modal-body__actions">
               <button
                 type="button"
                 @click="closeRoleModal"
-                class="flex-1 py-3 px-4 border-2 border-stone-200 text-slate-600 font-medium rounded-xl hover:bg-stone-50 transition-colors"
+                class="btn btn-secondary"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 :disabled="rolesStore.loading || !roleForm.name"
-                class="flex-1 py-3 px-4 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50"
+                class="btn btn-primary"
               >
                 {{ editingRole ? 'Guardar Cambios' : 'Crear Rol' }}
               </button>
@@ -628,7 +614,6 @@ const handleRoleChange = async (userId: string, newRoleId: string) => {
     const data = await response.json()
     
     if (data.success) {
-      // Actualizar usuario en la lista
       const user = users.value.find(u => u._id === userId)
       if (user && data.data.role) {
         user.role = data.data.role
@@ -714,10 +699,10 @@ const formatDate = (dateStr: string): string => {
   })
 }
 
-const getRoleColorClass = (slug?: string): string => {
-  if (slug === 'super_admin') return 'bg-purple-100 text-purple-700'
-  if (slug === 'moderator') return 'bg-blue-100 text-blue-700'
-  return 'bg-stone-100 text-slate-700'
+const getRoleSelectClass = (slug?: string): string => {
+  if (slug === 'super_admin') return 'admin-table__role-select--purple'
+  if (slug === 'moderator') return 'admin-table__role-select--blue'
+  return 'admin-table__role-select--default'
 }
 
 const getCategoryLabel = (category: string): string => {
@@ -799,3 +784,746 @@ onMounted(async () => {
   await rolesStore.fetchPermissions()
 })
 </script>
+
+<style scoped>
+.admin-view {
+  min-height: 100vh;
+  padding-bottom: 80px; /* Espacio para la navegación móvil */
+}
+
+@media (min-width: 768px) {
+  .admin-view {
+    padding-bottom: 0;
+  }
+}
+
+.admin-view__main {
+  padding-top: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .admin-view__main {
+    padding-top: 2rem;
+  }
+}
+
+/* View Header */
+.view-header {
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .view-header {
+    margin-bottom: 2rem;
+  }
+}
+
+.view-header__top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.view-header__icon {
+  color: #9333ea; /* Purple para admin */
+}
+
+.view-header__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .view-header__title {
+    font-size: 1.875rem;
+  }
+}
+
+.view-header__subtitle {
+  font-size: 1.125rem;
+  color: var(--color-text-muted);
+}
+
+/* Admin Tabs */
+.admin-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  background-color: var(--color-background);
+  color: var(--color-text-main);
+}
+
+.tab-btn.active {
+  background: #9333ea; /* Purple para admin */
+  color: white;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-icon-wrapper {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon-wrapper--blue {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.stat-icon-wrapper--green {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.stat-icon-wrapper--amber {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.stat-icon-wrapper--purple {
+  background-color: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Quick Stats */
+.admin-view__quick-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .admin-view__quick-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.card__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin-bottom: 1rem;
+}
+
+.card__stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card__stats-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.card__stats-value {
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.card__stats-value--green {
+  color: #15803d;
+}
+
+.card__stats-value--purple {
+  color: #9333ea;
+}
+
+.card__stats-value--blue {
+  color: #3b82f6;
+}
+
+/* Table Card */
+.table-card {
+  overflow: hidden;
+}
+
+.table-card__header {
+  padding: 1.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.table-card__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.table-card__subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+.table-card__search {
+  position: relative;
+  min-width: 250px;
+}
+
+.table-card__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.table-card__search-input {
+  padding-left: 2.5rem;
+}
+
+/* Loading */
+.admin-view__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.admin-view__loader-icon {
+  color: #9333ea;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Table */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-table th {
+  padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.02);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.admin-table td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.admin-table__row {
+  transition: background-color var(--transition-fast);
+}
+
+.admin-table__row:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.admin-table__row:last-child td {
+  border-bottom: none;
+}
+
+.admin-table__user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-table__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background-color: rgba(168, 85, 247, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9333ea;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.admin-table__user-name {
+  font-weight: 500;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.admin-table__user-email {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.admin-table__role-select {
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.admin-table__role-select--purple {
+  background-color: rgba(168, 85, 247, 0.2);
+  color: #9333ea;
+}
+
+.admin-table__role-select--blue {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.admin-table__role-select--default {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--color-text-main);
+}
+
+.admin-table__role-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-table__text-muted {
+  color: var(--color-text-muted);
+}
+
+.admin-table__date {
+  font-size: 0.875rem;
+}
+
+.admin-table__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-table__action-btn {
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.admin-table__action-btn:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.admin-table__action-btn--success {
+  color: #15803d;
+}
+
+.admin-table__action-btn--success:hover:not(:disabled) {
+  background-color: rgba(21, 128, 61, 0.1);
+}
+
+.admin-table__action-btn--warning {
+  color: #f59e0b;
+}
+
+.admin-table__action-btn--warning:hover:not(:disabled) {
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+.admin-table__action-btn--danger {
+  color: var(--color-accent);
+}
+
+.admin-table__action-btn--danger:hover:not(:disabled) {
+  background-color: rgba(239, 108, 0, 0.1);
+}
+
+.admin-table__action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Status Badge */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.status-badge--active {
+  background-color: #dcfce7; /* Green 100 */
+  color: #15803d; /* Green 700 */
+}
+
+.status-badge--inactive {
+  background-color: #fee2e2; /* Red 100 */
+  color: #b91c1c; /* Red 700 */
+}
+
+/* Pagination */
+.table-card__pagination {
+  padding: 1.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.table-card__pagination-info {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.table-card__pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.table-card__pagination-page {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Roles Section */
+.admin-view__roles {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-view__roles-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-view__role-item {
+  padding: 1.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  transition: background-color var(--transition-fast);
+}
+
+.admin-view__role-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.admin-view__role-item:last-child {
+  border-bottom: none;
+}
+
+.admin-view__role-content {
+  flex: 1;
+}
+
+.admin-view__role-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.admin-view__role-name {
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.admin-view__role-description {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0 0 0.75rem 0;
+}
+
+.admin-view__role-permissions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.admin-view__permission-tag {
+  padding: 0.25rem 0.5rem;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #15803d;
+  font-size: 0.75rem;
+  border-radius: var(--radius-full);
+}
+
+.admin-view__permission-empty {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.admin-view__role-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.badge-secondary {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--color-text-muted);
+}
+
+/* Permissions Reference */
+.admin-view__permissions {
+  padding: 1.25rem;
+}
+
+.admin-view__permission-category {
+  margin-bottom: 1.5rem;
+}
+
+.admin-view__permission-category:last-child {
+  margin-bottom: 0;
+}
+
+.admin-view__permission-category-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.admin-view__permissions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .admin-view__permissions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.admin-view__permission-card {
+  padding: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: var(--radius-lg);
+}
+
+.admin-view__permission-card-name {
+  font-weight: 500;
+  color: var(--color-text-main);
+  font-size: 0.875rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.admin-view__permission-card-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-float);
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.modal-header__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.modal-body__permissions {
+  max-height: 15rem;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modal-body__permission-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.modal-body__permission-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.modal-body__checkbox {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.125rem;
+  cursor: pointer;
+  accent-color: #9333ea;
+}
+
+.modal-body__permission-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-main);
+  margin: 0 0 0.25rem 0;
+}
+
+.modal-body__permission-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.modal-body__actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 1rem;
+}
+
+.modal-body__actions .btn {
+  flex: 1;
+}
+
+.input-field--disabled {
+  background-color: rgba(0, 0, 0, 0.05);
+  cursor: not-allowed;
+}
+
+/* Form Section */
+.form-section {
+  margin-bottom: 1.25rem;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-main);
+  font-size: 1rem;
+}
+</style>
