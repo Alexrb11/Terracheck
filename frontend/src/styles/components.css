@@ -173,6 +173,12 @@
   color: #d84315;
 }
 
+.alert-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #b45309;
+}
+
 /* Badges */
 .badge {
   display: inline-flex;

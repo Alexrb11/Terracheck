@@ -1,161 +1,224 @@
 <template>
-  <div class="min-h-screen pb-20 md:pb-0">
+  <div class="view-detail">
     <Navigation />
 
-    <main class="max-w-4xl mx-auto px-4 py-6">
+    <main class="container view-detail__main">
       <!-- Loading -->
-      <div v-if="loading" class="flex items-center justify-center py-16">
-        <LoaderIcon :size="48" class="text-emerald-600 animate-spin" />
+      <div v-if="loading" class="view-detail__loading">
+        <LoaderIcon :size="48" class="view-detail__loader-icon" />
       </div>
 
-      <div v-else-if="terrarium" class="space-y-6">
+      <div v-else-if="terrarium" class="view-detail__content">
         <!-- Botón volver -->
         <button
           @click="$router.push('/')"
-          class="flex items-center gap-2 text-slate-600 hover:text-emerald-600 transition-colors mb-4"
+          class="btn-text view-detail__back-btn"
         >
           <ArrowLeftIcon :size="20" />
-          <span class="font-medium">Volver</span>
+          <span>Volver</span>
         </button>
 
         <!-- Header del Terrario -->
-        <div class="bg-white rounded-3xl shadow-lg p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h1 class="text-3xl font-bold text-slate-800">{{ terrarium.name }}</h1>
+        <header class="detail-header">
+          <div class="detail-header__title-section">
+            <h1 class="detail-header__title">{{ terrarium.name }}</h1>
             <component
               :is="terrarium.type === 'glass' ? SquareIcon : Grid3x3Icon"
               :size="40"
-              class="text-emerald-600"
+              class="detail-header__icon"
             />
           </div>
-
-          <!-- Alerta de compatibilidad -->
-          <div
-            v-if="terrarium.hasCompatibilityIssue"
-            class="flex items-center gap-2 mb-4 p-3 bg-red-50 rounded-2xl border border-red-200"
-          >
-            <AlertTriangleIcon :size="24" class="text-red-600 flex-shrink-0" />
-            <span class="text-sm font-medium text-red-700">
-              Problema de compatibilidad detectado
-            </span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div class="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl">
-              <ThermometerIcon :size="24" class="text-amber-500" />
-              <div>
-                <p class="text-xs text-slate-500">Temperatura</p>
-                <p class="text-xl font-semibold text-slate-800">
-                  {{ terrarium.sensors?.temperature ?? '--' }}°C
-                </p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl">
-              <DropletIcon :size="24" class="text-blue-500" />
-              <div>
-                <p class="text-xs text-slate-500">Humedad</p>
-                <p class="text-xl font-semibold text-slate-800">
-                  {{ terrarium.sensors?.humidity ?? '--' }}%
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Dimensiones -->
-          <div class="mt-4 flex items-center gap-2 text-slate-600">
-            <RulerIcon :size="18" />
-            <span>
-              {{ terrarium.dimensions.width }} x {{ terrarium.dimensions.depth }} x {{ terrarium.dimensions.height }} cm
-            </span>
-            <span v-if="terrarium.liters" class="text-slate-400">
-              ({{ terrarium.liters }}L)
-            </span>
-          </div>
-
-          <!-- Notas -->
-          <p v-if="terrarium.notes" class="mt-4 text-slate-600 italic">
-            {{ terrarium.notes }}
-          </p>
-        </div>
-
-        <!-- Animales -->
-        <div class="bg-white rounded-3xl shadow-lg p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-2xl font-bold text-slate-800">
-              Animales ({{ terrarium.animals?.length || 0 }})
-            </h2>
-            <button
-              @click="showAddAnimalModal = true"
-              class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-2xl font-medium hover:bg-emerald-700 transition-colors shadow-md"
-            >
-              <PlusIcon :size="20" />
-              <span>Añadir Animal</span>
+          <div class="detail-header__actions">
+            <button class="btn btn-secondary" @click="handleEdit">
+              <EditIcon :size="18" />
+              <span>Editar</span>
+            </button>
+            <button class="btn btn-danger" @click="handleDelete">
+              <TrashIcon :size="18" />
+              <span>Eliminar</span>
             </button>
           </div>
-          
-          <div v-if="terrarium.animals && terrarium.animals.length > 0" class="space-y-3">
-            <div
-              v-for="animal in terrarium.animals"
-              :key="animal._id"
-              class="flex items-center gap-4 p-4 bg-emerald-50 rounded-2xl group"
-            >
+        </header>
+
+        <!-- Alerta de compatibilidad -->
+        <div
+          v-if="terrarium.hasCompatibilityIssue"
+          class="alert alert-danger view-detail__alert"
+        >
+          <AlertTriangleIcon :size="24" />
+          <span>Problema de compatibilidad detectado</span>
+        </div>
+
+        <!-- Layout Principal: Info + Animales -->
+        <div class="detail-layout">
+          <!-- Columna Izquierda: Información Técnica -->
+          <aside class="detail-card" :class="{ 'detail-card--glass': terrarium.type === 'glass' }">
+            <h2 class="detail-card__title">Información</h2>
+            
+            <div class="specs-grid">
+              <!-- Dimensiones -->
+              <div class="spec-item">
+                <div class="spec-item__icon">
+                  <RulerIcon :size="20" />
+                </div>
+                <span class="spec-label">Ancho</span>
+                <span class="spec-value">{{ terrarium.dimensions.width }} cm</span>
+              </div>
+
+              <div class="spec-item">
+                <div class="spec-item__icon">
+                  <RulerIcon :size="20" />
+                </div>
+                <span class="spec-label">Fondo</span>
+                <span class="spec-value">{{ terrarium.dimensions.depth }} cm</span>
+              </div>
+
+              <div class="spec-item">
+                <div class="spec-item__icon">
+                  <RulerIcon :size="20" />
+                </div>
+                <span class="spec-label">Alto</span>
+                <span class="spec-value">{{ terrarium.dimensions.height }} cm</span>
+              </div>
+
+              <div class="spec-item">
+                <div class="spec-item__icon">
+                  <BoxIcon :size="20" />
+                </div>
+                <span class="spec-label">Volumen</span>
+                <span class="spec-value">{{ terrarium.liters || '--' }} L</span>
+              </div>
+
+              <!-- Bioma -->
+              <div class="spec-item spec-item--full">
+                <div class="spec-item__icon">
+                  <MapPinIcon :size="20" />
+                </div>
+                <span class="spec-label">Bioma</span>
+                <span class="spec-value">{{ getBiomeLabel(terrarium.biome) }}</span>
+              </div>
+
+              <!-- Tipo -->
+              <div class="spec-item spec-item--full">
+                <div class="spec-item__icon">
+                  <component
+                    :is="terrarium.type === 'glass' ? SquareIcon : Grid3x3Icon"
+                    :size="20"
+                  />
+                </div>
+                <span class="spec-label">Tipo</span>
+                <span class="spec-value">{{ getTypeLabel(terrarium.type) }}</span>
+              </div>
+            </div>
+
+            <!-- Sensores -->
+            <div class="detail-card__sensors">
+              <div class="sensor-item">
+                <ThermometerIcon :size="24" class="sensor-item__icon" />
+                <div>
+                  <span class="sensor-label">Temperatura</span>
+                  <span class="sensor-value">
+                    {{ terrarium.sensors?.temperature ?? '--' }}°C
+                  </span>
+                </div>
+              </div>
+              <div class="sensor-item">
+                <DropletIcon :size="24" class="sensor-item__icon" />
+                <div>
+                  <span class="sensor-label">Humedad</span>
+                  <span class="sensor-value">
+                    {{ terrarium.sensors?.humidity ?? '--' }}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notas -->
+            <div v-if="terrarium.notes" class="detail-card__notes">
+              <span class="notes-label">Notas</span>
+              <p class="notes-text">{{ terrarium.notes }}</p>
+            </div>
+          </aside>
+
+          <!-- Columna Derecha: Habitantes -->
+          <section class="animals-section">
+            <div class="animals-section__header">
+              <h2 class="animals-section__title">
+                Habitantes ({{ terrarium.animals?.length || 0 }})
+              </h2>
+            </div>
+            
+            <div v-if="terrarium.animals && terrarium.animals.length > 0" class="animals-grid">
               <div
-                class="w-12 h-12 rounded-full bg-emerald-200 flex items-center justify-center"
+                v-for="animal in terrarium.animals"
+                :key="animal._id"
+                class="animal-card"
               >
-                <span class="text-emerald-700 font-semibold text-lg">
+                <div class="animal-avatar">
                   {{ animal.name.charAt(0) }}
-                </span>
+                </div>
+                <div class="animal-card__info">
+                  <p class="animal-card__name">{{ animal.name }}</p>
+                  <p class="animal-card__species">
+                    {{ animal.species?.commonName || 'Especie desconocida' }}
+                  </p>
+                  <p v-if="animal.species?.scientificName" class="animal-card__scientific">
+                    {{ animal.species.scientificName }}
+                  </p>
+                </div>
+                <div class="animal-card__actions">
+                  <span
+                    class="sex-badge"
+                    :class="`sex-badge--${animal.sex || 'unknown'}`"
+                  >
+                    {{ getSexLabel(animal.sex) }}
+                  </span>
+                  <button
+                    @click="handleDeleteAnimal(animal._id, animal.name)"
+                    class="animal-card__delete-btn"
+                    title="Eliminar animal"
+                  >
+                    <TrashIcon :size="18" />
+                  </button>
+                </div>
               </div>
-              <div class="flex-1">
-                <p class="font-semibold text-slate-800 text-lg">{{ animal.name }}</p>
-                <p class="text-slate-600">{{ animal.species?.commonName || 'Especie desconocida' }}</p>
-                <p v-if="animal.species?.scientificName" class="text-slate-400 text-sm italic">
-                  {{ animal.species.scientificName }}
-                </p>
-              </div>
-              <div class="flex items-center gap-3">
-                <span
-                  class="inline-block px-3 py-1 text-xs font-medium rounded-full"
-                  :class="{
-                    'bg-blue-100 text-blue-700': animal.sex === 'male',
-                    'bg-pink-100 text-pink-700': animal.sex === 'female',
-                    'bg-gray-100 text-gray-700': animal.sex === 'unknown'
-                  }"
-                >
-                  {{ animal.sex === 'male' ? 'Macho' : animal.sex === 'female' ? 'Hembra' : 'Desconocido' }}
-                </span>
-                <!-- Botón eliminar -->
+
+              <!-- Botón Añadir Animal -->
+              <button
+                @click="showAddAnimalModal = true"
+                class="btn-add-animal"
+              >
+                <PlusIcon :size="32" />
+                <span>Añadir Animal</span>
+              </button>
+            </div>
+            
+            <!-- Estado Vacío -->
+            <div v-else class="animals-section__empty">
+              <div class="empty-state">
+                <div class="empty-state__icon">
+                  <PawPrintIcon :size="48" />
+                </div>
+                <p class="empty-state__text">No hay animales asignados a este terrario</p>
                 <button
-                  @click="handleDeleteAnimal(animal._id, animal.name)"
-                  class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                  title="Eliminar animal"
+                  @click="showAddAnimalModal = true"
+                  class="btn btn-primary"
                 >
-                  <TrashIcon :size="18" />
+                  <PlusIcon :size="20" />
+                  <span>Añadir tu primer animal</span>
                 </button>
               </div>
             </div>
-          </div>
-          
-          <div v-else class="text-center py-8">
-            <div class="w-16 h-16 mx-auto mb-4 bg-emerald-100 rounded-full flex items-center justify-center">
-              <PawPrintIcon :size="32" class="text-emerald-600" />
-            </div>
-            <p class="text-slate-500 mb-4">No hay animales asignados a este terrario</p>
-            <button
-              @click="showAddAnimalModal = true"
-              class="px-6 py-3 bg-emerald-600 text-white rounded-2xl font-semibold hover:bg-emerald-700 transition-colors shadow-lg"
-            >
-              Añadir tu primer animal
-            </button>
-          </div>
+          </section>
         </div>
       </div>
 
-      <div v-else class="text-center py-16">
-        <p class="text-slate-600 text-lg">Terrario no encontrado</p>
+      <!-- Estado: Terrario no encontrado -->
+      <div v-else class="view-detail__not-found">
+        <p class="view-detail__not-found-text">Terrario no encontrado</p>
         <button
           @click="$router.push('/')"
-          class="mt-4 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-semibold hover:bg-emerald-700 transition-colors"
+          class="btn btn-primary"
         >
           Volver al inicio
         </button>
@@ -174,7 +237,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useTerrariumStore } from '@/stores/terrarium'
 import Navigation from '@/components/Navigation.vue'
 import AddAnimalModal from '@/components/AddAnimalModal.vue'
@@ -189,10 +252,14 @@ import {
   LoaderIcon,
   PlusIcon,
   PawPrintIcon,
-  TrashIcon
+  TrashIcon,
+  EditIcon,
+  BoxIcon,
+  MapPinIcon
 } from 'lucide-vue-next'
 
 const route = useRoute()
+const router = useRouter()
 const store = useTerrariumStore()
 const loading = ref(true)
 const showAddAnimalModal = ref(false)
@@ -202,6 +269,33 @@ const terrariumId = computed(() => route.params.id as string)
 const terrarium = computed(() =>
   store.getTerrariumById(terrariumId.value)
 )
+
+const getBiomeLabel = (biome?: string): string => {
+  const labels: Record<string, string> = {
+    tropical: 'Tropical',
+    desert: 'Desierto',
+    temperate: 'Templado'
+  }
+  return labels[biome || 'tropical'] || 'Tropical'
+}
+
+const getTypeLabel = (type: string): string => {
+  const labels: Record<string, string> = {
+    glass: 'Cristal',
+    mesh: 'Malla',
+    hybrid: 'Híbrido'
+  }
+  return labels[type] || type
+}
+
+const getSexLabel = (sex?: string): string => {
+  const labels: Record<string, string> = {
+    male: 'Macho',
+    female: 'Hembra',
+    unknown: 'Desconocido'
+  }
+  return labels[sex || 'unknown'] || 'Desconocido'
+}
 
 const handleAnimalAdded = () => {
   // El modal ya recarga los datos, no necesitamos hacer nada extra
@@ -215,6 +309,25 @@ const handleDeleteAnimal = async (animalId: string, animalName: string) => {
   await store.removeAnimalFromTerrarium(animalId)
 }
 
+const handleEdit = () => {
+  // Navegar a la vista de edición cuando esté implementada
+  // Por ahora, redirigir al dashboard
+  router.push('/')
+}
+
+const handleDelete = async () => {
+  if (!terrarium.value) return
+  
+  if (!confirm(`¿Estás seguro de que deseas eliminar el terrario "${terrarium.value.name}"? Esta acción no se puede deshacer.`)) {
+    return
+  }
+
+  const success = await store.deleteTerrarium(terrarium.value._id)
+  if (success) {
+    router.push('/')
+  }
+}
+
 onMounted(async () => {
   // Si no tenemos terrarios cargados, cargarlos
   if (store.terrariums.length === 0) {
@@ -223,3 +336,521 @@ onMounted(async () => {
   loading.value = false
 })
 </script>
+
+<style scoped>
+/* ============================================
+   CONTENEDOR PRINCIPAL
+   ============================================ */
+.view-detail {
+  min-height: 100vh;
+  padding-bottom: 80px; /* Espacio para la navegación móvil */
+}
+
+@media (min-width: 768px) {
+  .view-detail {
+    padding-bottom: 0;
+  }
+}
+
+.view-detail__main {
+  padding-top: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+.view-detail__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Botón Volver */
+.btn-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+}
+
+.btn-text:hover {
+  color: var(--color-primary);
+}
+
+.view-detail__back-btn {
+  margin-bottom: 1rem;
+}
+
+/* Loading */
+.view-detail__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+.view-detail__loader-icon {
+  color: var(--color-primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Not Found */
+.view-detail__not-found {
+  text-align: center;
+  padding: 4rem 0;
+}
+
+.view-detail__not-found-text {
+  font-size: 1.125rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+}
+
+/* ============================================
+   HEADER DEL TERRARIO
+   ============================================ */
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.detail-header__title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.detail-header__title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .detail-header__title {
+    font-size: 2.5rem;
+  }
+}
+
+.detail-header__icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.detail-header__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Alerta */
+.view-detail__alert {
+  margin-bottom: 1.5rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ============================================
+   LAYOUT PRINCIPAL
+   ============================================ */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .detail-layout {
+    grid-template-columns: 1fr 1.5fr; /* Info izquierda, Animales derecha más ancho */
+  }
+}
+
+/* ============================================
+   TARJETA DE INFORMACIÓN
+   ============================================ */
+.detail-card {
+  padding: 2rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  height: fit-content;
+}
+
+.detail-card--glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-card__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0 0 1.5rem 0;
+}
+
+.detail-card--glass .detail-card__title {
+  color: white;
+}
+
+/* Grid de Especificaciones */
+.specs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.spec-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.spec-item--full {
+  grid-column: 1 / -1;
+}
+
+.spec-item__icon {
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.detail-card--glass .spec-item__icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.spec-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.detail-card--glass .spec-label {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.spec-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.detail-card--glass .spec-value {
+  color: white;
+}
+
+/* Sensores */
+.detail-card__sensors {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+.detail-card--glass .detail-card__sensors {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.sensor-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: var(--radius-lg);
+}
+
+.detail-card--glass .sensor-item {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sensor-item__icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.detail-card--glass .sensor-item__icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.sensor-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.detail-card--glass .sensor-label {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sensor-value {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.detail-card--glass .sensor-value {
+  color: white;
+}
+
+/* Notas */
+.detail-card__notes {
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.detail-card--glass .detail-card__notes {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.notes-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.detail-card--glass .notes-label {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.notes-text {
+  font-size: 0.95rem;
+  color: var(--color-text-main);
+  font-style: italic;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.detail-card--glass .notes-text {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ============================================
+   SECCIÓN DE ANIMALES
+   ============================================ */
+.animals-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.animals-section__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.animals-section__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+/* Grid de Animales */
+.animals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.animal-card {
+  background: var(--color-surface);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.animal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.animal-card__info {
+  flex: 1;
+}
+
+.animal-card__name {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--color-text-main);
+  margin: 0 0 0.25rem 0;
+}
+
+.animal-card__species {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0 0 0.25rem 0;
+}
+
+.animal-card__scientific {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.animal-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.animal-card__delete-btn {
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.animal-card__delete-btn:hover {
+  background-color: rgba(239, 108, 0, 0.1);
+  color: var(--color-accent);
+}
+
+.animal-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Badge de Sexo */
+.sex-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sex-badge--male {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #1e40af;
+}
+
+.sex-badge--female {
+  background-color: rgba(236, 72, 153, 0.15);
+  color: #be185d;
+}
+
+.sex-badge--unknown {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--color-text-main);
+}
+
+/* Botón Añadir Animal */
+.btn-add-animal {
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  background: transparent;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  min-height: 100px;
+  padding: 1rem;
+}
+
+.btn-add-animal:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.btn-add-animal svg {
+  color: var(--color-primary);
+}
+
+/* Estado Vacío */
+.animals-section__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.empty-state {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.empty-state__icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state__text {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+</style>
