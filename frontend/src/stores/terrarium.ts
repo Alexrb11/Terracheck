@@ -13,6 +13,7 @@ export interface Animal {
   sex: 'male' | 'female' | 'unknown'
   birthDate?: string
   weight?: number
+  imageUrl?: string
 }
 
 export interface Terrarium {

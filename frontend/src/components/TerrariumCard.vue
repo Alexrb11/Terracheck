@@ -49,9 +49,16 @@
           v-for="animal in terrarium.animals.slice(0, 3)" 
           :key="animal._id" 
           class="animal-avatar"
+          :class="{ 'has-image': animal.imageUrl }"
           :title="animal.name"
         >
-          {{ animal.name.charAt(0) }}
+          <img 
+            v-if="animal.imageUrl" 
+            :src="getImageUrl(animal.imageUrl)" 
+            :alt="animal.name" 
+            class="avatar-img"
+          />
+          <span v-else>{{ animal.name.charAt(0) }}</span>
         </div>
         <div v-if="terrarium.animals.length > 3" class="animal-avatar animal-avatar--more">
           +{{ terrarium.animals.length - 3 }}
@@ -94,6 +101,7 @@ import {
   DropletIcon,
   MoreVerticalIcon
 } from 'lucide-vue-next'
+import { getImageUrl } from '../utils/image'
 
 const props = defineProps<{
   terrarium: Terrarium
@@ -334,6 +342,23 @@ const getFooterStyle = (biome: string = 'tropical'): { backgroundImage: string; 
   box-shadow: var(--shadow-sm);
   margin-left: 0.5rem; /* Compensar el gap negativo */
   transition: transform var(--transition-base);
+  overflow: hidden; /* Importante para recortar la imagen */
+  padding: 0; /* Quitar padding para que la imagen toque los bordes */
+  position: relative;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Ajuste para cuando NO hay imagen (centrar texto) */
+.animal-avatar:not(.has-image) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .terrarium-card--glass .animal-avatar {
