@@ -259,9 +259,10 @@ function calculateParameters(animals) {
   const idealHumMin = Math.max(...humMins)
   const idealHumMax = Math.min(...humMaxs)
 
-  // Detectar conflictos
+  // Detectar conflictos y recopilar datos de especies incompatibles
   const errors = []
   let isCompatible = true
+  const incompatibleSpecies = []
 
   if (idealTempMin > idealTempMax) {
     isCompatible = false
@@ -273,10 +274,34 @@ function calculateParameters(animals) {
     errors.push('Conflicto de humedad: los rangos de humedad de las especies no se intersectan')
   }
 
+  // Si hay incompatibilidad, recopilar los rangos individuales de cada especie
+  if (!isCompatible) {
+    animalsWithSpecies.forEach(animal => {
+      const tempMin = getTempMin(animal.species.parameters)
+      const tempMax = getTempMax(animal.species.parameters)
+      const humMin = getHumMin(animal.species.parameters)
+      const humMax = getHumMax(animal.species.parameters)
+
+      incompatibleSpecies.push({
+        animalName: animal.name,
+        speciesName: animal.species.commonName || animal.species.scientificName,
+        temperature: {
+          min: tempMin,
+          max: tempMax
+        },
+        humidity: {
+          min: humMin,
+          max: humMax
+        }
+      })
+    })
+  }
+
   return {
     compatibility: {
       isCompatible,
-      errors
+      errors,
+      incompatibleSpecies: incompatibleSpecies.length > 0 ? incompatibleSpecies : undefined
     },
     temperature: {
       min: idealTempMin,

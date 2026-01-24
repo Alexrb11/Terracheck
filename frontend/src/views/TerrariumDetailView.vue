@@ -121,13 +121,65 @@
                 class="alert alert-danger parameters-alert"
               >
                 <AlertTriangleIcon :size="20" />
-                <div>
-                  <strong>Incompatibilidad detectada</strong>
-                  <ul class="parameters-errors">
-                    <li v-for="error in terrarium.parameters.compatibility.errors" :key="error">
-                      {{ error }}
-                    </li>
-                  </ul>
+                <div class="parameters-alert__content">
+                  <div class="parameters-alert__header">
+                    <strong>Incompatibilidad detectada</strong>
+                    <button
+                      v-if="terrarium.parameters.compatibility.incompatibleSpecies"
+                      @click="isIncompatibilityExpanded = !isIncompatibilityExpanded"
+                      class="accordion-toggle"
+                      :aria-expanded="isIncompatibilityExpanded"
+                    >
+                      <component
+                        :is="isIncompatibilityExpanded ? ChevronUpIcon : ChevronDownIcon"
+                        :size="20"
+                      />
+                    </button>
+                  </div>
+                  
+                  <!-- Contenido expandible (errores + especies) -->
+                  <transition name="accordion">
+                    <div
+                      v-if="isIncompatibilityExpanded"
+                      class="parameters-alert__expandable"
+                    >
+                      <!-- Lista de errores -->
+                      <ul class="parameters-errors">
+                        <li v-for="error in terrarium.parameters.compatibility.errors" :key="error">
+                          {{ error }}
+                        </li>
+                      </ul>
+                      
+                      <!-- Mostrar datos incompatibles de cada especie -->
+                      <div v-if="terrarium.parameters.compatibility.incompatibleSpecies" class="incompatible-species">
+                        <h4 class="incompatible-species__title">Rangos por especie:</h4>
+                        <div 
+                          v-for="(species, index) in terrarium.parameters.compatibility.incompatibleSpecies" 
+                          :key="index"
+                          class="incompatible-species-item"
+                        >
+                          <div class="incompatible-species-header">
+                            <strong>{{ species.animalName }}</strong>
+                            <span class="incompatible-species-name">({{ species.speciesName }})</span>
+                          </div>
+                          <div class="incompatible-species-ranges">
+                            <div class="incompatible-range">
+                              <span class="incompatible-range-label">Temp:</span>
+                              <span class="incompatible-range-value">
+                                {{ species.temperature.min }}°C - {{ species.temperature.max }}°C
+                              </span>
+                            </div>
+                            <div class="incompatible-range">
+                              <span class="incompatible-range-label">Humedad:</span>
+                              <span class="incompatible-range-value">
+                                {{ species.humidity.min }}% - {{ species.humidity.max }}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </transition>
                 </div>
               </div>
 
@@ -310,7 +362,9 @@ import {
   EditIcon,
   BoxIcon,
   MapPinIcon,
-  LogOutIcon
+  LogOutIcon,
+  ChevronDownIcon,
+  ChevronUpIcon
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -318,6 +372,7 @@ const router = useRouter()
 const store = useTerrariumStore()
 const loading = ref(true)
 const showSelectAnimalModal = ref(false)
+const isIncompatibilityExpanded = ref(false)
 
 // Confirmation Modal
 const confirmModal = ref<{
@@ -729,8 +784,99 @@ onMounted(async () => {
 
 .parameters-alert {
   margin-bottom: 1rem;
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   font-size: 0.875rem;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.parameters-alert svg:first-child {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.parameters-alert__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.parameters-alert__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.parameters-alert__header strong {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.parameters-alert__expandable {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.accordion-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.accordion-toggle:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.accordion-toggle:focus {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
+/* Transiciones del acordeón */
+.accordion-enter-active,
+.accordion-leave-active {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.accordion-enter-from {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-10px);
+}
+
+.accordion-enter-to {
+  opacity: 1;
+  max-height: 1000px;
+  transform: translateY(0);
+}
+
+.accordion-leave-from {
+  opacity: 1;
+  max-height: 1000px;
+  transform: translateY(0);
+}
+
+.accordion-leave-to {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-10px);
 }
 
 .parameters-errors {
@@ -741,6 +887,90 @@ onMounted(async () => {
 
 .parameters-errors li {
   margin-top: 0.25rem;
+}
+
+/* Especies incompatibles */
+.incompatible-species {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.incompatible-species__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ef4444;
+  margin: 0 0 0.75rem 0;
+}
+
+.incompatible-species-item {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: var(--radius-md);
+  border-left: 3px solid #ef4444;
+}
+
+.incompatible-species-item:last-child {
+  margin-bottom: 0;
+}
+
+.incompatible-species-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.incompatible-species-header strong {
+  color: var(--color-text-main);
+  font-size: 0.875rem;
+}
+
+.incompatible-species-name {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.incompatible-species-ranges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.incompatible-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.incompatible-range-label {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  min-width: 60px;
+}
+
+.incompatible-range-value {
+  color: var(--color-text-main);
+  font-weight: 500;
+}
+
+.detail-card--glass .incompatible-species-header strong {
+  color: white;
+}
+
+.detail-card--glass .incompatible-species-name {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.detail-card--glass .incompatible-range-label {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.detail-card--glass .incompatible-range-value {
+  color: white;
 }
 
 .parameter-item {

@@ -33,6 +33,18 @@ export interface Terrarium {
     compatibility: {
       isCompatible: boolean
       errors: string[]
+      incompatibleSpecies?: Array<{
+        animalName: string
+        speciesName: string
+        temperature: {
+          min: number
+          max: number
+        }
+        humidity: {
+          min: number
+          max: number
+        }
+      }>
     }
     temperature: {
       min: number
