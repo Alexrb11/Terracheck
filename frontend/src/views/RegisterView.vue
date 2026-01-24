@@ -1,88 +1,64 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center px-4 py-12">
-    <div class="w-full max-w-md">
-      <!-- Logo/Header -->
-      <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-4">
-          <LeafIcon :size="32" class="text-emerald-600" />
+  <div class="auth-view">
+    <div class="auth-container">
+      <div class="auth-header">
+        <div class="logo-circle">
+          <LeafIcon :size="32" />
         </div>
-        <h1 class="text-3xl font-bold text-slate-800">Terracheck</h1>
-        <p class="text-slate-600 mt-2">Crea tu cuenta para empezar</p>
+        <h1 class="auth-title">Terracheck</h1>
+        <p class="auth-subtitle">Crea tu cuenta para empezar</p>
       </div>
 
-      <!-- Card de Registro -->
-      <div class="bg-white rounded-3xl shadow-lg p-8">
-        <h2 class="text-2xl font-semibold text-slate-800 mb-6 text-center">
-          Crear Cuenta
-        </h2>
+      <div class="card auth-card">
+        <h2 class="card-title">Crear Cuenta</h2>
 
-        <!-- Mensaje de error -->
-        <div
-          v-if="authStore.error"
-          class="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3"
-        >
-          <AlertCircleIcon :size="20" class="text-red-600 flex-shrink-0" />
-          <p class="text-red-700 text-sm">{{ authStore.error }}</p>
-          <button
-            @click="authStore.clearError()"
-            class="ml-auto text-red-400 hover:text-red-600"
-          >
+        <div v-if="authStore.error" class="alert alert-danger mb-md">
+          <div class="alert-content">
+            <AlertCircleIcon :size="20" />
+            <span>{{ authStore.error }}</span>
+          </div>
+          <button @click="authStore.clearError()" class="btn-icon">
             <XIcon :size="18" />
           </button>
         </div>
 
-        <form @submit.prevent="handleRegister" class="space-y-5">
-          <!-- Nombre -->
-          <div>
-            <label for="name" class="block text-sm font-medium text-slate-700 mb-2">
-              Nombre
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <UserIcon :size="20" class="text-slate-400" />
-              </div>
+        <form @submit.prevent="handleRegister" class="auth-form">
+          <div class="form-group">
+            <label for="name" class="form-label">Nombre</label>
+            <div class="input-wrapper">
+              <UserIcon :size="20" class="input-icon" />
               <input
                 id="name"
                 v-model="form.name"
                 type="text"
                 required
                 autocomplete="name"
-                class="w-full pl-12 pr-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
+                class="input-field input-with-icon"
                 placeholder="Tu nombre"
               />
             </div>
           </div>
 
-          <!-- Email -->
-          <div>
-            <label for="email" class="block text-sm font-medium text-slate-700 mb-2">
-              Email
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <MailIcon :size="20" class="text-slate-400" />
-              </div>
+          <div class="form-group">
+            <label for="email" class="form-label">Email</label>
+            <div class="input-wrapper">
+              <MailIcon :size="20" class="input-icon" />
               <input
                 id="email"
                 v-model="form.email"
                 type="email"
                 required
                 autocomplete="email"
-                class="w-full pl-12 pr-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
+                class="input-field input-with-icon"
                 placeholder="tu@email.com"
               />
             </div>
           </div>
 
-          <!-- Password -->
-          <div>
-            <label for="password" class="block text-sm font-medium text-slate-700 mb-2">
-              Contraseña
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <LockIcon :size="20" class="text-slate-400" />
-              </div>
+          <div class="form-group">
+            <label for="password" class="form-label">Contraseña</label>
+            <div class="input-wrapper">
+              <LockIcon :size="20" class="input-icon" />
               <input
                 id="password"
                 v-model="form.password"
@@ -90,44 +66,36 @@
                 required
                 autocomplete="new-password"
                 minlength="6"
-                class="w-full pl-12 pr-12 py-3 rounded-2xl border-2 border-stone-200 focus:border-emerald-600 focus:outline-none text-lg"
+                class="input-field input-with-icon input-with-action"
                 placeholder="Mínimo 6 caracteres"
               />
               <button
                 type="button"
                 @click="showPassword = !showPassword"
-                class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600"
+                class="input-action-btn"
               >
                 <EyeIcon v-if="!showPassword" :size="20" />
                 <EyeOffIcon v-else :size="20" />
               </button>
             </div>
-            <p
-              v-if="form.password && form.password.length < 6"
-              class="mt-1 text-sm text-amber-600"
-            >
+            <p v-if="form.password && form.password.length < 6" class="form-hint warning">
               La contraseña debe tener al menos 6 caracteres
             </p>
           </div>
 
-          <!-- Submit Button -->
           <button
             type="submit"
             :disabled="authStore.loading || !isFormValid"
-            class="w-full py-3 px-6 bg-emerald-600 text-white font-semibold text-lg rounded-2xl hover:bg-emerald-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            class="btn btn-primary w-full"
           >
-            <LoaderIcon v-if="authStore.loading" :size="20" class="animate-spin" />
+            <LoaderIcon v-if="authStore.loading" :size="20" class="spin" />
             <span>{{ authStore.loading ? 'Creando cuenta...' : 'Crear Cuenta' }}</span>
           </button>
         </form>
 
-        <!-- Link a login -->
-        <p class="mt-6 text-center text-slate-600">
+        <p class="auth-footer">
           ¿Ya tienes cuenta?
-          <router-link
-            to="/login"
-            class="text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
-          >
+          <router-link to="/login" class="link-primary">
             Inicia Sesión
           </router-link>
         </p>
@@ -173,15 +141,191 @@ const isFormValid = computed(() => {
 
 const handleRegister = async () => {
   if (!isFormValid.value) return
-
   const success = await authStore.register(
     form.value.name,
     form.value.email,
     form.value.password
   )
-
   if (success) {
     router.push('/')
   }
 }
 </script>
+
+<style scoped>
+/* Copia exactamente los mismos estilos del LoginView para mantener consistencia */
+.auth-view {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background-color: var(--color-background);
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 450px;
+}
+
+/* Header */
+.auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logo-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background-color: var(--color-primary-light);
+  border-radius: 50%;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}
+
+.auth-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.auth-subtitle {
+  color: var(--color-text-muted);
+  margin-top: 0.5rem;
+}
+
+/* Card & Form */
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-main);
+  margin-bottom: 0.5rem;
+}
+
+.form-hint {
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.form-hint.warning {
+  color: var(--color-accent);
+}
+
+/* Inputs con Iconos */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.input-with-icon {
+  padding-left: 3rem !important;
+}
+
+.input-with-action {
+  padding-right: 3rem !important;
+}
+
+.input-action-btn {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0.25rem;
+}
+
+.input-action-btn:hover {
+  color: var(--color-text-main);
+}
+
+/* Botones y Links */
+.w-full {
+  width: 100%;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.auth-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.link-primary {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.link-primary:hover {
+  color: #1b5e20;
+}
+
+/* Alerts custom */
+.alert {
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.btn-icon:hover {
+  opacity: 1;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>

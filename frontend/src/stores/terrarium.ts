@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useAnimalStore } from './animal'
 
 export interface Animal {
   _id: string
@@ -283,6 +284,13 @@ export const useTerrariumStore = defineStore('terrarium', () => {
 
       if (!response.ok) {
         throw new Error(data.message || 'Error al quitar animal del terrario')
+      }
+
+      // Sincronizar el estado del animal en animalStore
+      const animalStore = useAnimalStore()
+      const animalInList = animalStore.myAnimals.find(a => a._id === animalId)
+      if (animalInList) {
+        animalInList.terrarium = null
       }
 
       // Refrescar la lista de terrarios
