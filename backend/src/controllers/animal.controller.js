@@ -91,10 +91,13 @@ export const getAnimalById = async (req, res) => {
 
     const terrariumIds = terrariums.map(t => t._id)
 
-    // Buscar el animal y verificar que esté en uno de los terrarios del usuario
+    // Buscar el animal y verificar que esté en uno de los terrarios del usuario O sin terrario asignado
     const animal = await Animal.findOne({
       _id: req.params.id,
-      terrarium: { $in: terrariumIds },
+      $or: [
+        { terrarium: { $in: terrariumIds } },
+        { terrarium: null }
+      ],
       isActive: true
     })
       .populate('species', 'commonName scientificName biome parameters imageUrl description')
@@ -189,10 +192,13 @@ export const updateAnimal = async (req, res) => {
 
     const terrariumIds = userTerrariums.map(t => t._id)
 
-    // Verificar que el animal pertenezca al usuario (está en uno de sus terrarios)
+    // Verificar que el animal pertenezca al usuario (está en uno de sus terrarios O sin terrario asignado)
     const currentAnimal = await Animal.findOne({
       _id: req.params.id,
-      terrarium: { $in: terrariumIds },
+      $or: [
+        { terrarium: { $in: terrariumIds } },
+        { terrarium: null }
+      ],
       isActive: true
     }).populate('species')
 
@@ -238,28 +244,27 @@ export const updateAnimal = async (req, res) => {
           biomeToCheck = currentAnimal.species?.biome
         }
 
+        // Verificar compatibilidad (solo para logging, no bloquea la operación)
         if (biomeToCheck) {
           const compatibilityCheck = await checkBiomeCompatibility(
             newTerrariumId,
             biomeToCheck,
             req.params.id // Excluir el animal actual de la verificación
           )
-
-          if (!compatibilityCheck.compatible) {
-            return res.status(400).json({
-              success: false,
-              message: 'Incompatibilidad de Bioma',
-              details: compatibilityCheck.details,
-              warning: true
-            })
-          }
+          // Permitir animales incompatibles, solo advertir visualmente en el frontend
         }
       }
     }
 
     // Actualizar el animal
     const animal = await Animal.findOneAndUpdate(
-      { _id: req.params.id, terrarium: { $in: terrariumIds } },
+      { 
+        _id: req.params.id, 
+        $or: [
+          { terrarium: { $in: terrariumIds } },
+          { terrarium: null }
+        ]
+      },
       req.body,
       { new: true, runValidators: true }
     )
@@ -330,22 +335,14 @@ export const moveAnimal = async (req, res) => {
       })
     }
 
-    // Si se mueve a un terrario (no se saca), verificar compatibilidad
+    // Si se mueve a un terrario (no se saca), verificar compatibilidad (solo para logging, no bloquea)
     if (terrariumId) {
       const compatibilityCheck = await checkBiomeCompatibility(
         terrariumId,
         animal.species.biome,
         animal._id.toString()
       )
-
-      if (!compatibilityCheck.compatible) {
-        return res.status(400).json({
-          success: false,
-          message: 'Incompatibilidad de Bioma',
-          details: compatibilityCheck.details,
-          warning: true
-        })
-      }
+      // Permitir animales incompatibles, solo advertir visualmente en el frontend
     }
 
     animal.terrarium = terrariumId || null
@@ -428,10 +425,13 @@ export const updateProfileImage = async (req, res) => {
 
     const terrariumIds = userTerrariums.map(t => t._id)
 
-    // Buscar el animal y verificar que pertenezca al usuario
+    // Buscar el animal y verificar que pertenezca al usuario (está en uno de sus terrarios O sin terrario asignado)
     const animal = await Animal.findOne({
       _id: req.params.id,
-      terrarium: { $in: terrariumIds },
+      $or: [
+        { terrarium: { $in: terrariumIds } },
+        { terrarium: null }
+      ],
       isActive: true
     })
 
@@ -513,10 +513,13 @@ export const addToGallery = async (req, res) => {
 
     const terrariumIds = userTerrariums.map(t => t._id)
 
-    // Buscar el animal y verificar que pertenezca al usuario
+    // Buscar el animal y verificar que pertenezca al usuario (está en uno de sus terrarios O sin terrario asignado)
     const animal = await Animal.findOne({
       _id: req.params.id,
-      terrarium: { $in: terrariumIds },
+      $or: [
+        { terrarium: { $in: terrariumIds } },
+        { terrarium: null }
+      ],
       isActive: true
     })
 
@@ -593,10 +596,13 @@ export const removeFromGallery = async (req, res) => {
 
     const terrariumIds = userTerrariums.map(t => t._id)
 
-    // Buscar el animal y verificar que pertenezca al usuario
+    // Buscar el animal y verificar que pertenezca al usuario (está en uno de sus terrarios O sin terrario asignado)
     const animal = await Animal.findOne({
       _id: req.params.id,
-      terrarium: { $in: terrariumIds },
+      $or: [
+        { terrarium: { $in: terrariumIds } },
+        { terrarium: null }
+      ],
       isActive: true
     })
 

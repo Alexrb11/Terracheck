@@ -273,15 +273,16 @@ export const useTerrariumStore = defineStore('terrarium', () => {
     error.value = null
 
     try {
-      const response = await fetch(`/api/animals/${animalId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders()
+      const response = await fetch(`/api/animals/${animalId}/move`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ terrariumId: null })
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al eliminar animal')
+        throw new Error(data.message || 'Error al quitar animal del terrario')
       }
 
       // Refrescar la lista de terrarios

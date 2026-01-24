@@ -153,6 +153,7 @@
                 v-for="animal in terrarium.animals"
                 :key="animal._id"
                 class="animal-card"
+                :class="{ 'animal-card--incompatible': isBiomeIncompatible(animal) }"
               >
                 <div class="animal-avatar">
                   {{ animal.name.charAt(0) }}
@@ -165,6 +166,16 @@
                   <p v-if="animal.species?.scientificName" class="animal-card__scientific">
                     {{ animal.species.scientificName }}
                   </p>
+                  <!-- Bioma del animal -->
+                  <div v-if="animal.species?.biome" class="animal-card__biome">
+                    <MapPinIcon :size="14" />
+                    <span>{{ getBiomeLabel(animal.species.biome) }}</span>
+                  </div>
+                  <!-- Advertencia de incompatibilidad -->
+                  <div v-if="isBiomeIncompatible(animal)" class="animal-card__incompatibility-warning">
+                    <AlertTriangleIcon :size="16" />
+                    <span>Bioma incompatible</span>
+                  </div>
                 </div>
                 <div class="animal-card__actions">
                   <span
@@ -176,9 +187,9 @@
                   <button
                     @click="handleDeleteAnimal(animal._id, animal.name)"
                     class="animal-card__delete-btn"
-                    title="Eliminar animal"
+                    title="Quitar del terrario"
                   >
-                    <TrashIcon :size="18" />
+                    <LogOutIcon :size="18" />
                   </button>
                 </div>
               </div>
@@ -269,7 +280,8 @@ import {
   TrashIcon,
   EditIcon,
   BoxIcon,
-  MapPinIcon
+  MapPinIcon,
+  LogOutIcon
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -364,6 +376,25 @@ const getSexLabel = (sex?: string): string => {
   return labels[sex || 'unknown'] || 'Desconocido'
 }
 
+// Helper para verificar incompatibilidad de biomas
+const isBiomeIncompatible = (animal: any): boolean => {
+  if (!terrarium.value || !animal.species?.biome) {
+    return false
+  }
+  
+  // Normalizar ambos valores para comparación (lowercase y trim)
+  const terrariumBiome = String(terrarium.value.biome || '').toLowerCase().trim()
+  const animalBiome = String(animal.species.biome || '').toLowerCase().trim()
+  
+  // Si alguno está vacío, no considerar incompatible
+  if (!terrariumBiome || !animalBiome) {
+    return false
+  }
+  
+  // Retornar true solo si son diferentes
+  return terrariumBiome !== animalBiome
+}
+
 const handleAnimalAdded = async () => {
   // Recargar el terrario específico para ver el nuevo habitante
   await store.fetchTerrariumById(route.params.id as string)
@@ -371,14 +402,14 @@ const handleAnimalAdded = async () => {
 
 const handleDeleteAnimal = (animalId: string, animalName: string) => {
   openConfirm(
-    'Eliminar Animal',
-    `¿Estás seguro de que deseas eliminar a ${animalName}?`,
+    'Quitar del terrario',
+    `¿Estás seguro de que deseas quitar a ${animalName} de este terrario? El animal volverá a tu lista de animales disponibles.`,
     async () => {
       await store.removeAnimalFromTerrarium(animalId)
     },
     {
-      confirmText: 'Eliminar',
-      isDanger: true
+      confirmText: 'Quitar',
+      isDanger: false
     }
   )
 }
@@ -776,11 +807,17 @@ onMounted(async () => {
   gap: 0.75rem;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  border: 2px solid transparent;
 }
 
 .animal-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+.animal-card--incompatible {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
 }
 
 .animal-card__info {
@@ -805,6 +842,41 @@ onMounted(async () => {
   color: var(--color-text-muted);
   font-style: italic;
   margin: 0;
+}
+
+.animal-card__biome {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.animal-card__biome svg {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.animal-card__incompatibility-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-md);
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.animal-card__incompatibility-warning svg {
+  flex-shrink: 0;
 }
 
 .animal-card__actions {
