@@ -53,9 +53,13 @@ export const getMyAnimals = async (req, res) => {
 
     const terrariumIds = terrariums.map(t => t._id)
 
-    // Buscar todos los animales que estén en esos terrarios
+    // Buscar todos los animales que estén en esos terrarios O sin terrario asignado
+    // Esto permite mostrar animales disponibles para asignar
     const animals = await Animal.find({
-      terrarium: { $in: terrariumIds },
+      $or: [
+        { terrarium: { $in: terrariumIds } },
+        { terrarium: null }
+      ],
       isActive: true
     })
       .populate('species', 'commonName scientificName biome')
@@ -199,51 +203,56 @@ export const updateAnimal = async (req, res) => {
       })
     }
 
-    // Si se cambia de terrario, verificar que el nuevo terrario también pertenezca al usuario
-    if (newTerrariumId) {
-      const newTerrarium = await Terrarium.findOne({
-        _id: newTerrariumId,
-        user: req.user._id,
-        isActive: true
-      })
-
-      if (!newTerrarium) {
-        return res.status(403).json({
-          success: false,
-          message: 'El terrario especificado no existe o no tienes permisos para usarlo'
+    // VALIDACIÓN DE SEGURIDAD: Si se incluye terrarium en el body, verificar que pertenezca al usuario
+    if (req.body.terrarium !== undefined) {
+      const newTerrariumId = req.body.terrarium
+      
+      // Si se asigna a un terrario (no es null), verificar que exista y pertenezca al usuario
+      if (newTerrariumId) {
+        const newTerrarium = await Terrarium.findOne({
+          _id: newTerrariumId,
+          user: req.user._id,
+          isActive: true
         })
-      }
 
-      // Verificar compatibilidad de biomas
-      let biomeToCheck
-
-      if (newSpeciesId) {
-        const speciesDoc = await Species.findById(newSpeciesId)
-        if (!speciesDoc) {
-          return res.status(400).json({
+        if (!newTerrarium) {
+          return res.status(403).json({
             success: false,
-            message: 'La especie especificada no existe'
+            message: 'El terrario especificado no existe o no tienes permisos para usarlo'
           })
         }
-        biomeToCheck = speciesDoc.biome
-      } else {
-        biomeToCheck = currentAnimal.species?.biome
-      }
 
-      if (biomeToCheck) {
-        const compatibilityCheck = await checkBiomeCompatibility(
-          newTerrariumId,
-          biomeToCheck,
-          req.params.id // Excluir el animal actual de la verificación
-        )
+        // Verificar compatibilidad de biomas
+        let biomeToCheck
 
-        if (!compatibilityCheck.compatible) {
-          return res.status(400).json({
-            success: false,
-            message: 'Incompatibilidad de Bioma',
-            details: compatibilityCheck.details,
-            warning: true
-          })
+        if (newSpeciesId) {
+          const speciesDoc = await Species.findById(newSpeciesId)
+          if (!speciesDoc) {
+            return res.status(400).json({
+              success: false,
+              message: 'La especie especificada no existe'
+            })
+          }
+          biomeToCheck = speciesDoc.biome
+        } else {
+          biomeToCheck = currentAnimal.species?.biome
+        }
+
+        if (biomeToCheck) {
+          const compatibilityCheck = await checkBiomeCompatibility(
+            newTerrariumId,
+            biomeToCheck,
+            req.params.id // Excluir el animal actual de la verificación
+          )
+
+          if (!compatibilityCheck.compatible) {
+            return res.status(400).json({
+              success: false,
+              message: 'Incompatibilidad de Bioma',
+              details: compatibilityCheck.details,
+              warning: true
+            })
+          }
         }
       }
     }

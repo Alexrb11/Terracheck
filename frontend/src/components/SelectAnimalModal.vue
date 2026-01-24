@@ -50,8 +50,17 @@
 
           <!-- Badge de ubicación -->
           <div class="animal-select-card__location">
-            <span class="location-badge">
-              {{ animal.terrarium ? `En: ${animal.terrarium.name}` : 'Sin asignar' }}
+            <span
+              v-if="animal.terrarium"
+              class="location-badge location-badge--warning"
+            >
+              📍 Mover desde {{ animal.terrarium.name }}
+            </span>
+            <span
+              v-else
+              class="location-badge location-badge--success"
+            >
+              ✨ Sin asignar
             </span>
           </div>
         </div>
@@ -61,7 +70,7 @@
       <div v-else class="select-animal-modal__empty">
         <PawPrintIcon :size="48" class="select-animal-modal__empty-icon" />
         <p class="select-animal-modal__empty-text">
-          No hay animales disponibles para asignar
+          No tienes más animales para añadir
         </p>
       </div>
     </template>
@@ -83,7 +92,7 @@ import { useScrollLock } from '@/composables/useScrollLock'
 const props = defineProps<{
   isOpen: boolean
   terrariumId: string
-  currentAnimals?: string[] // Array de IDs de animales ya en el terrario
+  currentAnimals?: (string | { _id: string })[] // Array de IDs o objetos con _id de animales ya en el terrario
 }>()
 
 const emit = defineEmits<{
@@ -98,9 +107,19 @@ useScrollLock(toRef(props, 'isOpen'))
 
 // Computed: Filtrar animales que NO están ya en este terrario
 const availableAnimals = computed(() => {
-  const currentIds = props.currentAnimals || []
+  if (!props.currentAnimals) {
+    return animalStore.myAnimals
+  }
+  
+  // Si currentAnimals es un array de objetos, extraer los IDs y usar Set para mejor rendimiento
+  const currentIds = new Set(
+    props.currentAnimals.map((item: any) => 
+      typeof item === 'string' ? item : item._id
+    )
+  )
+  
   return animalStore.myAnimals.filter(
-    animal => !currentIds.includes(animal._id)
+    (animal) => !currentIds.has(animal._id)
   )
 })
 
@@ -265,12 +284,20 @@ onMounted(() => {
 .location-badge {
   display: inline-block;
   padding: 0.375rem 0.75rem;
-  background: rgba(0, 0, 0, 0.05);
   border-radius: var(--radius-md);
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--color-text-muted);
   white-space: nowrap;
+}
+
+.location-badge--warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: #78350f;
+}
+
+.location-badge--success {
+  background: rgba(34, 197, 94, 0.2);
+  color: #14532d;
 }
 
 /* ============================================

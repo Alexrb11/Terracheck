@@ -365,8 +365,8 @@ const getSexLabel = (sex?: string): string => {
 }
 
 const handleAnimalAdded = async () => {
-  // Recargar el terrario para ver el nuevo habitante
-  await store.fetchTerrariums()
+  // Recargar el terrario específico para ver el nuevo habitante
+  await store.fetchTerrariumById(route.params.id as string)
 }
 
 const handleDeleteAnimal = (animalId: string, animalName: string) => {

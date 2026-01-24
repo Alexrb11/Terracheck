@@ -84,6 +84,39 @@ export const useTerrariumStore = defineStore('terrarium', () => {
     }
   }
 
+  const fetchTerrariumById = async (id: string) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        headers: getAuthHeaders()
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al obtener el terrario')
+      }
+
+      // Actualizar el terrario en el estado local
+      const index = terrariums.value.findIndex(t => t._id === id)
+      if (index !== -1) {
+        terrariums.value[index] = data.data
+      } else {
+        // Si no existe, añadirlo
+        terrariums.value.push(data.data)
+      }
+
+      return data.data
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error desconocido'
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
   const addTerrarium = async (terrarium: {
     name: string
     type: 'mesh' | 'glass' | 'hybrid'
@@ -275,6 +308,7 @@ export const useTerrariumStore = defineStore('terrarium', () => {
     getTerrariumById,
     // Actions
     fetchTerrariums,
+    fetchTerrariumById,
     addTerrarium,
     updateTerrarium,
     deleteTerrarium,
