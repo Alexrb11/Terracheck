@@ -359,6 +359,18 @@
       </div>
     </main>
 
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+      :is-open="confirmModal.isOpen"
+      :title="confirmModal.title"
+      :message="confirmModal.message"
+      :confirm-text="confirmModal.confirmText"
+      :cancel-text="confirmModal.cancelText"
+      :is-danger="confirmModal.isDanger"
+      @close="confirmModal.isOpen = false"
+      @confirm="handleConfirm"
+    />
+
     <!-- Role Modal -->
     <Teleport to="body">
       <div
@@ -457,6 +469,7 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRolesStore, type Role } from '@/stores/roles'
 import Navigation from '@/components/Navigation.vue'
+import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import {
   ShieldIcon,
   UsersIcon,
@@ -528,6 +541,54 @@ const pagination = ref<Pagination>({
   total: 0,
   pages: 0
 })
+
+// Confirmation Modal
+const confirmModal = ref<{
+  isOpen: boolean
+  title: string
+  message: string
+  confirmText: string
+  cancelText: string
+  isDanger: boolean
+  onConfirm: (() => void) | null
+}>({
+  isOpen: false,
+  title: '',
+  message: '',
+  confirmText: 'Confirmar',
+  cancelText: 'Cancelar',
+  isDanger: false,
+  onConfirm: null
+})
+
+const openConfirm = (
+  title: string,
+  message: string,
+  onConfirm: () => void,
+  options?: {
+    confirmText?: string
+    cancelText?: string
+    isDanger?: boolean
+  }
+) => {
+  confirmModal.value = {
+    isOpen: true,
+    title,
+    message,
+    confirmText: options?.confirmText || 'Confirmar',
+    cancelText: options?.cancelText || 'Cancelar',
+    isDanger: options?.isDanger ?? false,
+    onConfirm
+  }
+}
+
+const handleConfirm = () => {
+  if (confirmModal.value.onConfirm) {
+    confirmModal.value.onConfirm()
+  }
+  confirmModal.value.isOpen = false
+  confirmModal.value.onConfirm = null
+}
 
 // Role Modal
 const showRoleModal = ref(false)
@@ -651,32 +712,34 @@ const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
   }
 }
 
-const deleteUserConfirm = async (user: AdminUser) => {
-  const cascade = confirm(
-    `¿Eliminar a ${user.name} y TODOS sus datos (terrarios, animales)?
-    
-Presiona OK para eliminar todo, Cancelar para abortar.`
-  )
-  
-  if (!cascade) return
-  
-  try {
-    const response = await fetch(`/api/admin/users/${user._id}?cascade=true`, {
-      method: 'DELETE',
-      headers: getAuthHeaders()
-    })
-    
-    const data = await response.json()
-    
-    if (data.success) {
-      users.value = users.value.filter(u => u._id !== user._id)
-      fetchStats()
-    } else {
-      alert(data.message || 'Error al eliminar usuario')
+const deleteUserConfirm = (user: AdminUser) => {
+  openConfirm(
+    'Eliminar Usuario',
+    `¿Estás seguro de que deseas eliminar a ${user.name} y TODOS sus datos (terrarios, animales)?\n\nEsta acción no se puede deshacer.`,
+    async () => {
+      try {
+        const response = await fetch(`/api/admin/users/${user._id}?cascade=true`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        })
+        
+        const data = await response.json()
+        
+        if (data.success) {
+          users.value = users.value.filter(u => u._id !== user._id)
+          fetchStats()
+        } else {
+          alert(data.message || 'Error al eliminar usuario')
+        }
+      } catch (error) {
+        console.error('Error deleting user:', error)
+      }
+    },
+    {
+      confirmText: 'Eliminar',
+      isDanger: true
     }
-  } catch (error) {
-    console.error('Error deleting user:', error)
-  }
+  )
 }
 
 const changePage = (page: number) => {
@@ -764,16 +827,24 @@ const handleSaveRole = async () => {
   fetchStats()
 }
 
-const handleDeleteRole = async (role: Role) => {
-  if (!confirm(`¿Estás seguro de eliminar el rol "${role.name}"?`)) return
-  
-  const success = await rolesStore.deleteRole(role._id)
-  if (!success && rolesStore.error) {
-    alert(rolesStore.error)
-  } else {
-    fetchAvailableRoles()
-    fetchStats()
-  }
+const handleDeleteRole = (role: Role) => {
+  openConfirm(
+    'Eliminar Rol',
+    `¿Estás seguro de que deseas eliminar el rol "${role.name}"?`,
+    async () => {
+      const success = await rolesStore.deleteRole(role._id)
+      if (!success && rolesStore.error) {
+        alert(rolesStore.error)
+      } else {
+        fetchAvailableRoles()
+        fetchStats()
+      }
+    },
+    {
+      confirmText: 'Eliminar',
+      isDanger: true
+    }
+  )
 }
 
 onMounted(async () => {

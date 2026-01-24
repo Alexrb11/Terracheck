@@ -232,6 +232,18 @@
       @close="showAddAnimalModal = false"
       @success="handleAnimalAdded"
     />
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+      :is-open="confirmModal.isOpen"
+      :title="confirmModal.title"
+      :message="confirmModal.message"
+      :confirm-text="confirmModal.confirmText"
+      :cancel-text="confirmModal.cancelText"
+      :is-danger="confirmModal.isDanger"
+      @close="confirmModal.isOpen = false"
+      @confirm="handleConfirm"
+    />
   </div>
 </template>
 
@@ -241,6 +253,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useTerrariumStore } from '@/stores/terrarium'
 import Navigation from '@/components/Navigation.vue'
 import AddAnimalModal from '@/components/AddAnimalModal.vue'
+import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import {
   ArrowLeftIcon,
   SquareIcon,
@@ -263,6 +276,54 @@ const router = useRouter()
 const store = useTerrariumStore()
 const loading = ref(true)
 const showAddAnimalModal = ref(false)
+
+// Confirmation Modal
+const confirmModal = ref<{
+  isOpen: boolean
+  title: string
+  message: string
+  confirmText: string
+  cancelText: string
+  isDanger: boolean
+  onConfirm: (() => void) | null
+}>({
+  isOpen: false,
+  title: '',
+  message: '',
+  confirmText: 'Confirmar',
+  cancelText: 'Cancelar',
+  isDanger: false,
+  onConfirm: null
+})
+
+const openConfirm = (
+  title: string,
+  message: string,
+  onConfirm: () => void,
+  options?: {
+    confirmText?: string
+    cancelText?: string
+    isDanger?: boolean
+  }
+) => {
+  confirmModal.value = {
+    isOpen: true,
+    title,
+    message,
+    confirmText: options?.confirmText || 'Confirmar',
+    cancelText: options?.cancelText || 'Cancelar',
+    isDanger: options?.isDanger ?? false,
+    onConfirm
+  }
+}
+
+const handleConfirm = () => {
+  if (confirmModal.value.onConfirm) {
+    confirmModal.value.onConfirm()
+  }
+  confirmModal.value.isOpen = false
+  confirmModal.value.onConfirm = null
+}
 
 const terrariumId = computed(() => route.params.id as string)
 
@@ -301,12 +362,18 @@ const handleAnimalAdded = () => {
   // El modal ya recarga los datos, no necesitamos hacer nada extra
 }
 
-const handleDeleteAnimal = async (animalId: string, animalName: string) => {
-  if (!confirm(`¿Estás seguro de que deseas eliminar a ${animalName}?`)) {
-    return
-  }
-
-  await store.removeAnimalFromTerrarium(animalId)
+const handleDeleteAnimal = (animalId: string, animalName: string) => {
+  openConfirm(
+    'Eliminar Animal',
+    `¿Estás seguro de que deseas eliminar a ${animalName}?`,
+    async () => {
+      await store.removeAnimalFromTerrarium(animalId)
+    },
+    {
+      confirmText: 'Eliminar',
+      isDanger: true
+    }
+  )
 }
 
 const handleEdit = () => {
@@ -315,17 +382,23 @@ const handleEdit = () => {
   router.push('/')
 }
 
-const handleDelete = async () => {
+const handleDelete = () => {
   if (!terrarium.value) return
   
-  if (!confirm(`¿Estás seguro de que deseas eliminar el terrario "${terrarium.value.name}"? Esta acción no se puede deshacer.`)) {
-    return
-  }
-
-  const success = await store.deleteTerrarium(terrarium.value._id)
-  if (success) {
-    router.push('/')
-  }
+  openConfirm(
+    'Eliminar Terrario',
+    `¿Estás seguro de que deseas eliminar el terrario "${terrarium.value.name}"?\n\nEsta acción no se puede deshacer.`,
+    async () => {
+      const success = await store.deleteTerrarium(terrarium.value!._id)
+      if (success) {
+        router.push('/')
+      }
+    },
+    {
+      confirmText: 'Eliminar',
+      isDanger: true
+    }
+  )
 }
 
 onMounted(async () => {
