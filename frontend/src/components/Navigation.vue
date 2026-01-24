@@ -22,6 +22,16 @@
         <span class="nav-link__text">Especies</span>
       </router-link>
 
+      <router-link
+        to="/my-animals"
+        class="nav-link"
+        :class="{ 'nav-link--active': $route.path === '/my-animals' }"
+        aria-label="Mis Especies"
+      >
+        <PawPrintIcon :size="24" />
+        <span class="nav-link__text">Mis Especies</span>
+      </router-link>
+
       <button
         class="nav-link nav-link--danger"
         aria-label="Cerrar Sesión"
@@ -58,6 +68,15 @@
           >
             <BookOpenIcon :size="20" />
             <span>Especies</span>
+          </router-link>
+
+          <router-link
+            to="/my-animals"
+            class="nav-link nav-link--horizontal"
+            :class="{ 'nav-link--active': $route.path === '/my-animals' }"
+          >
+            <PawPrintIcon :size="20" />
+            <span>Mis Especies</span>
           </router-link>
 
           <!-- Admin Panel (solo visible para admins) -->
@@ -106,7 +125,8 @@ import {
   LayoutGridIcon,
   BookOpenIcon,
   LogOutIcon,
-  ShieldIcon
+  ShieldIcon,
+  PawPrintIcon
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()

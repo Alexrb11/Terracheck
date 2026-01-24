@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import {
   getAllAnimals,
+  getMyAnimals,
   getAnimalById,
   createAnimal,
   updateAnimal,
@@ -16,6 +17,9 @@ router.use(protect)
 
 // GET /api/animals - Obtener todos los animales
 router.get('/', getAllAnimals)
+
+// GET /api/animals/mine - Obtener todos los animales del usuario autenticado
+router.get('/mine', getMyAnimals)
 
 // GET /api/animals/:id - Obtener un animal por ID
 router.get('/:id', getAnimalById)

@@ -36,6 +36,40 @@ export const getAllAnimals = async (req, res) => {
   }
 }
 
+// GET /api/animals/mine - Obtener todos los animales del usuario autenticado
+export const getMyAnimals = async (req, res) => {
+  try {
+    // Buscar todos los terrarios del usuario
+    const terrariums = await Terrarium.find({ 
+      user: req.user._id,
+      isActive: true 
+    }).select('_id')
+
+    const terrariumIds = terrariums.map(t => t._id)
+
+    // Buscar todos los animales que estén en esos terrarios
+    const animals = await Animal.find({
+      terrarium: { $in: terrariumIds },
+      isActive: true
+    })
+      .populate('species', 'commonName scientificName biome')
+      .populate('terrarium', 'name')
+      .sort({ createdAt: -1 })
+
+    res.json({
+      success: true,
+      count: animals.length,
+      data: animals
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener mis animales',
+      error: error.message
+    })
+  }
+}
+
 // GET /api/animals/:id - Obtener un animal por ID
 export const getAnimalById = async (req, res) => {
   try {
