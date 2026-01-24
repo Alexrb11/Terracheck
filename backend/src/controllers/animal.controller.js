@@ -89,7 +89,7 @@ export const getAnimalById = async (req, res) => {
       isActive: true
     })
       .populate('species', 'commonName scientificName biome parameters imageUrl description')
-      .populate('terrarium', 'name type biome dimensions sensors')
+      .populate('terrarium', 'name type biome dimensions')
 
     if (!animal) {
       return res.status(404).json({

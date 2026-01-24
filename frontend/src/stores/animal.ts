@@ -29,10 +29,6 @@ export interface AnimalWithTerrarium {
       height: number
       depth: number
     }
-    sensors?: {
-      temperature: number | null
-      humidity: number | null
-    }
   } | null
   sex: 'male' | 'female' | 'unknown'
   birthDate?: string

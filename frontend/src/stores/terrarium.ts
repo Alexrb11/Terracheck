@@ -27,11 +27,6 @@ export interface Terrarium {
     height: number
     depth: number
   }
-  sensors?: {
-    temperature: number | null
-    humidity: number | null
-    lastUpdated?: string
-  }
   animals: Animal[]
   hasCompatibilityIssue?: boolean
   parameters?: {

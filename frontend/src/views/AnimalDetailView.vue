@@ -213,32 +213,6 @@
                   </div>
                 </div>
 
-                <!-- Comparación con Terrario Actual -->
-                <div v-if="animal.terrarium?.sensors" class="stat-row stat-row--comparison">
-                  <div class="stat-row__content">
-                    <span class="stat-row__label">Estado Actual del Terrario</span>
-                    <div class="comparison-values">
-                      <div class="comparison-item">
-                        <span class="comparison-label">Temp:</span>
-                        <span
-                          class="comparison-value"
-                          :class="getTemperatureClass(animal.terrarium.sensors.temperature)"
-                        >
-                          {{ animal.terrarium.sensors.temperature ?? '--' }}°C
-                        </span>
-                      </div>
-                      <div class="comparison-item">
-                        <span class="comparison-label">Humedad:</span>
-                        <span
-                          class="comparison-value"
-                          :class="getHumidityClass(animal.terrarium.sensors.humidity)"
-                        >
-                          {{ animal.terrarium.sensors.humidity ?? '--' }}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -527,19 +501,6 @@ const calculateAge = (birthDate: string): string => {
   }
 }
 
-const getTemperatureClass = (temp: number | null): string => {
-  if (!temp || !animal.value?.species?.parameters) return ''
-  const { tempMin, tempMax } = animal.value.species.parameters
-  if (temp >= tempMin && temp <= tempMax) return 'comparison-value--good'
-  return 'comparison-value--warning'
-}
-
-const getHumidityClass = (humidity: number | null): string => {
-  if (!humidity || !animal.value?.species?.parameters) return ''
-  const { humidityMin, humidityMax } = animal.value.species.parameters
-  if (humidity >= humidityMin && humidity <= humidityMax) return 'comparison-value--good'
-  return 'comparison-value--warning'
-}
 
 const goToTerrarium = () => {
   if (animal.value?.terrarium?._id) {

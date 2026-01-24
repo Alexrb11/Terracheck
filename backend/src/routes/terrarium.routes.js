@@ -4,8 +4,7 @@ import {
   getTerrariumById,
   createTerrarium,
   updateTerrarium,
-  deleteTerrarium,
-  updateSensors
+  deleteTerrarium
 } from '../controllers/terrarium.controller.js'
 import { protect } from '../middleware/auth.middleware.js'
 
@@ -28,8 +27,5 @@ router.put('/:id', updateTerrarium)
 
 // DELETE /api/terrariums/:id - Eliminar un terrario
 router.delete('/:id', deleteTerrarium)
-
-// PUT /api/terrariums/:id/sensors - Actualizar sensores
-router.put('/:id/sensors', updateSensors)
 
 export default router

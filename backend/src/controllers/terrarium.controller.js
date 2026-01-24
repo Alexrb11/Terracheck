@@ -184,45 +184,29 @@ export const deleteTerrarium = async (req, res) => {
   }
 }
 
-// PUT /api/terrariums/:id/sensors - Actualizar sensores
-export const updateSensors = async (req, res) => {
-  try {
-    const { temperature, humidity } = req.body
+// Funciones helper para obtener parámetros (soportan estructura plana y anidada)
+const getTempMin = (params) => {
+  if (params.tempMin !== undefined) return params.tempMin
+  if (params.temperature?.min !== undefined) return params.temperature.min
+  return null
+}
 
-    // Verificar que el terrario pertenece al usuario
-    const terrarium = await Terrarium.findOneAndUpdate(
-      { 
-        _id: req.params.id, 
-        user: req.user._id // Verificar propiedad
-      },
-      {
-        sensors: {
-          temperature,
-          humidity,
-          lastUpdated: new Date()
-        }
-      },
-      { new: true }
-    )
+const getTempMax = (params) => {
+  if (params.tempMax !== undefined) return params.tempMax
+  if (params.temperature?.max !== undefined) return params.temperature.max
+  return null
+}
 
-    if (!terrarium) {
-      return res.status(404).json({
-        success: false,
-        message: 'Terrario no encontrado'
-      })
-    }
+const getHumMin = (params) => {
+  if (params.humidityMin !== undefined) return params.humidityMin
+  if (params.humidity?.min !== undefined) return params.humidity.min
+  return null
+}
 
-    res.json({
-      success: true,
-      data: terrarium.sensors
-    })
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: 'Error al actualizar sensores',
-      error: error.message
-    })
-  }
+const getHumMax = (params) => {
+  if (params.humidityMax !== undefined) return params.humidityMax
+  if (params.humidity?.max !== undefined) return params.humidity.max
+  return null
 }
 
 // Función auxiliar para calcular parámetros ideales del terrario (Terrario Inteligente)
@@ -233,11 +217,12 @@ function calculateParameters(animals) {
   }
 
   // Filtrar animales con especies populadas y parámetros válidos
+  // Soporta estructura plana (tempMin, tempMax, humidityMin, humidityMax)
   const animalsWithSpecies = animals.filter(
     animal => animal.species && 
     animal.species.parameters && 
-    animal.species.parameters.temperature && 
-    animal.species.parameters.humidity
+    (animal.species.parameters.tempMin !== undefined || 
+     (animal.species.parameters.temperature && animal.species.parameters.temperature.min !== undefined))
   )
 
   if (animalsWithSpecies.length === 0) {
@@ -245,14 +230,32 @@ function calculateParameters(animals) {
   }
 
   // Calcular la intersección de rangos para temperatura
-  const tempMins = animalsWithSpecies.map(a => a.species.parameters.temperature.min)
-  const tempMaxs = animalsWithSpecies.map(a => a.species.parameters.temperature.max)
+  const tempMins = animalsWithSpecies
+    .map(a => getTempMin(a.species.parameters))
+    .filter(val => val !== null)
+  const tempMaxs = animalsWithSpecies
+    .map(a => getTempMax(a.species.parameters))
+    .filter(val => val !== null)
+
+  if (tempMins.length === 0 || tempMaxs.length === 0) {
+    return null
+  }
+
   const idealTempMin = Math.max(...tempMins)
   const idealTempMax = Math.min(...tempMaxs)
 
   // Calcular la intersección de rangos para humedad
-  const humMins = animalsWithSpecies.map(a => a.species.parameters.humidity.min)
-  const humMaxs = animalsWithSpecies.map(a => a.species.parameters.humidity.max)
+  const humMins = animalsWithSpecies
+    .map(a => getHumMin(a.species.parameters))
+    .filter(val => val !== null)
+  const humMaxs = animalsWithSpecies
+    .map(a => getHumMax(a.species.parameters))
+    .filter(val => val !== null)
+
+  if (humMins.length === 0 || humMaxs.length === 0) {
+    return null
+  }
+
   const idealHumMin = Math.max(...humMins)
   const idealHumMax = Math.min(...humMaxs)
 
@@ -294,11 +297,12 @@ function calculateTerrariumRequirements(animals) {
   }
 
   // Filtrar animales con especies populadas y parámetros válidos
+  // Soporta estructura plana (tempMin, tempMax, humidityMin, humidityMax)
   const animalsWithSpecies = animals.filter(
     animal => animal.species && 
     animal.species.parameters && 
-    animal.species.parameters.temperature && 
-    animal.species.parameters.humidity
+    (animal.species.parameters.tempMin !== undefined || 
+     (animal.species.parameters.temperature && animal.species.parameters.temperature.min !== undefined))
   )
 
   if (animalsWithSpecies.length === 0) {
@@ -306,14 +310,32 @@ function calculateTerrariumRequirements(animals) {
   }
 
   // Calcular la intersección de rangos de temperatura
-  const tempMins = animalsWithSpecies.map(a => a.species.parameters.temperature.min)
-  const tempMaxs = animalsWithSpecies.map(a => a.species.parameters.temperature.max)
+  const tempMins = animalsWithSpecies
+    .map(a => getTempMin(a.species.parameters))
+    .filter(val => val !== null)
+  const tempMaxs = animalsWithSpecies
+    .map(a => getTempMax(a.species.parameters))
+    .filter(val => val !== null)
+
+  if (tempMins.length === 0 || tempMaxs.length === 0) {
+    return null
+  }
+
   const targetTempMin = Math.max(...tempMins)
   const targetTempMax = Math.min(...tempMaxs)
 
   // Calcular la intersección de rangos de humedad
-  const humMins = animalsWithSpecies.map(a => a.species.parameters.humidity.min)
-  const humMaxs = animalsWithSpecies.map(a => a.species.parameters.humidity.max)
+  const humMins = animalsWithSpecies
+    .map(a => getHumMin(a.species.parameters))
+    .filter(val => val !== null)
+  const humMaxs = animalsWithSpecies
+    .map(a => getHumMax(a.species.parameters))
+    .filter(val => val !== null)
+
+  if (humMins.length === 0 || humMaxs.length === 0) {
+    return null
+  }
+
   const targetHumMin = Math.max(...humMins)
   const targetHumMax = Math.min(...humMaxs)
 

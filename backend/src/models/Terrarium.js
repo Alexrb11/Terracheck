@@ -57,22 +57,6 @@ const terrariumSchema = new mongoose.Schema({
     default: BIOMES.TROPICAL
   },
 
-  // Sensores actuales (opcional)
-  sensors: {
-    temperature: {
-      type: Number,
-      default: null
-    },
-    humidity: {
-      type: Number,
-      default: null
-    },
-    lastUpdated: {
-      type: Date,
-      default: null
-    }
-  },
-
   // Imagen (URL opcional)
   imageUrl: {
     type: String,

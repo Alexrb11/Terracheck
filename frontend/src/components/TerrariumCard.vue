@@ -19,11 +19,6 @@
     <!-- Header: Nombre y acciones -->
     <header class="terrarium-card__header">
       <div class="header-info">
-        <component 
-          :is="getIcon(terrarium.type)" 
-          class="type-icon" 
-          :size="18" 
-        />
         <h3 class="terrarium-name">{{ terrarium.name }}</h3>
       </div>
       <div class="header-actions">
@@ -77,15 +72,6 @@
     >
       <div class="footer-overlay"></div>
       
-      <div class="sensor-badge">
-        <ThermometerIcon :size="14" />
-        <span>{{ terrarium.sensors?.temperature ?? '--' }}°C</span>
-      </div>
-      
-      <div class="sensor-badge">
-        <DropletIcon :size="14" />
-        <span>{{ terrarium.sensors?.humidity ?? '--' }}%</span>
-      </div>
     </footer>
   </article>
 </template>
@@ -97,8 +83,6 @@ import {
   SquareIcon,
   Grid3x3Icon,
   AlertTriangleIcon,
-  ThermometerIcon,
-  DropletIcon,
   MoreVerticalIcon
 } from 'lucide-vue-next'
 import { getImageUrl } from '../utils/image'
@@ -431,31 +415,4 @@ const getFooterStyle = (biome: string = 'tropical'): { backgroundImage: string; 
   pointer-events: none;
 }
 
-.sensor-badge {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.sensor-badge:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.sensor-badge svg {
-  flex-shrink: 0;
-}
 </style>
