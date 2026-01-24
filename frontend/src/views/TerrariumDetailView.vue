@@ -183,13 +183,13 @@
                 </div>
               </div>
 
-              <!-- Botón Añadir Animal -->
+              <!-- Botón Añadir Habitante -->
               <button
-                @click="showAddAnimalModal = true"
+                @click="showSelectAnimalModal = true"
                 class="btn-add-animal"
               >
                 <PlusIcon :size="32" />
-                <span>Añadir Animal</span>
+                <span>Añadir Habitante</span>
               </button>
             </div>
             
@@ -201,11 +201,11 @@
                 </div>
                 <p class="empty-state__text">No hay animales asignados a este terrario</p>
                 <button
-                  @click="showAddAnimalModal = true"
+                  @click="showSelectAnimalModal = true"
                   class="btn btn-primary"
                 >
                   <PlusIcon :size="20" />
-                  <span>Añadir tu primer animal</span>
+                  <span>Añadir tu primer habitante</span>
                 </button>
               </div>
             </div>
@@ -225,12 +225,13 @@
       </div>
     </main>
 
-    <!-- Modal Añadir Animal -->
-    <AddAnimalModal
-      :is-open="showAddAnimalModal"
+    <!-- Modal Seleccionar Animal -->
+    <SelectAnimalModal
+      :is-open="showSelectAnimalModal"
       :terrarium-id="terrariumId"
-      @close="showAddAnimalModal = false"
-      @success="handleAnimalAdded"
+      :current-animals="currentAnimalIds"
+      @close="showSelectAnimalModal = false"
+      @added="handleAnimalAdded"
     />
 
     <!-- Confirmation Modal -->
@@ -252,7 +253,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTerrariumStore } from '@/stores/terrarium'
 import Navigation from '@/components/Navigation.vue'
-import AddAnimalModal from '@/components/AddAnimalModal.vue'
+import SelectAnimalModal from '@/components/SelectAnimalModal.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import {
   ArrowLeftIcon,
@@ -275,7 +276,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useTerrariumStore()
 const loading = ref(true)
-const showAddAnimalModal = ref(false)
+const showSelectAnimalModal = ref(false)
 
 // Confirmation Modal
 const confirmModal = ref<{
@@ -331,6 +332,11 @@ const terrarium = computed(() =>
   store.getTerrariumById(terrariumId.value)
 )
 
+// IDs de animales actuales en el terrario
+const currentAnimalIds = computed(() => {
+  return terrarium.value?.animals?.map(animal => animal._id) || []
+})
+
 const getBiomeLabel = (biome?: string): string => {
   const labels: Record<string, string> = {
     tropical: 'Tropical',
@@ -358,8 +364,9 @@ const getSexLabel = (sex?: string): string => {
   return labels[sex || 'unknown'] || 'Desconocido'
 }
 
-const handleAnimalAdded = () => {
-  // El modal ya recarga los datos, no necesitamos hacer nada extra
+const handleAnimalAdded = async () => {
+  // Recargar el terrario para ver el nuevo habitante
+  await store.fetchTerrariums()
 }
 
 const handleDeleteAnimal = (animalId: string, animalName: string) => {

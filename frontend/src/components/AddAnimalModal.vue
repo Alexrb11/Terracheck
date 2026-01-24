@@ -399,52 +399,80 @@ const handleSubmit = async () => {
         localError.value = animalStore.error || 'Error al actualizar el animal'
       }
     } else {
-      // Modo creación - requiere terrariumId
-      if (!props.terrariumId) {
-        localError.value = 'Se requiere un terrario para crear un animal'
-        isSubmitting.value = false
-        return
-      }
+      // Modo creación
+      if (props.terrariumId) {
+        // Crear animal y asignarlo a un terrario
+        const result = await terrariumStore.addAnimalToTerrarium(props.terrariumId, animalData)
 
-      const result = await terrariumStore.addAnimalToTerrarium(props.terrariumId, animalData)
-
-      if (result.success) {
-        // Obtener el ID del animal recién creado
-        // Buscar el animal recién creado en la lista
-        await animalStore.fetchMyAnimals()
-        const newAnimal = animalStore.myAnimals.find(a => 
-          a.name === form.value.name && 
-          a.species?._id === form.value.species &&
-          a.terrarium?._id === props.terrariumId
-        )
-        if (newAnimal) {
-          animalId = newAnimal._id
-        }
-        
-        // Si hay una imagen seleccionada y tenemos el ID, subirla
-        if (selectedImageFile.value && animalId) {
-          const uploadSuccess = await animalStore.uploadProfileImage(animalId, selectedImageFile.value)
-          if (!uploadSuccess) {
-            localError.value = animalStore.error || 'Error al subir la imagen de perfil'
-            isSubmitting.value = false
-            return
+        if (result.success) {
+          // Obtener el ID del animal recién creado
+          await animalStore.fetchMyAnimals()
+          const newAnimal = animalStore.myAnimals.find(a => 
+            a.name === form.value.name && 
+            a.species?._id === form.value.species &&
+            a.terrarium?._id === props.terrariumId
+          )
+          if (newAnimal) {
+            animalId = newAnimal._id
           }
-        }
-        
-        if (result.message) {
-          // Hay un warning de compatibilidad pero el animal se añadió
-          compatibilityWarning.value = result.message
-          // Cerrar después de mostrar brevemente el warning
-          setTimeout(() => {
-            emit('success')
-            handleClose()
-          }, 2000)
+          
+          if (result.message) {
+            // Hay un warning de compatibilidad pero el animal se añadió
+            compatibilityWarning.value = result.message
+          }
         } else {
-          emit('success')
-          handleClose()
+          localError.value = result.message || 'Error al añadir el animal'
+          isSubmitting.value = false
+          return
         }
       } else {
-        localError.value = result.message || 'Error al añadir el animal'
+        // Crear animal sin asignar a terrario (modo creación pura)
+        try {
+          const token = localStorage.getItem('token')
+          const response = await fetch('/api/animals', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify(animalData)
+          })
+
+          const data = await response.json()
+
+          if (!response.ok) {
+            throw new Error(data.message || 'Error al crear el animal')
+          }
+
+          animalId = data.data._id
+        } catch (err) {
+          localError.value = err instanceof Error ? err.message : 'Error desconocido'
+          isSubmitting.value = false
+          return
+        }
+      }
+
+      // Si hay una imagen seleccionada y tenemos el ID, subirla
+      if (selectedImageFile.value && animalId) {
+        const uploadSuccess = await animalStore.uploadProfileImage(animalId, selectedImageFile.value)
+        if (!uploadSuccess) {
+          localError.value = animalStore.error || 'Error al subir la imagen de perfil'
+          isSubmitting.value = false
+          return
+        }
+      }
+
+      // Si hay un warning de compatibilidad, mostrar brevemente antes de cerrar
+      if (compatibilityWarning.value) {
+        setTimeout(() => {
+          emit('saved')
+          emit('success')
+          handleClose()
+        }, 2000)
+      } else {
+        emit('saved')
+        emit('success')
+        handleClose()
       }
     }
   } catch (err) {

@@ -5,12 +5,23 @@
     <!-- Contenido Principal -->
     <main class="container my-animals-view__main">
       <div class="my-animals-view__header">
-        <h2 class="my-animals-view__title">
-          Mis Especies
-        </h2>
-        <p class="my-animals-view__subtitle">
-          Todas tus mascotas en un solo lugar
-        </p>
+        <div class="my-animals-view__header-content">
+          <div>
+            <h2 class="my-animals-view__title">
+              Mis Especies
+            </h2>
+            <p class="my-animals-view__subtitle">
+              Todas tus mascotas en un solo lugar
+            </p>
+          </div>
+          <button
+            @click="showAddAnimalModal = true"
+            class="btn btn-primary my-animals-view__add-btn"
+          >
+            <PlusIcon :size="20" />
+            <span>Registrar Animal</span>
+          </button>
+        </div>
       </div>
 
       <!-- Filtro de búsqueda -->
@@ -126,6 +137,14 @@
         </p>
       </div>
     </main>
+
+    <!-- Modal Registrar Animal -->
+    <AddAnimalModal
+      :is-open="showAddAnimalModal"
+      @close="showAddAnimalModal = false"
+      @saved="handleAnimalSaved"
+      @success="handleAnimalSaved"
+    />
   </div>
 </template>
 
@@ -134,18 +153,21 @@ import { onMounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAnimalStore } from '@/stores/animal'
 import Navigation from '@/components/Navigation.vue'
+import AddAnimalModal from '@/components/AddAnimalModal.vue'
 import { getImageUrl } from '@/utils/image'
 import {
   PawPrintIcon,
   LoaderIcon,
   AlertCircleIcon,
   SearchIcon,
-  MapPinIcon
+  MapPinIcon,
+  PlusIcon
 } from 'lucide-vue-next'
 
 const store = useAnimalStore()
 const router = useRouter()
 const searchQuery = ref('')
+const showAddAnimalModal = ref(false)
 
 const filteredAnimals = computed(() => {
   if (!searchQuery.value.trim()) {
@@ -163,6 +185,11 @@ const filteredAnimals = computed(() => {
 
 const goToAnimalDetail = (animalId: string) => {
   router.push(`/my-animals/${animalId}`)
+}
+
+const handleAnimalSaved = () => {
+  // Recargar la lista de animales
+  store.fetchMyAnimals()
 }
 
 onMounted(() => {
@@ -200,6 +227,30 @@ onMounted(() => {
 @media (min-width: 768px) {
   .my-animals-view__header {
     margin-bottom: 2rem;
+  }
+}
+
+.my-animals-view__header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .my-animals-view__header-content {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+}
+
+.my-animals-view__add-btn {
+  align-self: flex-start;
+}
+
+@media (min-width: 768px) {
+  .my-animals-view__add-btn {
+    align-self: center;
   }
 }
 

@@ -162,7 +162,8 @@ const handleLogout = () => {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  height: 64px;
+  height: var(--bottom-nav-height);
+  min-height: var(--bottom-nav-height);
 }
 
 /* Navegación Desktop - Barra flotante con glass-bg (versión clara) */

@@ -11,6 +11,8 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Reserva el espacio del scrollbar siempre, aunque no se muestre */
+  scrollbar-gutter: stable;
 }
 
 body {

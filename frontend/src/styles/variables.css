@@ -28,4 +28,11 @@
   
   /* Layout */
   --header-height: 70px; /* Altura de la barra de navegación superior (desktop) */
+  --bottom-nav-height: 0px; /* En Desktop no hay barra inferior */
+}
+
+@media (max-width: 768px) {
+  :root {
+    --bottom-nav-height: 80px; /* Altura de la barra de navegación inferior (móvil) */
+  }
 }

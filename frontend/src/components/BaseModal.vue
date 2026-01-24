@@ -82,10 +82,10 @@ const handleClose = () => {
 .modal-overlay {
   position: fixed;
   top: calc(var(--header-height) + 1rem);
+  bottom: var(--bottom-nav-height); /* Respeta Barra Inferior (0px en PC, 80px en Móvil) */
   left: 0;
   right: 0;
-  bottom: 0;
-  height: calc(100vh - var(--header-height));
+  height: calc(100vh - var(--header-height) - var(--bottom-nav-height));
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -103,10 +103,10 @@ const handleClose = () => {
 @media (max-width: 767px) {
   .modal-overlay {
     top: 0;
-    height: 100vh;
+    height: calc(100vh - var(--bottom-nav-height));
     padding: 1.5rem 1rem;
     padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
   }
 }
 
@@ -134,7 +134,7 @@ const handleClose = () => {
 @media (max-width: 767px) {
   .modal-card {
     max-width: 100%;
-    max-height: calc(100vh - 3rem);
+    max-height: calc(100vh - var(--bottom-nav-height) - 3rem);
   }
 }
 
@@ -206,6 +206,7 @@ const handleClose = () => {
    ============================================ */
 .modal-body {
   padding: 1.5rem;
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
   overflow-y: auto;
   flex: 1;
 }
