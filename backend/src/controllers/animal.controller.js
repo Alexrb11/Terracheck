@@ -1,6 +1,12 @@
 import Animal from '../models/Animal.js'
 import Species from '../models/Species.js'
 import Terrarium from '../models/Terrarium.js'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // GET /api/animals - Obtener todos los animales
 export const getAllAnimals = async (req, res) => {
@@ -392,5 +398,246 @@ async function checkBiomeCompatibility(terrariumId, newAnimalBiome, excludeAnima
         biome: a.species?.biome
       }))
     }
+  }
+}
+
+// PUT /api/animals/:id/profile-image - Actualizar imagen de perfil
+export const updateProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se proporcionó ninguna imagen'
+      })
+    }
+
+    // Obtener todos los terrarios del usuario para verificar propiedad
+    const userTerrariums = await Terrarium.find({ 
+      user: req.user._id,
+      isActive: true 
+    }).select('_id')
+
+    const terrariumIds = userTerrariums.map(t => t._id)
+
+    // Buscar el animal y verificar que pertenezca al usuario
+    const animal = await Animal.findOne({
+      _id: req.params.id,
+      terrarium: { $in: terrariumIds },
+      isActive: true
+    })
+
+    if (!animal) {
+      // Si el animal no existe, eliminar el archivo subido
+      const filePath = path.join(__dirname, '../../public/uploads/animals', req.file.filename)
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath)
+      }
+      return res.status(404).json({
+        success: false,
+        message: 'Animal no encontrado o no tienes permisos para editarlo'
+      })
+    }
+
+    // Si el animal ya tenía una imagen anterior (y es local), borrarla
+    if (animal.imageUrl && !animal.imageUrl.startsWith('http')) {
+      // Manejar tanto /uploads como /public/uploads
+      const oldImagePath = animal.imageUrl.replace('/uploads', '').replace('/public', '')
+      const fullOldPath = path.join(__dirname, '../../public', oldImagePath)
+      
+      if (fs.existsSync(fullOldPath)) {
+        try {
+          fs.unlinkSync(fullOldPath)
+        } catch (error) {
+          console.error('Error al eliminar imagen anterior:', error.message)
+        }
+      }
+    }
+
+    // Guardar la nueva ruta de la imagen
+    const imageUrl = `/uploads/animals/${req.file.filename}`
+    animal.imageUrl = imageUrl
+    await animal.save()
+
+    res.json({
+      success: true,
+      message: 'Imagen de perfil actualizada exitosamente',
+      data: {
+        imageUrl: animal.imageUrl
+      }
+    })
+  } catch (error) {
+    // Si hay error, eliminar el archivo subido
+    if (req.file) {
+      const filePath = path.join(__dirname, '../../public/uploads/animals', req.file.filename)
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath)
+        } catch (unlinkError) {
+          console.error('Error al eliminar archivo subido:', unlinkError.message)
+        }
+      }
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar la imagen de perfil',
+      error: error.message
+    })
+  }
+}
+
+// POST /api/animals/:id/gallery - Añadir imágenes a la galería
+export const addToGallery = async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se proporcionaron imágenes'
+      })
+    }
+
+    // Obtener todos los terrarios del usuario para verificar propiedad
+    const userTerrariums = await Terrarium.find({ 
+      user: req.user._id,
+      isActive: true 
+    }).select('_id')
+
+    const terrariumIds = userTerrariums.map(t => t._id)
+
+    // Buscar el animal y verificar que pertenezca al usuario
+    const animal = await Animal.findOne({
+      _id: req.params.id,
+      terrarium: { $in: terrariumIds },
+      isActive: true
+    })
+
+    if (!animal) {
+      // Si el animal no existe, eliminar los archivos subidos
+      req.files.forEach(file => {
+        const filePath = path.join(__dirname, '../../public/uploads/animals', file.filename)
+        if (fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath)
+          } catch (error) {
+            console.error('Error al eliminar archivo:', error.message)
+          }
+        }
+      })
+      return res.status(404).json({
+        success: false,
+        message: 'Animal no encontrado o no tienes permisos para editarlo'
+      })
+    }
+
+    // Añadir las nuevas imágenes a la galería
+    const newImageUrls = req.files.map(file => `/uploads/animals/${file.filename}`)
+    animal.gallery = [...(animal.gallery || []), ...newImageUrls]
+    await animal.save()
+
+    res.json({
+      success: true,
+      message: `${req.files.length} imagen(es) añadida(s) a la galería exitosamente`,
+      data: {
+        gallery: animal.gallery
+      }
+    })
+  } catch (error) {
+    // Si hay error, eliminar los archivos subidos
+    if (req.files) {
+      req.files.forEach(file => {
+        const filePath = path.join(__dirname, '../../public/uploads/animals', file.filename)
+        if (fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath)
+          } catch (unlinkError) {
+            console.error('Error al eliminar archivo:', unlinkError.message)
+          }
+        }
+      })
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error al añadir imágenes a la galería',
+      error: error.message
+    })
+  }
+}
+
+// DELETE /api/animals/:id/gallery - Eliminar imagen de la galería
+export const removeFromGallery = async (req, res) => {
+  try {
+    const { imageUrl } = req.body
+
+    if (!imageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Se requiere la URL de la imagen a eliminar'
+      })
+    }
+
+    // Obtener todos los terrarios del usuario para verificar propiedad
+    const userTerrariums = await Terrarium.find({ 
+      user: req.user._id,
+      isActive: true 
+    }).select('_id')
+
+    const terrariumIds = userTerrariums.map(t => t._id)
+
+    // Buscar el animal y verificar que pertenezca al usuario
+    const animal = await Animal.findOne({
+      _id: req.params.id,
+      terrarium: { $in: terrariumIds },
+      isActive: true
+    })
+
+    if (!animal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Animal no encontrado o no tienes permisos para editarlo'
+      })
+    }
+
+    // Verificar que la imagen esté en la galería
+    if (!animal.gallery || !animal.gallery.includes(imageUrl)) {
+      return res.status(404).json({
+        success: false,
+        message: 'La imagen no se encuentra en la galería'
+      })
+    }
+
+    // Eliminar la imagen del array en MongoDB usando $pull
+    animal.gallery = animal.gallery.filter(url => url !== imageUrl)
+    await animal.save()
+
+    // Si es una imagen local (no externa), eliminar el archivo físico
+    if (!imageUrl.startsWith('http')) {
+      // Manejar tanto /uploads como /public/uploads
+      const imagePath = imageUrl.replace('/uploads', '').replace('/public', '')
+      const fullPath = path.join(__dirname, '../../public', imagePath)
+      
+      if (fs.existsSync(fullPath)) {
+        try {
+          fs.unlinkSync(fullPath)
+        } catch (error) {
+          console.error('Error al eliminar archivo físico:', error.message)
+          // No fallar la respuesta si no se puede eliminar el archivo
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Imagen eliminada de la galería exitosamente',
+      data: {
+        gallery: animal.gallery
+      }
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error al eliminar la imagen de la galería',
+      error: error.message
+    })
   }
 }

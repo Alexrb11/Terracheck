@@ -2,6 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
+import path from 'path'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
 
 // Routes
 import authRoutes from './routes/auth.routes.js'
@@ -13,6 +16,16 @@ import roleRoutes from './routes/role.routes.js'
 
 // Load environment variables
 dotenv.config()
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Crear carpetas necesarias para almacenamiento de imágenes
+const uploadsDir = path.join(__dirname, '../public/uploads/animals')
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true })
+  console.log('✅ Carpeta de uploads creada:', uploadsDir)
+}
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -30,6 +43,9 @@ app.use(cors({
   credentials: true
 }))
 app.use(express.json())
+
+// Servir archivos estáticos desde la carpeta public
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')))
 
 // Routes
 app.use('/api/auth', authRoutes)

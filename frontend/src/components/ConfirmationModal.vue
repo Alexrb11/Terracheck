@@ -6,25 +6,27 @@
     @close="$emit('close')"
   >
     <template #header>
-      <div 
-        class="confirmation-header__icon-wrapper"
-        :class="{
-          'confirmation-header__icon-wrapper--danger': isDanger,
-          'confirmation-header__icon-wrapper--info': !isDanger
-        }"
-      >
-        <AlertTriangleIcon 
-          v-if="isDanger" 
-          class="confirmation-header__icon" 
-          :size="24" 
-        />
-        <InfoIcon 
-          v-else 
-          class="confirmation-header__icon" 
-          :size="24" 
-        />
+      <div class="confirmation-header__content">
+        <div 
+          class="confirmation-header__icon-wrapper"
+          :class="{
+            'confirmation-header__icon-wrapper--danger': isDanger,
+            'confirmation-header__icon-wrapper--info': !isDanger
+          }"
+        >
+          <AlertTriangleIcon 
+            v-if="isDanger" 
+            class="confirmation-header__icon" 
+            :size="24" 
+          />
+          <InfoIcon 
+            v-else 
+            class="confirmation-header__icon" 
+            :size="24" 
+          />
+        </div>
+        <h3 class="modal-title">{{ title }}</h3>
       </div>
-      <h3 class="modal-title">{{ title }}</h3>
     </template>
 
     <template #default>
@@ -106,14 +108,17 @@ defineEmits<{
   color: var(--color-primary);
 }
 
-:deep(.modal-header) {
+/* Contenedor para icono y título juntos */
+.confirmation-header__content {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex: 1;
 }
 
 :deep(.modal-title) {
-  flex: 1;
+  margin: 0;
+  flex: 0 1 auto;
 }
 
 /* ============================================

@@ -6,9 +6,13 @@ import {
   createAnimal,
   updateAnimal,
   deleteAnimal,
-  moveAnimal
+  moveAnimal,
+  updateProfileImage,
+  addToGallery,
+  removeFromGallery
 } from '../controllers/animal.controller.js'
 import { protect } from '../middleware/auth.middleware.js'
+import upload from '../config/storage.js'
 
 const router = Router()
 
@@ -35,5 +39,14 @@ router.delete('/:id', deleteAnimal)
 
 // PUT /api/animals/:id/move - Mover animal a otro terrario
 router.put('/:id/move', moveAnimal)
+
+// PUT /api/animals/:id/profile-image - Actualizar imagen de perfil
+router.put('/:id/profile-image', upload.single('image'), updateProfileImage)
+
+// POST /api/animals/:id/gallery - Añadir imágenes a la galería
+router.post('/:id/gallery', upload.array('images', 5), addToGallery)
+
+// PUT /api/animals/:id/gallery/remove - Eliminar imagen de la galería
+router.put('/:id/gallery/remove', removeFromGallery)
 
 export default router

@@ -51,10 +51,16 @@ const animalSchema = new mongoose.Schema({
     default: ''
   },
 
-  // Imagen (URL opcional)
+  // Imagen de perfil (URL opcional)
   imageUrl: {
     type: String,
     default: null
+  },
+
+  // Galería de imágenes (Array de URLs)
+  gallery: {
+    type: [String],
+    default: []
   },
 
   // Estado (activo = vivo)

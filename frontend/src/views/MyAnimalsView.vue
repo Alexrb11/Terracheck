@@ -63,8 +63,8 @@
           <!-- Avatar o Imagen -->
           <div class="animal-card__avatar">
             <img
-              v-if="animal.imageUrl"
-              :src="animal.imageUrl"
+              v-if="animal.imageUrl || animal.species?.imageUrl"
+              :src="getImageUrl(animal.imageUrl || animal.species?.imageUrl)"
               :alt="animal.name"
               class="animal-card__image"
             />
@@ -134,6 +134,7 @@ import { onMounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAnimalStore } from '@/stores/animal'
 import Navigation from '@/components/Navigation.vue'
+import { getImageUrl } from '@/utils/image'
 import {
   PawPrintIcon,
   LoaderIcon,

@@ -33,6 +33,47 @@
 
           <!-- Formulario -->
           <form v-else @submit.prevent="handleSubmit" class="animal-modal-form">
+            <!-- Foto de Perfil -->
+            <div class="form-group">
+              <label for="animal-image" class="form-label">Foto de Perfil</label>
+              <div class="image-upload-wrapper">
+                <input
+                  id="animal-image"
+                  type="file"
+                  accept="image/*"
+                  @change="handleFileSelect"
+                  class="image-input"
+                  ref="fileInputRef"
+                />
+                <div
+                  v-if="selectedImagePreview"
+                  class="image-preview"
+                >
+                  <img
+                    :src="selectedImagePreview"
+                    alt="Vista previa"
+                    class="image-preview__img"
+                  />
+                  <button
+                    type="button"
+                    @click="clearImage"
+                    class="image-preview__remove"
+                    title="Eliminar imagen"
+                  >
+                    ×
+                  </button>
+                </div>
+                <label
+                  v-else
+                  for="animal-image"
+                  class="image-upload-label"
+                >
+                  <ImageIcon :size="24" />
+                  <span>Seleccionar imagen</span>
+                </label>
+              </div>
+            </div>
+
             <!-- Nombre -->
             <div class="form-group">
               <label for="animal-name" class="form-label">Nombre del animal *</label>
@@ -185,7 +226,8 @@ import {
   LoaderIcon,
   PawPrintIcon,
   FishIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  ImageIcon
 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -216,6 +258,9 @@ const form = ref({
 const localError = ref<string | null>(null)
 const compatibilityWarning = ref<string | null>(null)
 const isSubmitting = ref(false)
+const selectedImageFile = ref<File | null>(null)
+const selectedImagePreview = ref<string | null>(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
 
 const today = new Date().toISOString().split('T')[0]
 
@@ -243,6 +288,47 @@ const resetForm = () => {
   }
   localError.value = null
   compatibilityWarning.value = null
+  selectedImageFile.value = null
+  selectedImagePreview.value = null
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
+
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (file) {
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      localError.value = 'Por favor, selecciona un archivo de imagen válido'
+      return
+    }
+    
+    // Validar tamaño (5MB máximo)
+    if (file.size > 5 * 1024 * 1024) {
+      localError.value = 'La imagen no puede superar los 5MB'
+      return
+    }
+    
+    selectedImageFile.value = file
+    
+    // Crear preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      selectedImagePreview.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+const clearImage = () => {
+  selectedImageFile.value = null
+  selectedImagePreview.value = null
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
 }
 
 const fillFormFromAnimal = (animal: AnimalWithTerrarium) => {
@@ -278,6 +364,8 @@ const handleSubmit = async () => {
       ...(form.value.notes ? { notes: form.value.notes } : {})
     }
 
+    let animalId: string | null = null
+
     // Si estamos en modo edición
     if (isEditMode.value && props.animalToEdit) {
       // Si hay un terrariumId en props, añadirlo a los datos
@@ -288,6 +376,18 @@ const handleSubmit = async () => {
       const updatedAnimal = await animalStore.updateAnimal(props.animalToEdit._id, animalData)
 
       if (updatedAnimal) {
+        animalId = updatedAnimal._id
+        
+        // Si hay una imagen seleccionada, subirla
+        if (selectedImageFile.value && animalId) {
+          const uploadSuccess = await animalStore.uploadProfileImage(animalId, selectedImageFile.value)
+          if (!uploadSuccess) {
+            localError.value = animalStore.error || 'Error al subir la imagen de perfil'
+            isSubmitting.value = false
+            return
+          }
+        }
+        
         emit('saved')
         emit('success')
         handleClose()
@@ -305,6 +405,28 @@ const handleSubmit = async () => {
       const result = await terrariumStore.addAnimalToTerrarium(props.terrariumId, animalData)
 
       if (result.success) {
+        // Obtener el ID del animal recién creado
+        // Buscar el animal recién creado en la lista
+        await animalStore.fetchMyAnimals()
+        const newAnimal = animalStore.myAnimals.find(a => 
+          a.name === form.value.name && 
+          a.species?._id === form.value.species &&
+          a.terrarium?._id === props.terrariumId
+        )
+        if (newAnimal) {
+          animalId = newAnimal._id
+        }
+        
+        // Si hay una imagen seleccionada y tenemos el ID, subirla
+        if (selectedImageFile.value && animalId) {
+          const uploadSuccess = await animalStore.uploadProfileImage(animalId, selectedImageFile.value)
+          if (!uploadSuccess) {
+            localError.value = animalStore.error || 'Error al subir la imagen de perfil'
+            isSubmitting.value = false
+            return
+          }
+        }
+        
         if (result.message) {
           // Hay un warning de compatibilidad pero el animal se añadió
           compatibilityWarning.value = result.message
@@ -424,6 +546,87 @@ onMounted(() => {
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.5;
+}
+
+/* ============================================
+   SUBIDA DE IMAGEN
+   ============================================ */
+.image-upload-wrapper {
+  position: relative;
+}
+
+.image-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.image-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-lg);
+  background: rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--color-text-muted);
+}
+
+.image-upload-label:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.image-upload-label span {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.image-preview {
+  position: relative;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.image-preview__img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.image-preview__remove {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: background var(--transition-fast);
+}
+
+.image-preview__remove:hover {
+  background: rgba(239, 68, 68, 0.9);
 }
 
 /* ============================================

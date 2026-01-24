@@ -60,7 +60,7 @@
             <div class="profile-card__avatar">
               <img
                 v-if="animal.imageUrl || animal.species?.imageUrl"
-                :src="animal.imageUrl || animal.species?.imageUrl"
+                :src="getImageUrl(animal.imageUrl || animal.species?.imageUrl)"
                 :alt="animal.name"
                 class="profile-card__image"
               />
@@ -247,6 +247,66 @@
               <h3 class="notes-card__title">Notas</h3>
               <p class="notes-card__text">{{ animal.notes }}</p>
             </div>
+
+            <!-- Galería de Imágenes -->
+            <div class="card gallery-card">
+              <div class="gallery-card__header">
+                <ImageIcon :size="24" class="gallery-card__icon" />
+                <h3 class="gallery-card__title">Galería de Fotos</h3>
+              </div>
+              
+              <div class="gallery-card__content">
+                <!-- Input file oculto -->
+                <input
+                  ref="galleryFileInputRef"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  @change="handleGalleryFiles"
+                  class="gallery-input"
+                />
+                
+                <!-- Botón para añadir fotos -->
+                <button
+                  type="button"
+                  @click="galleryFileInputRef?.click()"
+                  class="gallery-add-btn"
+                >
+                  <PlusIcon :size="20" />
+                  <span>Añadir Fotos</span>
+                </button>
+                
+                <!-- Grid de fotos -->
+                <div v-if="animal.gallery && animal.gallery.length > 0" class="gallery-grid">
+                  <div
+                    v-for="(imageUrl, index) in animal.gallery"
+                    :key="index"
+                    class="gallery-item"
+                    @click="openLightbox(index)"
+                  >
+                    <img
+                      :src="getImageUrl(imageUrl)"
+                      :alt="`Foto ${index + 1}`"
+                      class="gallery-item__img"
+                    />
+                    <button
+                      type="button"
+                      @click.stop="handleRemoveFromGallery(imageUrl)"
+                      class="gallery-item__remove"
+                      title="Eliminar foto"
+                    >
+                      <TrashIcon :size="16" />
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Estado vacío -->
+                <div v-else class="gallery-empty">
+                  <ImageIcon :size="48" class="gallery-empty__icon" />
+                  <p class="gallery-empty__text">No hay fotos en la galería</p>
+                </div>
+              </div>
+            </div>
           </section>
         </div>
       </div>
@@ -273,16 +333,61 @@
       @saved="handleAnimalSaved"
       @success="handleAnimalSaved"
     />
+
+    <!-- Lightbox (Visor de Imágenes) -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="lightboxOpen && animal?.gallery && animal.gallery.length > 0"
+          class="lightbox-overlay"
+          @click.self="closeLightbox"
+        >
+          <button class="lightbox-close" @click="closeLightbox">
+            <XIcon :size="32" />
+          </button>
+
+          <button
+            v-if="animal.gallery.length > 1"
+            class="lightbox-nav nav-left"
+            @click.stop="prevImage"
+            aria-label="Imagen anterior"
+          >
+            <ChevronLeftIcon :size="48" />
+          </button>
+
+          <div class="lightbox-content">
+            <img
+              :src="getImageUrl(animal.gallery[currentImageIndex])"
+              :alt="`${animal.name} - Foto ${currentImageIndex + 1}`"
+              class="lightbox-image"
+            />
+            <span class="lightbox-counter">
+              {{ currentImageIndex + 1 }} / {{ animal.gallery.length }}
+            </span>
+          </div>
+
+          <button
+            v-if="animal.gallery.length > 1"
+            class="lightbox-nav nav-right"
+            @click.stop="nextImage"
+            aria-label="Imagen siguiente"
+          >
+            <ChevronRightIcon :size="48" />
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAnimalStore } from '@/stores/animal'
 import Navigation from '@/components/Navigation.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import AddAnimalModal from '@/components/AddAnimalModal.vue'
+import { getImageUrl } from '@/utils/image'
 import {
   ArrowLeftIcon,
   LoaderIcon,
@@ -296,13 +401,23 @@ import {
   CalendarIcon,
   ClockIcon,
   ThermometerIcon,
-  DropletIcon
+  DropletIcon,
+  ImageIcon,
+  PlusIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  XIcon
 } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
 const store = useAnimalStore()
 const loading = ref(true)
+const galleryFileInputRef = ref<HTMLInputElement | null>(null)
+
+// Lightbox state
+const lightboxOpen = ref(false)
+const currentImageIndex = ref(0)
 
 // Confirmation Modal
 const confirmModal = ref<{
@@ -469,8 +584,90 @@ const handleDelete = () => {
   )
 }
 
+const handleGalleryFiles = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  
+  if (!files || files.length === 0 || !animal.value) return
+  
+  const success = await store.addToGallery(animal.value._id, files)
+  
+  if (success) {
+    // Recargar el animal para ver las nuevas fotos
+    await loadAnimal()
+  }
+  
+  // Limpiar el input
+  if (target) {
+    target.value = ''
+  }
+}
+
+const handleRemoveFromGallery = (imageUrl: string) => {
+  if (!animal.value) return
+  
+  openConfirm(
+    'Eliminar Foto',
+    '¿Estás seguro de que deseas eliminar esta foto de la galería?',
+    async () => {
+      const success = await store.removeFromGallery(animal.value!._id, imageUrl)
+      if (success) {
+        // Recargar el animal para actualizar la galería
+        await loadAnimal()
+      }
+    },
+    {
+      confirmText: 'Eliminar',
+      isDanger: true
+    }
+  )
+}
+
+// Lightbox methods
+const openLightbox = (index: number) => {
+  currentImageIndex.value = index
+  lightboxOpen.value = true
+}
+
+const closeLightbox = () => {
+  lightboxOpen.value = false
+}
+
+const nextImage = () => {
+  if (!animal.value?.gallery || animal.value.gallery.length === 0) return
+  currentImageIndex.value = (currentImageIndex.value + 1) % animal.value.gallery.length
+}
+
+const prevImage = () => {
+  if (!animal.value?.gallery || animal.value.gallery.length === 0) return
+  const length = animal.value.gallery.length
+  currentImageIndex.value = (currentImageIndex.value - 1 + length) % length
+}
+
+// Keyboard event handler
+const handleKeydown = (event: KeyboardEvent) => {
+  if (!lightboxOpen.value) return
+
+  switch (event.key) {
+    case 'Escape':
+      closeLightbox()
+      break
+    case 'ArrowRight':
+      nextImage()
+      break
+    case 'ArrowLeft':
+      prevImage()
+      break
+  }
+}
+
 onMounted(async () => {
   await loadAnimal()
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
 })
 </script>
 
@@ -864,5 +1061,277 @@ onMounted(async () => {
 .view-detail__error-text {
   color: #991b1b;
   margin-bottom: 1rem;
+}
+
+/* ============================================
+   GALERÍA
+   ============================================ */
+.gallery-card {
+  padding: 1.5rem;
+}
+
+.gallery-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.gallery-card__icon {
+  color: var(--color-primary);
+}
+
+.gallery-card__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.gallery-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gallery-input {
+  display: none;
+}
+
+.gallery-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-lg);
+  background: rgba(0, 0, 0, 0.02);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-weight: 500;
+}
+
+.gallery-add-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.gallery-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.gallery-item:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-md);
+}
+
+.gallery-item__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-item__remove {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast);
+  opacity: 0;
+}
+
+.gallery-item:hover .gallery-item__remove {
+  opacity: 1;
+}
+
+.gallery-item__remove:hover {
+  background: rgba(239, 68, 68, 0.9);
+}
+
+.gallery-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.gallery-empty__icon {
+  margin-bottom: 0.75rem;
+  opacity: 0.5;
+}
+
+.gallery-empty__text {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   LIGHTBOX (VISOR DE IMÁGENES)
+   ============================================ */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  z-index: 10000;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lightbox-image {
+  max-width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.lightbox-counter {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(8px);
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  z-index: 10000;
+}
+
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.lightbox-nav.nav-left {
+  left: 1.5rem;
+}
+
+.lightbox-nav.nav-right {
+  right: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .lightbox-overlay {
+    padding: 1rem;
+  }
+
+  .lightbox-close {
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+  }
+
+  .lightbox-nav {
+    width: 48px;
+    height: 48px;
+  }
+
+  .lightbox-nav.nav-left {
+    left: 0.5rem;
+  }
+
+  .lightbox-nav.nav-right {
+    right: 0.5rem;
+  }
+
+  .lightbox-image {
+    max-height: 80vh;
+  }
+}
+
+/* Transición fade para el lightbox */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--transition-base);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

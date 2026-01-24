@@ -39,18 +39,26 @@ export interface AnimalWithTerrarium {
   weight?: number
   notes?: string
   imageUrl?: string
+  gallery?: string[]
   createdAt?: string
 }
 
 const API_URL = '/api/animals'
 
 // Helper para obtener headers con auth
-const getAuthHeaders = (): HeadersInit => {
+const getAuthHeaders = (includeContentType = true): HeadersInit => {
   const token = localStorage.getItem('token')
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  const headers: HeadersInit = {}
+  
+  if (includeContentType) {
+    headers['Content-Type'] = 'application/json'
   }
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  
+  return headers
 }
 
 export const useAnimalStore = defineStore('animal', () => {
@@ -186,6 +194,139 @@ export const useAnimalStore = defineStore('animal', () => {
     error.value = null
   }
 
+  // Subir imagen de perfil
+  const uploadProfileImage = async (id: string, file: File): Promise<boolean> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/${id}/profile-image`, {
+        method: 'PUT',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al subir la imagen de perfil')
+      }
+
+      // Actualizar el animal en el estado local
+      const updatedAnimal = data.data
+      const index = myAnimals.value.findIndex(a => a._id === id)
+      if (index !== -1) {
+        myAnimals.value[index].imageUrl = updatedAnimal.imageUrl
+      }
+
+      if (currentAnimal.value?._id === id) {
+        currentAnimal.value.imageUrl = updatedAnimal.imageUrl
+      }
+
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error desconocido'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Añadir imágenes a la galería
+  const addToGallery = async (id: string, files: FileList | File[]): Promise<boolean> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const formData = new FormData()
+      const fileArray = Array.from(files)
+      
+      fileArray.forEach(file => {
+        formData.append('images', file)
+      })
+
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/${id}/gallery`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al añadir imágenes a la galería')
+      }
+
+      // Actualizar el animal en el estado local
+      const updatedGallery = data.data.gallery
+      const index = myAnimals.value.findIndex(a => a._id === id)
+      if (index !== -1) {
+        myAnimals.value[index].gallery = updatedGallery
+      }
+
+      if (currentAnimal.value?._id === id) {
+        currentAnimal.value.gallery = updatedGallery
+      }
+
+      // Recargar el animal completo para tener todos los datos actualizados
+      await fetchAnimalById(id)
+
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error desconocido'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Eliminar imagen de la galería
+  const removeFromGallery = async (id: string, imageUrl: string): Promise<boolean> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch(`${API_URL}/${id}/gallery/remove`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ imageUrl })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al eliminar la imagen de la galería')
+      }
+
+      // Actualizar el animal en el estado local
+      const updatedGallery = data.data.gallery
+      const index = myAnimals.value.findIndex(a => a._id === id)
+      if (index !== -1) {
+        myAnimals.value[index].gallery = updatedGallery
+      }
+
+      if (currentAnimal.value?._id === id) {
+        currentAnimal.value.gallery = updatedGallery
+      }
+
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error desconocido'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     // State
     myAnimals,
@@ -197,6 +338,9 @@ export const useAnimalStore = defineStore('animal', () => {
     fetchAnimalById,
     updateAnimal,
     deleteAnimal,
+    uploadProfileImage,
+    addToGallery,
+    removeFromGallery,
     clearError
   }
 })

@@ -44,7 +44,7 @@
           <div class="species-card__image">
             <img
               v-if="species.imageUrl"
-              :src="species.imageUrl"
+              :src="getImageUrl(species.imageUrl)"
               :alt="species.commonName"
               loading="lazy"
             />
@@ -153,6 +153,7 @@
 import { onMounted } from 'vue'
 import { useSpeciesStore, type Species } from '@/stores/species'
 import Navigation from '@/components/Navigation.vue'
+import { getImageUrl } from '@/utils/image'
 import {
   LoaderIcon,
   AlertCircleIcon,
