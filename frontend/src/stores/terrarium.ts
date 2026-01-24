@@ -34,6 +34,20 @@ export interface Terrarium {
   }
   animals: Animal[]
   hasCompatibilityIssue?: boolean
+  parameters?: {
+    compatibility: {
+      isCompatible: boolean
+      errors: string[]
+    }
+    temperature: {
+      min: number
+      max: number
+    }
+    humidity: {
+      min: number
+      max: number
+    }
+  } | null
   liters?: number
   notes?: string
 }

@@ -19,10 +19,12 @@ export const getAllTerrariums = async (req, res) => {
       })
       .sort({ createdAt: -1 })
 
-    // Agregar información de compatibilidad a cada terrario
+    // Agregar información de compatibilidad y requisitos a cada terrario
     const terrariumsWithCompatibility = terrariums.map(terrarium => {
       const terrariumObj = terrarium.toObject()
       terrariumObj.hasCompatibilityIssue = checkCompatibilityIssues(terrariumObj.animals)
+      terrariumObj.requirements = calculateTerrariumRequirements(terrariumObj.animals)
+      terrariumObj.parameters = calculateParameters(terrariumObj.animals)
       return terrariumObj
     })
 
@@ -65,6 +67,8 @@ export const getTerrariumById = async (req, res) => {
 
     const terrariumObj = terrarium.toObject()
     terrariumObj.hasCompatibilityIssue = checkCompatibilityIssues(terrariumObj.animals)
+    terrariumObj.requirements = calculateTerrariumRequirements(terrariumObj.animals)
+    terrariumObj.parameters = calculateParameters(terrariumObj.animals)
 
     res.json({
       success: true,
@@ -218,6 +222,130 @@ export const updateSensors = async (req, res) => {
       message: 'Error al actualizar sensores',
       error: error.message
     })
+  }
+}
+
+// Función auxiliar para calcular parámetros ideales del terrario (Terrario Inteligente)
+function calculateParameters(animals) {
+  // Si no hay animales, devolver null
+  if (!animals || animals.length === 0) {
+    return null
+  }
+
+  // Filtrar animales con especies populadas y parámetros válidos
+  const animalsWithSpecies = animals.filter(
+    animal => animal.species && 
+    animal.species.parameters && 
+    animal.species.parameters.temperature && 
+    animal.species.parameters.humidity
+  )
+
+  if (animalsWithSpecies.length === 0) {
+    return null
+  }
+
+  // Calcular la intersección de rangos para temperatura
+  const tempMins = animalsWithSpecies.map(a => a.species.parameters.temperature.min)
+  const tempMaxs = animalsWithSpecies.map(a => a.species.parameters.temperature.max)
+  const idealTempMin = Math.max(...tempMins)
+  const idealTempMax = Math.min(...tempMaxs)
+
+  // Calcular la intersección de rangos para humedad
+  const humMins = animalsWithSpecies.map(a => a.species.parameters.humidity.min)
+  const humMaxs = animalsWithSpecies.map(a => a.species.parameters.humidity.max)
+  const idealHumMin = Math.max(...humMins)
+  const idealHumMax = Math.min(...humMaxs)
+
+  // Detectar conflictos
+  const errors = []
+  let isCompatible = true
+
+  if (idealTempMin > idealTempMax) {
+    isCompatible = false
+    errors.push('Conflicto de temperatura: los rangos de temperatura de las especies no se intersectan')
+  }
+
+  if (idealHumMin > idealHumMax) {
+    isCompatible = false
+    errors.push('Conflicto de humedad: los rangos de humedad de las especies no se intersectan')
+  }
+
+  return {
+    compatibility: {
+      isCompatible,
+      errors
+    },
+    temperature: {
+      min: idealTempMin,
+      max: idealTempMax
+    },
+    humidity: {
+      min: idealHumMin,
+      max: idealHumMax
+    }
+  }
+}
+
+// Función auxiliar para calcular requisitos ambientales del terrario
+function calculateTerrariumRequirements(animals) {
+  // Si no hay animales, devolver null
+  if (!animals || animals.length === 0) {
+    return null
+  }
+
+  // Filtrar animales con especies populadas y parámetros válidos
+  const animalsWithSpecies = animals.filter(
+    animal => animal.species && 
+    animal.species.parameters && 
+    animal.species.parameters.temperature && 
+    animal.species.parameters.humidity
+  )
+
+  if (animalsWithSpecies.length === 0) {
+    return null
+  }
+
+  // Calcular la intersección de rangos de temperatura
+  const tempMins = animalsWithSpecies.map(a => a.species.parameters.temperature.min)
+  const tempMaxs = animalsWithSpecies.map(a => a.species.parameters.temperature.max)
+  const targetTempMin = Math.max(...tempMins)
+  const targetTempMax = Math.min(...tempMaxs)
+
+  // Calcular la intersección de rangos de humedad
+  const humMins = animalsWithSpecies.map(a => a.species.parameters.humidity.min)
+  const humMaxs = animalsWithSpecies.map(a => a.species.parameters.humidity.max)
+  const targetHumMin = Math.max(...humMins)
+  const targetHumMax = Math.min(...humMaxs)
+
+  // Detectar incompatibilidades
+  const errors = []
+  let isCompatible = true
+
+  if (targetTempMin > targetTempMax) {
+    isCompatible = false
+    errors.push('Rango de temperatura imposible: los rangos de temperatura de las especies no se intersectan')
+  }
+
+  if (targetHumMin > targetHumMax) {
+    isCompatible = false
+    errors.push('Rango de humedad imposible: los rangos de humedad de las especies no se intersectan')
+  }
+
+  return {
+    temperature: {
+      min: targetTempMin,
+      max: targetTempMax,
+      unit: 'C'
+    },
+    humidity: {
+      min: targetHumMin,
+      max: targetHumMax,
+      unit: '%'
+    },
+    compatibility: {
+      isCompatible,
+      errors
+    }
   }
 }
 

@@ -27,29 +27,33 @@ const speciesSchema = new mongoose.Schema({
 
   // Parámetros ambientales requeridos
   parameters: {
-    tempMin: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 50
+    temperature: {
+      min: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 50
+      },
+      max: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 50
+      }
     },
-    tempMax: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 50
-    },
-    humidityMin: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 100
-    },
-    humidityMax: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 100
+    humidity: {
+      min: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 100
+      },
+      max: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 100
+      }
     },
     uvIndex: {
       type: Number,

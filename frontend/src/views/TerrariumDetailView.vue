@@ -111,23 +111,98 @@
               </div>
             </div>
 
+            <!-- Parámetros Ideales -->
+            <div v-if="terrarium.parameters" class="detail-card__parameters">
+              <h3 class="parameters-title">Parámetros Ideales</h3>
+              
+              <!-- Alerta de incompatibilidad -->
+              <div
+                v-if="!terrarium.parameters.compatibility.isCompatible"
+                class="alert alert-danger parameters-alert"
+              >
+                <AlertTriangleIcon :size="20" />
+                <div>
+                  <strong>Incompatibilidad detectada</strong>
+                  <ul class="parameters-errors">
+                    <li v-for="error in terrarium.parameters.compatibility.errors" :key="error">
+                      {{ error }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Rango de Temperatura Ideal -->
+              <div class="parameter-item">
+                <div class="parameter-header">
+                  <ThermometerIcon :size="20" class="parameter-icon" />
+                  <span class="parameter-label">Temperatura Ideal</span>
+                </div>
+                <div class="parameter-range">
+                  {{ terrarium.parameters.temperature.min }}°C - {{ terrarium.parameters.temperature.max }}°C
+                </div>
+              </div>
+
+              <!-- Rango de Humedad Ideal -->
+              <div class="parameter-item">
+                <div class="parameter-header">
+                  <DropletIcon :size="20" class="parameter-icon" />
+                  <span class="parameter-label">Humedad Ideal</span>
+                </div>
+                <div class="parameter-range">
+                  {{ terrarium.parameters.humidity.min }}% - {{ terrarium.parameters.humidity.max }}%
+                </div>
+              </div>
+            </div>
+
+            <!-- Mensaje cuando no hay animales -->
+            <div v-else-if="!terrarium.animals || terrarium.animals.length === 0" class="detail-card__no-parameters">
+              <p class="no-parameters-text">
+                Añade habitantes para ver los parámetros recomendados
+              </p>
+            </div>
+
             <!-- Sensores -->
             <div class="detail-card__sensors">
-              <div class="sensor-item">
+              <h3 class="sensors-title">Sensores Actuales</h3>
+              
+              <div class="sensor-item" :class="getSensorStatusClass('temperature')">
                 <ThermometerIcon :size="24" class="sensor-item__icon" />
-                <div>
+                <div class="sensor-content">
                   <span class="sensor-label">Temperatura</span>
-                  <span class="sensor-value">
-                    {{ terrarium.sensors?.temperature ?? '--' }}°C
+                  <div class="sensor-value-wrapper">
+                    <span class="sensor-value">
+                      {{ terrarium.sensors?.temperature ?? '--' }}°C
+                    </span>
+                    <component
+                      :is="isSensorInRange('temperature') ? CheckCircleIcon : AlertCircleIcon"
+                      :size="20"
+                      class="sensor-status-icon"
+                      :class="isSensorInRange('temperature') ? 'sensor-status-icon--ok' : 'sensor-status-icon--warning'"
+                    />
+                  </div>
+                  <span v-if="terrarium.parameters && terrarium.sensors?.temperature" class="sensor-comparison">
+                    {{ getSensorComparisonText('temperature') }}
                   </span>
                 </div>
               </div>
-              <div class="sensor-item">
+              
+              <div class="sensor-item" :class="getSensorStatusClass('humidity')">
                 <DropletIcon :size="24" class="sensor-item__icon" />
-                <div>
+                <div class="sensor-content">
                   <span class="sensor-label">Humedad</span>
-                  <span class="sensor-value">
-                    {{ terrarium.sensors?.humidity ?? '--' }}%
+                  <div class="sensor-value-wrapper">
+                    <span class="sensor-value">
+                      {{ terrarium.sensors?.humidity ?? '--' }}%
+                    </span>
+                    <component
+                      :is="isSensorInRange('humidity') ? CheckCircleIcon : AlertCircleIcon"
+                      :size="20"
+                      class="sensor-status-icon"
+                      :class="isSensorInRange('humidity') ? 'sensor-status-icon--ok' : 'sensor-status-icon--warning'"
+                    />
+                  </div>
+                  <span v-if="terrarium.parameters && terrarium.sensors?.humidity" class="sensor-comparison">
+                    {{ getSensorComparisonText('humidity') }}
                   </span>
                 </div>
               </div>
@@ -281,7 +356,9 @@ import {
   EditIcon,
   BoxIcon,
   MapPinIcon,
-  LogOutIcon
+  LogOutIcon,
+  CheckCircleIcon,
+  AlertCircleIcon
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -393,6 +470,80 @@ const isBiomeIncompatible = (animal: any): boolean => {
   
   // Retornar true solo si son diferentes
   return terrariumBiome !== animalBiome
+}
+
+// Helper para verificar si un sensor está dentro del rango ideal
+const isSensorInRange = (type: 'temperature' | 'humidity'): boolean => {
+  if (!terrarium.value?.parameters || !terrarium.value.sensors) {
+    return false
+  }
+
+  const sensorValue = terrarium.value.sensors[type]
+  if (sensorValue === null || sensorValue === undefined) {
+    return false
+  }
+
+  const params = terrarium.value.parameters
+  if (!params.compatibility.isCompatible) {
+    return false // Si hay incompatibilidad, no puede estar en rango
+  }
+
+  if (type === 'temperature') {
+    return sensorValue >= params.temperature.min && sensorValue <= params.temperature.max
+  } else {
+    return sensorValue >= params.humidity.min && sensorValue <= params.humidity.max
+  }
+}
+
+// Helper para obtener la clase CSS del estado del sensor
+const getSensorStatusClass = (type: 'temperature' | 'humidity'): string => {
+  if (!terrarium.value?.parameters) {
+    return ''
+  }
+  
+  if (isSensorInRange(type)) {
+    return 'sensor-item--ok'
+  } else if (terrarium.value.sensors?.[type] !== null && terrarium.value.sensors?.[type] !== undefined) {
+    return 'sensor-item--warning'
+  }
+  return ''
+}
+
+// Helper para obtener el texto de comparación del sensor
+const getSensorComparisonText = (type: 'temperature' | 'humidity'): string => {
+  if (!terrarium.value?.parameters || !terrarium.value.sensors) {
+    return ''
+  }
+
+  const sensorValue = terrarium.value.sensors[type]
+  if (sensorValue === null || sensorValue === undefined) {
+    return ''
+  }
+
+  const params = terrarium.value.parameters
+  if (!params.compatibility.isCompatible) {
+    return 'Rango incompatible'
+  }
+
+  if (type === 'temperature') {
+    const { min, max } = params.temperature
+    if (sensorValue < min) {
+      return `${(min - sensorValue).toFixed(1)}°C por debajo del mínimo`
+    } else if (sensorValue > max) {
+      return `${(sensorValue - max).toFixed(1)}°C por encima del máximo`
+    } else {
+      return 'Dentro del rango ideal'
+    }
+  } else {
+    const { min, max } = params.humidity
+    if (sensorValue < min) {
+      return `${(min - sensorValue).toFixed(1)}% por debajo del mínimo`
+    } else if (sensorValue > max) {
+      return `${(sensorValue - max).toFixed(1)}% por encima del máximo`
+    } else {
+      return 'Dentro del rango ideal'
+    }
+  }
 }
 
 const handleAnimalAdded = async () => {
@@ -675,6 +826,118 @@ onMounted(async () => {
   color: white;
 }
 
+/* Parámetros Ideales */
+.detail-card__parameters {
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+.detail-card--glass .detail-card__parameters {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.parameters-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0 0 1rem 0;
+}
+
+.detail-card--glass .parameters-title {
+  color: white;
+}
+
+.parameters-alert {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.parameters-errors {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1.25rem;
+  list-style-type: disc;
+}
+
+.parameters-errors li {
+  margin-top: 0.25rem;
+}
+
+.parameter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.75rem;
+}
+
+.detail-card--glass .parameter-item {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.parameter-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.parameter-icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.detail-card--glass .parameter-icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.parameter-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.detail-card--glass .parameter-label {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.parameter-range {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.detail-card--glass .parameter-range {
+  color: white;
+}
+
+/* Mensaje sin parámetros */
+.detail-card__no-parameters {
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.detail-card--glass .detail-card__no-parameters {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.no-parameters-text {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.detail-card--glass .no-parameters-text {
+  color: rgba(255, 255, 255, 0.6);
+}
+
 /* Sensores */
 .detail-card__sensors {
   display: grid;
@@ -689,33 +952,81 @@ onMounted(async () => {
   border-top-color: rgba(255, 255, 255, 0.1);
 }
 
+.sensors-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0 0 1rem 0;
+}
+
+.detail-card--glass .sensors-title {
+  color: white;
+}
+
 .sensor-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   padding: 1rem;
   background: rgba(0, 0, 0, 0.02);
   border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.sensor-item--ok {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.sensor-item--warning {
+  background: rgba(251, 146, 60, 0.1);
+  border: 1px solid rgba(251, 146, 60, 0.2);
 }
 
 .detail-card--glass .sensor-item {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.detail-card--glass .sensor-item--ok {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.detail-card--glass .sensor-item--warning {
+  background: rgba(251, 146, 60, 0.15);
+  border-color: rgba(251, 146, 60, 0.3);
+}
+
 .sensor-item__icon {
   color: var(--color-primary);
   flex-shrink: 0;
+  margin-top: 0.25rem;
 }
 
 .detail-card--glass .sensor-item__icon {
   color: rgba(255, 255, 255, 0.8);
 }
 
+.sensor-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sensor-value-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .sensor-label {
   display: block;
   font-size: 0.75rem;
   color: var(--color-text-muted);
-  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .detail-card--glass .sensor-label {
@@ -731,6 +1042,45 @@ onMounted(async () => {
 
 .detail-card--glass .sensor-value {
   color: white;
+}
+
+.sensor-status-icon {
+  flex-shrink: 0;
+}
+
+.sensor-status-icon--ok {
+  color: #22c55e;
+}
+
+.sensor-status-icon--warning {
+  color: #fb923c;
+}
+
+.sensor-comparison {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.sensor-item--ok .sensor-comparison {
+  color: #22c55e;
+}
+
+.sensor-item--warning .sensor-comparison {
+  color: #fb923c;
+}
+
+.detail-card--glass .sensor-comparison {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.detail-card--glass .sensor-item--ok .sensor-comparison {
+  color: rgba(34, 197, 94, 0.9);
+}
+
+.detail-card--glass .sensor-item--warning .sensor-comparison {
+  color: rgba(251, 146, 60, 0.9);
 }
 
 /* Notas */
