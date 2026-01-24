@@ -9,16 +9,37 @@ export interface AnimalWithTerrarium {
     commonName: string
     scientificName: string
     biome: string
+    parameters?: {
+      tempMin: number
+      tempMax: number
+      humidityMin: number
+      humidityMax: number
+      uvIndex: number
+    }
+    imageUrl?: string
+    description?: string
   }
   terrarium: {
     _id: string
     name: string
+    type?: string
+    biome?: string
+    dimensions?: {
+      width: number
+      height: number
+      depth: number
+    }
+    sensors?: {
+      temperature: number | null
+      humidity: number | null
+    }
   } | null
   sex: 'male' | 'female' | 'unknown'
   birthDate?: string
   weight?: number
   notes?: string
   imageUrl?: string
+  createdAt?: string
 }
 
 const API_URL = '/api/animals'
@@ -35,6 +56,7 @@ const getAuthHeaders = (): HeadersInit => {
 export const useAnimalStore = defineStore('animal', () => {
   // State
   const myAnimals = ref<AnimalWithTerrarium[]>([])
+  const currentAnimal = ref<AnimalWithTerrarium | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -63,6 +85,64 @@ export const useAnimalStore = defineStore('animal', () => {
     }
   }
 
+  const fetchAnimalById = async (id: string) => {
+    loading.value = true
+    error.value = null
+    currentAnimal.value = null
+
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        headers: getAuthHeaders()
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al obtener el animal')
+      }
+
+      currentAnimal.value = data.data || null
+      return data.data
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error desconocido'
+      currentAnimal.value = null
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const deleteAnimal = async (id: string): Promise<boolean> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al eliminar el animal')
+      }
+
+      // Eliminar del estado local
+      myAnimals.value = myAnimals.value.filter(a => a._id !== id)
+      if (currentAnimal.value?._id === id) {
+        currentAnimal.value = null
+      }
+
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error desconocido'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   const clearError = () => {
     error.value = null
   }
@@ -70,10 +150,13 @@ export const useAnimalStore = defineStore('animal', () => {
   return {
     // State
     myAnimals,
+    currentAnimal,
     loading,
     error,
     // Actions
     fetchMyAnimals,
+    fetchAnimalById,
+    deleteAnimal,
     clearError
   }
 })

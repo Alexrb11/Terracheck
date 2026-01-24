@@ -73,14 +73,27 @@ export const getMyAnimals = async (req, res) => {
 // GET /api/animals/:id - Obtener un animal por ID
 export const getAnimalById = async (req, res) => {
   try {
-    const animal = await Animal.findById(req.params.id)
-      .populate('species')
-      .populate('terrarium')
+    // Buscar todos los terrarios del usuario para verificar propiedad
+    const terrariums = await Terrarium.find({ 
+      user: req.user._id,
+      isActive: true 
+    }).select('_id')
+
+    const terrariumIds = terrariums.map(t => t._id)
+
+    // Buscar el animal y verificar que esté en uno de los terrarios del usuario
+    const animal = await Animal.findOne({
+      _id: req.params.id,
+      terrarium: { $in: terrariumIds },
+      isActive: true
+    })
+      .populate('species', 'commonName scientificName biome parameters imageUrl description')
+      .populate('terrarium', 'name type biome dimensions sensors')
 
     if (!animal) {
       return res.status(404).json({
         success: false,
-        message: 'Animal no encontrado'
+        message: 'Animal no encontrado o no tienes permisos para verlo'
       })
     }
 

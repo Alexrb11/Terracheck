@@ -55,10 +55,10 @@
           v-for="animal in filteredAnimals"
           :key="animal._id"
           class="card animal-card"
-          @click="goToTerrarium(animal.terrarium?._id)"
+          @click="goToAnimalDetail(animal._id)"
           tabindex="0"
-          @keydown.enter.prevent="goToTerrarium(animal.terrarium?._id)"
-          @keydown.space.prevent="goToTerrarium(animal.terrarium?._id)"
+          @keydown.enter.prevent="goToAnimalDetail(animal._id)"
+          @keydown.space.prevent="goToAnimalDetail(animal._id)"
         >
           <!-- Avatar o Imagen -->
           <div class="animal-card__avatar">
@@ -160,10 +160,8 @@ const filteredAnimals = computed(() => {
   )
 })
 
-const goToTerrarium = (terrariumId?: string) => {
-  if (terrariumId) {
-    router.push(`/terrarium/${terrariumId}`)
-  }
+const goToAnimalDetail = (animalId: string) => {
+  router.push(`/my-animals/${animalId}`)
 }
 
 onMounted(() => {
