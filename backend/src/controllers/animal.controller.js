@@ -45,21 +45,9 @@ export const getAllAnimals = async (req, res) => {
 // GET /api/animals/mine - Obtener todos los animales del usuario autenticado
 export const getMyAnimals = async (req, res) => {
   try {
-    // Buscar todos los terrarios del usuario
-    const terrariums = await Terrarium.find({ 
-      user: req.user._id,
-      isActive: true 
-    }).select('_id')
-
-    const terrariumIds = terrariums.map(t => t._id)
-
-    // Buscar todos los animales que estén en esos terrarios O sin terrario asignado
-    // Esto permite mostrar animales disponibles para asignar
+    // Buscar directamente por el usuario propietario
     const animals = await Animal.find({
-      $or: [
-        { terrarium: { $in: terrariumIds } },
-        { terrarium: null }
-      ],
+      user: req.user._id,
       isActive: true
     })
       .populate('species', 'commonName scientificName biome')
@@ -152,6 +140,7 @@ export const createAnimal = async (req, res) => {
     }
 
     const animal = await Animal.create({
+      user: req.user._id,
       name,
       birthDate,
       sex,

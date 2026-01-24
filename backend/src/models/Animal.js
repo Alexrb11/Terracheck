@@ -1,6 +1,13 @@
 import mongoose from 'mongoose'
 
 const animalSchema = new mongoose.Schema({
+  // Propietario del animal
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'El usuario propietario es requerido']
+  },
+
   name: {
     type: String,
     required: [true, 'El nombre del animal es requerido'],
@@ -73,6 +80,7 @@ const animalSchema = new mongoose.Schema({
 })
 
 // Índices
+animalSchema.index({ user: 1, isActive: 1 })
 animalSchema.index({ terrarium: 1 })
 animalSchema.index({ species: 1 })
 

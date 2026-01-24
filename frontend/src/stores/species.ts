@@ -20,7 +20,7 @@ export interface Species {
   scientificName: string
   commonName: string
   family: string
-  biome: 'Tropical' | 'Arid' | 'Temperate'
+  biome: 'tropical' | 'desert' | 'temperate'
   parameters: SpeciesParameters
   requirements: SpeciesRequirements
   compatibility: string[]

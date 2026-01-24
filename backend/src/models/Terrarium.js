@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { BIOMES, BIOME_LIST } from '../constants/biomes.js'
 
 const terrariumSchema = new mongoose.Schema({
   // Propietario del terrario
@@ -50,10 +51,10 @@ const terrariumSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: {
-      values: ['tropical', 'desert', 'temperate'],
+      values: BIOME_LIST,
       message: 'El bioma debe ser tropical, desert o temperate'
     },
-    default: 'tropical'
+    default: BIOMES.TROPICAL
   },
 
   // Sensores actuales (opcional)

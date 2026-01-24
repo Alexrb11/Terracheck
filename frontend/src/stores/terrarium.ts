@@ -8,7 +8,7 @@ export interface Animal {
     _id: string
     commonName: string
     scientificName: string
-    biome: string
+    biome: 'tropical' | 'desert' | 'temperate'
   }
   sex: 'male' | 'female' | 'unknown'
   birthDate?: string

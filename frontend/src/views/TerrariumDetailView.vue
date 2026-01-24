@@ -403,7 +403,7 @@ const handleAnimalAdded = async () => {
 const handleDeleteAnimal = (animalId: string, animalName: string) => {
   openConfirm(
     'Quitar del terrario',
-    `¿Estás seguro de que deseas quitar a ${animalName} de este terrario? El animal volverá a tu lista de animales disponibles.`,
+    `¿Estás seguro de que deseas quitar a ${animalName} de este terrario? El animal volverá a tu lista de disponibles.`,
     async () => {
       await store.removeAnimalFromTerrarium(animalId)
     },

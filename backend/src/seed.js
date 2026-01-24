@@ -41,7 +41,7 @@ const speciesData = [
     scientificName: 'Eublepharis macularius',
     commonName: 'Gecko Leopardo',
     family: 'Eublepharidae',
-    biome: 'Arid',
+    biome: 'desert',
     parameters: { tempMin: 24, tempMax: 32, humidityMin: 30, humidityMax: 40, uvIndex: 2 },
     requirements: { minLiters: 75, minHeight: 30, arboreal: false },
     compatibility: ['solitary', 'female-groups'],
@@ -52,7 +52,7 @@ const speciesData = [
     scientificName: 'Correlophus ciliatus',
     commonName: 'Gecko Crestado',
     family: 'Diplodactylidae',
-    biome: 'Tropical',
+    biome: 'tropical',
     parameters: { tempMin: 22, tempMax: 27, humidityMin: 60, humidityMax: 80, uvIndex: 2 },
     requirements: { minLiters: 60, minHeight: 45, arboreal: true },
     compatibility: ['communal', 'female-groups'],
@@ -63,7 +63,7 @@ const speciesData = [
     scientificName: 'Python regius',
     commonName: 'Pitón Bola',
     family: 'Pythonidae',
-    biome: 'Tropical',
+    biome: 'tropical',
     parameters: { tempMin: 26, tempMax: 32, humidityMin: 50, humidityMax: 60, uvIndex: 0 },
     requirements: { minLiters: 120, minHeight: 30, arboreal: false },
     compatibility: ['solitary'],
@@ -74,7 +74,7 @@ const speciesData = [
     scientificName: 'Pogona vitticeps',
     commonName: 'Dragón Barbudo',
     family: 'Agamidae',
-    biome: 'Arid',
+    biome: 'desert',
     parameters: { tempMin: 25, tempMax: 40, humidityMin: 30, humidityMax: 40, uvIndex: 10 },
     requirements: { minLiters: 200, minHeight: 40, arboreal: false },
     compatibility: ['solitary', 'male-female-pair'],
@@ -85,7 +85,7 @@ const speciesData = [
     scientificName: 'Dendrobates tinctorius',
     commonName: 'Rana Dardo Azul',
     family: 'Dendrobatidae',
-    biome: 'Tropical',
+    biome: 'tropical',
     parameters: { tempMin: 22, tempMax: 26, humidityMin: 80, humidityMax: 100, uvIndex: 2 },
     requirements: { minLiters: 40, minHeight: 30, arboreal: false },
     compatibility: ['communal', 'same-species-groups'],
@@ -231,11 +231,11 @@ async function seed() {
     // ============== CREAR ANIMALES ==============
     console.log('🐍 Insertando animales...')
     const animalsData = [
-      { name: 'Leo', birthDate: new Date('2022-06-15'), sex: 'male', species: speciesMap['Gecko Leopardo'], terrarium: terrariumMap['Desértico 90cm'], weight: 65, notes: 'Morph: Normal/Wild Type' },
-      { name: 'Luna', birthDate: new Date('2023-03-20'), sex: 'female', species: speciesMap['Gecko Leopardo'], terrarium: terrariumMap['Desértico 90cm'], weight: 52, notes: 'Morph: High Yellow' },
-      { name: 'Coco', birthDate: new Date('2023-01-10'), sex: 'male', species: speciesMap['Gecko Crestado'], terrarium: terrariumMap['Tropical Alto 45x45x60'], weight: 45, notes: 'Morph: Harlequin' },
-      { name: 'Verde', birthDate: new Date('2022-09-01'), sex: 'female', species: speciesMap['Rana Dardo Azul'], terrarium: terrariumMap['Bioactivo Tropical'], weight: 8, notes: 'Coloración azul intenso' },
-      { name: 'Azul', birthDate: new Date('2022-09-01'), sex: 'female', species: speciesMap['Rana Dardo Azul'], terrarium: terrariumMap['Bioactivo Tropical'], weight: 7, notes: 'Coloración azul con manchas negras' }
+      { user: adminUser._id, name: 'Leo', birthDate: new Date('2022-06-15'), sex: 'male', species: speciesMap['Gecko Leopardo'], terrarium: terrariumMap['Desértico 90cm'], weight: 65, notes: 'Morph: Normal/Wild Type' },
+      { user: adminUser._id, name: 'Luna', birthDate: new Date('2023-03-20'), sex: 'female', species: speciesMap['Gecko Leopardo'], terrarium: terrariumMap['Desértico 90cm'], weight: 52, notes: 'Morph: High Yellow' },
+      { user: adminUser._id, name: 'Coco', birthDate: new Date('2023-01-10'), sex: 'male', species: speciesMap['Gecko Crestado'], terrarium: terrariumMap['Tropical Alto 45x45x60'], weight: 45, notes: 'Morph: Harlequin' },
+      { user: adminUser._id, name: 'Verde', birthDate: new Date('2022-09-01'), sex: 'female', species: speciesMap['Rana Dardo Azul'], terrarium: terrariumMap['Bioactivo Tropical'], weight: 8, notes: 'Coloración azul intenso' },
+      { user: adminUser._id, name: 'Azul', birthDate: new Date('2022-09-01'), sex: 'female', species: speciesMap['Rana Dardo Azul'], terrarium: terrariumMap['Bioactivo Tropical'], weight: 7, notes: 'Coloración azul con manchas negras' }
     ]
     const animals = await Animal.insertMany(animalsData)
     console.log(`   ✅ ${animals.length} animales insertados`)

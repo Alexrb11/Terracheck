@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { BIOME_LIST } from '../constants/biomes.js'
 
 const speciesSchema = new mongoose.Schema({
   // Información general
@@ -21,10 +22,7 @@ const speciesSchema = new mongoose.Schema({
   biome: {
     type: String,
     required: true,
-    enum: {
-      values: ['Tropical', 'Arid', 'Temperate'],
-      message: 'Bioma debe ser Tropical, Arid o Temperate'
-    }
+    enum: BIOME_LIST
   },
 
   // Parámetros ambientales requeridos

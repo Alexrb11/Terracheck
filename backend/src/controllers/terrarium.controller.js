@@ -82,13 +82,14 @@ export const getTerrariumById = async (req, res) => {
 // POST /api/terrariums - Crear un nuevo terrario
 export const createTerrarium = async (req, res) => {
   try {
-    const { name, dimensions, type, notes } = req.body
+    const { name, dimensions, type, biome, notes } = req.body
 
     const terrarium = await Terrarium.create({
       user: req.user._id, // Asignar al usuario autenticado
       name,
       dimensions,
       type,
+      biome,
       notes
     })
 

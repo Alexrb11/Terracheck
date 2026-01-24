@@ -8,7 +8,7 @@ export interface AnimalWithTerrarium {
     _id: string
     commonName: string
     scientificName: string
-    biome: string
+    biome: 'tropical' | 'desert' | 'temperate'
     parameters?: {
       tempMin: number
       tempMax: number
@@ -23,7 +23,7 @@ export interface AnimalWithTerrarium {
     _id: string
     name: string
     type?: string
-    biome?: string
+    biome?: 'tropical' | 'desert' | 'temperate'
     dimensions?: {
       width: number
       height: number
