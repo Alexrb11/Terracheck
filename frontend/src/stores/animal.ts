@@ -112,6 +112,45 @@ export const useAnimalStore = defineStore('animal', () => {
     }
   }
 
+  const updateAnimal = async (id: string, animalData: any): Promise<AnimalWithTerrarium | null> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(animalData)
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al actualizar el animal')
+      }
+
+      const updatedAnimal = data.data
+
+      // Actualizar en el estado local
+      const index = myAnimals.value.findIndex(a => a._id === id)
+      if (index !== -1) {
+        myAnimals.value[index] = updatedAnimal
+      }
+
+      // Si es el animal actual, actualizarlo también
+      if (currentAnimal.value?._id === id) {
+        currentAnimal.value = updatedAnimal
+      }
+
+      return updatedAnimal
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error desconocido'
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
   const deleteAnimal = async (id: string): Promise<boolean> => {
     loading.value = true
     error.value = null
@@ -156,6 +195,7 @@ export const useAnimalStore = defineStore('animal', () => {
     // Actions
     fetchMyAnimals,
     fetchAnimalById,
+    updateAnimal,
     deleteAnimal,
     clearError
   }

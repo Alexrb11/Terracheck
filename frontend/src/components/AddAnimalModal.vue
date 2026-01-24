@@ -1,24 +1,10 @@
 <template>
-  <Teleport to="body">
-    <div 
-      v-if="isOpen"
-      class="modal-overlay" 
-      @click.self="handleClose"
-    >
-      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <header class="modal-header">
-          <h2 id="modal-title" class="modal-title">Nuevo Habitante</h2>
-          <button 
-            class="btn-icon" 
-            @click="handleClose" 
-            title="Cerrar"
-            aria-label="Cerrar"
-          >
-            <XIcon :size="24" />
-          </button>
-        </header>
-
-        <div class="modal-body">
+  <BaseModal
+    :is-open="isOpen"
+    :title="isEditMode ? 'Editar Animal' : 'Nuevo Habitante'"
+    @close="handleClose"
+  >
+    <template #default>
           <!-- Error -->
           <div
             v-if="localError"
@@ -46,7 +32,7 @@
           </div>
 
           <!-- Formulario -->
-          <form v-else @submit.prevent="handleSubmit" class="modal-form">
+          <form v-else @submit.prevent="handleSubmit" class="animal-modal-form">
             <!-- Nombre -->
             <div class="form-group">
               <label for="animal-name" class="form-label">Nombre del animal *</label>
@@ -152,37 +138,48 @@
               />
             </div>
 
-            <!-- Footer con botones -->
-            <footer class="modal-footer">
-              <button 
-                type="button" 
-                class="btn btn-secondary" 
-                @click="handleClose"
-              >
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                class="btn btn-primary" 
-                :disabled="terrariumStore.loading || !isFormValid"
-              >
-                <LoaderIcon v-if="terrariumStore.loading" :size="20" class="modal-footer__loader" />
-                <span>{{ terrariumStore.loading ? 'Guardando...' : 'Añadir Animal' }}</span>
-              </button>
-            </footer>
+            <!-- Notas (opcional) -->
+            <div class="form-group">
+              <label for="animal-notes" class="form-label">Notas</label>
+              <textarea
+                id="animal-notes"
+                v-model="form.notes"
+                class="input-field"
+                rows="3"
+                placeholder="Notas adicionales sobre el animal..."
+              />
+            </div>
           </form>
-        </div>
-      </div>
-    </div>
-  </Teleport>
+    </template>
+
+    <template #footer>
+      <button 
+        type="button" 
+        class="btn btn-secondary" 
+        @click="handleClose"
+      >
+        Cancelar
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        :disabled="isSubmitting || !isFormValid || speciesStore.loading"
+        @click="handleSubmit"
+      >
+        <LoaderIcon v-if="isSubmitting" :size="20" class="modal-footer__loader" />
+        <span>{{ isSubmitting ? 'Guardando...' : (isEditMode ? 'Guardar Cambios' : 'Añadir Animal') }}</span>
+      </button>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useTerrariumStore } from '@/stores/terrarium'
 import { useSpeciesStore } from '@/stores/species'
+import { useAnimalStore, type AnimalWithTerrarium } from '@/stores/animal'
+import BaseModal from '@/components/BaseModal.vue'
 import {
-  XIcon,
   AlertCircleIcon,
   AlertTriangleIcon,
   LoaderIcon,
@@ -193,29 +190,38 @@ import {
 
 const props = defineProps<{
   isOpen: boolean
-  terrariumId: string
+  terrariumId?: string
+  animalToEdit?: AnimalWithTerrarium | null
 }>()
 
 const emit = defineEmits<{
   close: []
   success: []
+  saved: []
 }>()
 
 const terrariumStore = useTerrariumStore()
 const speciesStore = useSpeciesStore()
+const animalStore = useAnimalStore()
 
 const form = ref({
   name: '',
   species: '',
   sex: 'unknown' as 'male' | 'female' | 'unknown',
   birthDate: '',
-  weight: null as number | null
+  weight: null as number | null,
+  notes: ''
 })
 
 const localError = ref<string | null>(null)
 const compatibilityWarning = ref<string | null>(null)
+const isSubmitting = ref(false)
 
 const today = new Date().toISOString().split('T')[0]
+
+const isEditMode = computed(() => {
+  return !!props.animalToEdit
+})
 
 const isFormValid = computed(() => {
   return form.value.name.trim() !== '' && form.value.species !== ''
@@ -232,10 +238,22 @@ const resetForm = () => {
     species: '',
     sex: 'unknown',
     birthDate: '',
-    weight: null
+    weight: null,
+    notes: ''
   }
   localError.value = null
   compatibilityWarning.value = null
+}
+
+const fillFormFromAnimal = (animal: AnimalWithTerrarium) => {
+  form.value = {
+    name: animal.name || '',
+    species: animal.species?._id || '',
+    sex: animal.sex || 'unknown',
+    birthDate: animal.birthDate ? new Date(animal.birthDate).toISOString().split('T')[0] : '',
+    weight: animal.weight || null,
+    notes: animal.notes || ''
+  }
 }
 
 const handleClose = () => {
@@ -248,160 +266,101 @@ const handleSubmit = async () => {
 
   localError.value = null
   compatibilityWarning.value = null
+  isSubmitting.value = true
 
-  const animalData = {
-    name: form.value.name,
-    species: form.value.species,
-    sex: form.value.sex,
-    ...(form.value.birthDate ? { birthDate: form.value.birthDate } : {}),
-    ...(form.value.weight ? { weight: form.value.weight } : {})
-  }
+  try {
+    const animalData: any = {
+      name: form.value.name,
+      species: form.value.species,
+      sex: form.value.sex,
+      ...(form.value.birthDate ? { birthDate: form.value.birthDate } : {}),
+      ...(form.value.weight !== null ? { weight: form.value.weight } : {}),
+      ...(form.value.notes ? { notes: form.value.notes } : {})
+    }
 
-  const result = await terrariumStore.addAnimalToTerrarium(props.terrariumId, animalData)
+    // Si estamos en modo edición
+    if (isEditMode.value && props.animalToEdit) {
+      // Si hay un terrariumId en props, añadirlo a los datos
+      if (props.terrariumId) {
+        animalData.terrarium = props.terrariumId
+      }
 
-  if (result.success) {
-    if (result.message) {
-      // Hay un warning de compatibilidad pero el animal se añadió
-      compatibilityWarning.value = result.message
-      // Cerrar después de mostrar brevemente el warning
-      setTimeout(() => {
+      const updatedAnimal = await animalStore.updateAnimal(props.animalToEdit._id, animalData)
+
+      if (updatedAnimal) {
+        emit('saved')
         emit('success')
         handleClose()
-      }, 2000)
+      } else {
+        localError.value = animalStore.error || 'Error al actualizar el animal'
+      }
     } else {
-      emit('success')
-      handleClose()
+      // Modo creación - requiere terrariumId
+      if (!props.terrariumId) {
+        localError.value = 'Se requiere un terrario para crear un animal'
+        isSubmitting.value = false
+        return
+      }
+
+      const result = await terrariumStore.addAnimalToTerrarium(props.terrariumId, animalData)
+
+      if (result.success) {
+        if (result.message) {
+          // Hay un warning de compatibilidad pero el animal se añadió
+          compatibilityWarning.value = result.message
+          // Cerrar después de mostrar brevemente el warning
+          setTimeout(() => {
+            emit('success')
+            handleClose()
+          }, 2000)
+        } else {
+          emit('success')
+          handleClose()
+        }
+      } else {
+        localError.value = result.message || 'Error al añadir el animal'
+      }
     }
-  } else {
-    localError.value = result.message || 'Error al añadir el animal'
+  } catch (err) {
+    localError.value = err instanceof Error ? err.message : 'Error desconocido'
+  } finally {
+    isSubmitting.value = false
   }
 }
 
-// Cargar especies al abrir el modal
+// Cargar especies al abrir el modal y rellenar formulario si estamos en modo edición
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     speciesStore.fetchSpecies()
+    if (props.animalToEdit) {
+      fillFormFromAnimal(props.animalToEdit)
+    } else {
+      resetForm()
+    }
   }
 })
+
+// También observar cambios en animalToEdit
+watch(() => props.animalToEdit, (animal) => {
+  if (props.isOpen && animal) {
+    fillFormFromAnimal(animal)
+  }
+}, { deep: true })
 
 onMounted(() => {
   if (props.isOpen) {
     speciesStore.fetchSpecies()
+    if (props.animalToEdit) {
+      fillFormFromAnimal(props.animalToEdit)
+    }
   }
 })
 </script>
 
 <style scoped>
 /* ============================================
-   OVERLAY Y MODAL BASE
+   LOADING
    ============================================ */
-.modal-overlay {
-  position: fixed;
-  top: var(--header-height); /* Offset del Header */
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: calc(100vh - var(--header-height));
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  animation: modal-fade-in 0.2s ease-out;
-}
-
-/* En móvil, la barra está abajo, así que usamos pantalla completa */
-@media (max-width: 767px) {
-  .modal-overlay {
-    top: 0;
-    height: 100vh;
-  }
-}
-
-@keyframes modal-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.modal-card {
-  background: var(--color-surface);
-  border-radius: var(--radius-xl);
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  box-shadow: var(--shadow-float);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  animation: modal-slide-up 0.3s ease-out;
-}
-
-@keyframes modal-slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ============================================
-   HEADER
-   ============================================ */
-.modal-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-  margin: 0;
-}
-
-.btn-icon {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  padding: 0.25rem;
-  border-radius: 50%;
-  transition: background var(--transition-fast), color var(--transition-fast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-}
-
-.btn-icon:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--color-text-main);
-}
-
-/* ============================================
-   BODY
-   ============================================ */
-.modal-body {
-  padding: 1.5rem;
-  overflow-y: auto;
-  flex: 1;
-}
-
 .modal-body__loading {
   display: flex;
   align-items: center;
@@ -423,7 +382,10 @@ onMounted(() => {
   }
 }
 
-.modal-form {
+/* ============================================
+   FORMULARIO
+   ============================================ */
+.animal-modal-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -528,6 +490,13 @@ onMounted(() => {
   background-image: none; /* Quita la flecha nativa */
 }
 
+/* Textarea */
+textarea.input-field {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
 /* Info de especie seleccionada */
 .species-info {
   margin-top: 0.75rem;
@@ -600,22 +569,12 @@ onMounted(() => {
 /* ============================================
    FOOTER
    ============================================ */
-.modal-footer {
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.02);
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  flex-shrink: 0;
-}
-
-.modal-footer .btn {
-  flex: 1;
-  max-width: 200px;
-}
-
 .modal-footer__loader {
   animation: spin 1s linear infinite;
+}
+
+:deep(.modal-footer .btn) {
+  flex: 1;
+  max-width: 200px;
 }
 </style>

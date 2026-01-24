@@ -171,8 +171,44 @@ export const updateAnimal = async (req, res) => {
   try {
     const { terrarium: newTerrariumId, species: newSpeciesId } = req.body
 
-    // Si se cambia de terrario, verificar compatibilidad
+    // Obtener todos los terrarios del usuario para verificar propiedad
+    const userTerrariums = await Terrarium.find({ 
+      user: req.user._id,
+      isActive: true 
+    }).select('_id')
+
+    const terrariumIds = userTerrariums.map(t => t._id)
+
+    // Verificar que el animal pertenezca al usuario (está en uno de sus terrarios)
+    const currentAnimal = await Animal.findOne({
+      _id: req.params.id,
+      terrarium: { $in: terrariumIds },
+      isActive: true
+    }).populate('species')
+
+    if (!currentAnimal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Animal no encontrado o no tienes permisos para editarlo'
+      })
+    }
+
+    // Si se cambia de terrario, verificar que el nuevo terrario también pertenezca al usuario
     if (newTerrariumId) {
+      const newTerrarium = await Terrarium.findOne({
+        _id: newTerrariumId,
+        user: req.user._id,
+        isActive: true
+      })
+
+      if (!newTerrarium) {
+        return res.status(403).json({
+          success: false,
+          message: 'El terrario especificado no existe o no tienes permisos para usarlo'
+        })
+      }
+
+      // Verificar compatibilidad de biomas
       let biomeToCheck
 
       if (newSpeciesId) {
@@ -185,9 +221,7 @@ export const updateAnimal = async (req, res) => {
         }
         biomeToCheck = speciesDoc.biome
       } else {
-        // Obtener el bioma del animal actual
-        const currentAnimal = await Animal.findById(req.params.id).populate('species')
-        biomeToCheck = currentAnimal?.species?.biome
+        biomeToCheck = currentAnimal.species?.biome
       }
 
       if (biomeToCheck) {
@@ -208,8 +242,9 @@ export const updateAnimal = async (req, res) => {
       }
     }
 
-    const animal = await Animal.findByIdAndUpdate(
-      req.params.id,
+    // Actualizar el animal
+    const animal = await Animal.findOneAndUpdate(
+      { _id: req.params.id, terrarium: { $in: terrariumIds } },
       req.body,
       { new: true, runValidators: true }
     )

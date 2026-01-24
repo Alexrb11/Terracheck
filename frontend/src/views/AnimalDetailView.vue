@@ -263,6 +263,16 @@
       @close="confirmModal.isOpen = false"
       @confirm="handleConfirm"
     />
+
+    <!-- Modal de Edición -->
+    <AddAnimalModal
+      :is-open="editModal.isOpen"
+      :animal-to-edit="editModal.animal"
+      :terrarium-id="animal?.terrarium?._id"
+      @close="editModal.isOpen = false"
+      @saved="handleAnimalSaved"
+      @success="handleAnimalSaved"
+    />
   </div>
 </template>
 
@@ -272,6 +282,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAnimalStore } from '@/stores/animal'
 import Navigation from '@/components/Navigation.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
+import AddAnimalModal from '@/components/AddAnimalModal.vue'
 import {
   ArrowLeftIcon,
   LoaderIcon,
@@ -310,6 +321,15 @@ const confirmModal = ref<{
   cancelText: 'Cancelar',
   isDanger: false,
   onConfirm: null
+})
+
+// Edit Modal
+const editModal = ref<{
+  isOpen: boolean
+  animal: typeof animal.value | null
+}>({
+  isOpen: false,
+  animal: null
 })
 
 const openConfirm = (
@@ -409,8 +429,20 @@ const goToTerrarium = () => {
 }
 
 const handleEdit = () => {
-  // TODO: Implementar edición
-  alert('Funcionalidad de edición próximamente')
+  if (!animal.value) return
+  editModal.value = {
+    isOpen: true,
+    animal: animal.value
+  }
+}
+
+const handleAnimalSaved = async () => {
+  // Recargar los datos del animal para reflejar los cambios
+  if (animalId.value) {
+    await loadAnimal()
+  }
+  editModal.value.isOpen = false
+  editModal.value.animal = null
 }
 
 const handleMove = () => {
