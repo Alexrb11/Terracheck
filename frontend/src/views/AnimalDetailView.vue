@@ -388,6 +388,7 @@ import Navigation from '@/components/Navigation.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import AddAnimalModal from '@/components/AddAnimalModal.vue'
 import { getImageUrl } from '@/utils/image'
+import { useScrollLock } from '@/composables/useScrollLock'
 import {
   ArrowLeftIcon,
   LoaderIcon,
@@ -418,6 +419,9 @@ const galleryFileInputRef = ref<HTMLInputElement | null>(null)
 // Lightbox state
 const lightboxOpen = ref(false)
 const currentImageIndex = ref(0)
+
+// Bloquear scroll cuando el lightbox está abierto
+useScrollLock(lightboxOpen)
 
 // Confirmation Modal
 const confirmModal = ref<{

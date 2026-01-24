@@ -59,7 +59,7 @@ app.use('/api/admin/roles', roleRoutes)
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
-    message: 'TerrariumKeeper API is running',
+    message: 'Terracheck API is running',
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',

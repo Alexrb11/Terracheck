@@ -215,11 +215,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, toRef } from 'vue'
 import { useTerrariumStore } from '@/stores/terrarium'
 import { useSpeciesStore } from '@/stores/species'
 import { useAnimalStore, type AnimalWithTerrarium } from '@/stores/animal'
 import BaseModal from '@/components/BaseModal.vue'
+import { useScrollLock } from '@/composables/useScrollLock'
 import {
   AlertCircleIcon,
   AlertTriangleIcon,
@@ -245,6 +246,9 @@ const emit = defineEmits<{
 const terrariumStore = useTerrariumStore()
 const speciesStore = useSpeciesStore()
 const animalStore = useAnimalStore()
+
+// Bloquear scroll cuando el modal está abierto
+useScrollLock(toRef(props, 'isOpen'))
 
 const form = ref({
   name: '',

@@ -48,7 +48,7 @@
     <div class="container">
       <div class="nav-bar__content">
         <router-link to="/" class="nav-bar__logo">
-          TerrariumKeeper
+          Terracheck
         </router-link>
 
         <div class="nav-bar__menu">

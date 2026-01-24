@@ -1,4 +1,4 @@
-# 🦎 TerrariumKeeper
+# 🦎 Terracheck
 
 Aplicación web para gestionar terrarios y comprobar la compatibilidad entre especies de reptiles.
 

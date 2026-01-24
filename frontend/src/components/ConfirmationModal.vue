@@ -52,10 +52,12 @@
 </template>
 
 <script setup lang="ts">
+import { toRef } from 'vue'
 import BaseModal from '@/components/BaseModal.vue'
 import { AlertTriangleIcon, InfoIcon } from 'lucide-vue-next'
+import { useScrollLock } from '@/composables/useScrollLock'
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   isOpen: boolean
   title: string
   message: string
@@ -72,6 +74,9 @@ defineEmits<{
   close: []
   confirm: []
 }>()
+
+// Bloquear scroll cuando el modal está abierto
+useScrollLock(toRef(props, 'isOpen'))
 </script>
 
 <style scoped>

@@ -6,7 +6,7 @@
         <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-4">
           <LeafIcon :size="32" class="text-emerald-600" />
         </div>
-        <h1 class="text-3xl font-bold text-slate-800">TerrariumKeeper</h1>
+        <h1 class="text-3xl font-bold text-slate-800">Terracheck</h1>
         <p class="text-slate-600 mt-2">Crea tu cuenta para empezar</p>
       </div>
 

@@ -1,7 +1,7 @@
 {
   "name": "terrarium-keeper-backend",
   "version": "1.0.0",
-  "description": "Backend API for TerrariumKeeper - Reptile terrarium management",
+  "description": "Backend API for Terracheck - Reptile terrarium management",
   "main": "src/index.js",
   "type": "module",
   "scripts": {

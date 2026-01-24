@@ -1,4 +1,4 @@
-# TerrariumKeeper Backend
+# Terracheck Backend
 
 API REST para la gestión de terrarios de reptiles con autenticación JWT y sistema de roles dinámico.
 
