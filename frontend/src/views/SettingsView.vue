@@ -208,7 +208,6 @@ import {
 
 const authStore = useAuthStore()
 
-// Estado del formulario de perfil
 const profileForm = reactive({
   name: '',
   email: '',
@@ -223,7 +222,6 @@ const profileErrors = ref<{
   email?: string
 }>({})
 
-// Estado del formulario de contraseña
 const passwordForm = reactive({
   currentPassword: '',
   newPassword: ''
@@ -237,12 +235,10 @@ const passwordErrors = ref<{
   newPassword?: string
 }>({})
 
-// Estado para eliminar cuenta
 const deleteLoading = ref(false)
 const deleteError = ref<string | null>(null)
 const showDeleteModal = ref(false)
 
-// Cargar datos del usuario al montar
 onMounted(() => {
   if (authStore.user) {
     profileForm.name = authStore.user.name
@@ -251,7 +247,6 @@ onMounted(() => {
   }
 })
 
-// Validar formulario de perfil
 const validateProfile = (): boolean => {
   profileErrors.value = {}
 
@@ -268,15 +263,12 @@ const validateProfile = (): boolean => {
   return Object.keys(profileErrors.value).length === 0
 }
 
-// Manejar actualización de perfil
 const handleUpdateProfile = async () => {
-  // Limpiar errores previos
   profileErrors.value = {}
   profileLoading.value = true
   profileError.value = null
   profileSuccess.value = false
 
-  // Validar formulario
   if (!validateProfile()) {
     profileLoading.value = false
     return
@@ -291,7 +283,6 @@ const handleUpdateProfile = async () => {
 
     if (success) {
       profileSuccess.value = true
-      // Limpiar mensaje después de 3 segundos
       setTimeout(() => {
         profileSuccess.value = false
       }, 3000)
@@ -305,7 +296,6 @@ const handleUpdateProfile = async () => {
   }
 }
 
-// Validar formulario de contraseña
 const validatePassword = (): boolean => {
   passwordErrors.value = {}
 
@@ -322,15 +312,12 @@ const validatePassword = (): boolean => {
   return Object.keys(passwordErrors.value).length === 0
 }
 
-// Manejar cambio de contraseña
 const handleChangePassword = async () => {
-  // Limpiar errores previos
   passwordErrors.value = {}
   passwordLoading.value = true
   passwordError.value = null
   passwordSuccess.value = false
 
-  // Validar formulario
   if (!validatePassword()) {
     passwordLoading.value = false
     return
@@ -344,10 +331,8 @@ const handleChangePassword = async () => {
 
     if (success) {
       passwordSuccess.value = true
-      // Limpiar formulario
       passwordForm.currentPassword = ''
       passwordForm.newPassword = ''
-      // Limpiar mensaje después de 3 segundos
       setTimeout(() => {
         passwordSuccess.value = false
       }, 3000)
@@ -361,7 +346,6 @@ const handleChangePassword = async () => {
   }
 }
 
-// Manejar eliminación de cuenta
 const handleDeleteAccount = async () => {
   deleteLoading.value = true
   deleteError.value = null
@@ -369,7 +353,6 @@ const handleDeleteAccount = async () => {
 
   try {
     await authStore.deleteAccount()
-    // El logout se ejecuta automáticamente en deleteAccount
   } catch (error) {
     deleteError.value = error instanceof Error ? error.message : 'Error al eliminar cuenta'
     deleteLoading.value = false

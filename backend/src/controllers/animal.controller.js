@@ -1,6 +1,7 @@
 import Animal from '../models/Animal.js'
 import Species from '../models/Species.js'
 import Terrarium from '../models/Terrarium.js'
+import User from '../models/User.js'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -8,12 +9,42 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+const hasPermission = async (resource, user) => {
+  if (resource.user && resource.user.toString() === user._id.toString()) {
+    return true
+  }
+
+  let userWithRole = user
+  if (!user.role || typeof user.role === 'object' && !user.role.slug) {
+    userWithRole = await User.findById(user._id).populate('role', 'slug')
+  }
+
+  const roleSlug = userWithRole.role?.slug || (typeof userWithRole.role === 'object' ? userWithRole.role.slug : null)
+  
+  if (roleSlug === 'admin' || roleSlug === 'super_admin') {
+    return true
+  }
+
+  return false
+}
+
 // GET /api/animals - Obtener todos los animales
 export const getAllAnimals = async (req, res) => {
   try {
     const { terrarium, species } = req.query
 
+    let userWithRole = req.user
+    if (!req.user.role || typeof req.user.role === 'object' && !req.user.role.slug) {
+      userWithRole = await User.findById(req.user._id).populate('role', 'slug')
+    }
+    const roleSlug = userWithRole.role?.slug || (typeof userWithRole.role === 'object' ? userWithRole.role.slug : null)
+    const isAdmin = roleSlug === 'admin' || roleSlug === 'super_admin'
+
     let query = { isActive: true }
+
+    if (!isAdmin) {
+      query.user = req.user._id
+    }
 
     if (terrarium) {
       query.terrarium = terrarium
@@ -45,7 +76,6 @@ export const getAllAnimals = async (req, res) => {
 // GET /api/animals/mine - Obtener todos los animales del usuario autenticado
 export const getMyAnimals = async (req, res) => {
   try {
-    // Buscar directamente por el usuario propietario
     const animals = await Animal.find({
       user: req.user._id,
       isActive: true
@@ -71,30 +101,28 @@ export const getMyAnimals = async (req, res) => {
 // GET /api/animals/:id - Obtener un animal por ID
 export const getAnimalById = async (req, res) => {
   try {
-    // Buscar todos los terrarios del usuario para verificar propiedad
-    const terrariums = await Terrarium.find({ 
-      user: req.user._id,
-      isActive: true 
-    }).select('_id')
-
-    const terrariumIds = terrariums.map(t => t._id)
-
-    // Buscar el animal y verificar que esté en uno de los terrarios del usuario O sin terrario asignado
-    const animal = await Animal.findOne({
-      _id: req.params.id,
-      $or: [
-        { terrarium: { $in: terrariumIds } },
-        { terrarium: null }
-      ],
-      isActive: true
-    })
+    const animal = await Animal.findById(req.params.id)
       .populate('species', 'commonName scientificName biome parameters imageUrl description')
       .populate('terrarium', 'name type biome dimensions')
 
     if (!animal) {
       return res.status(404).json({
         success: false,
-        message: 'Animal no encontrado o no tienes permisos para verlo'
+        message: 'Animal no encontrado'
+      })
+    }
+
+    if (!await hasPermission(animal, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para ver este animal'
+      })
+    }
+
+    if (!animal.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: 'Animal no encontrado'
       })
     }
 
@@ -116,7 +144,6 @@ export const createAnimal = async (req, res) => {
   try {
     const { name, birthDate, sex, species: speciesId, terrarium: terrariumId, weight, notes } = req.body
 
-    // Verificar que la especie existe
     const speciesDoc = await Species.findById(speciesId)
     if (!speciesDoc) {
       return res.status(400).json({
@@ -125,7 +152,6 @@ export const createAnimal = async (req, res) => {
       })
     }
 
-    // Si se asigna a un terrario, verificar compatibilidad
     if (terrariumId) {
       const compatibilityCheck = await checkBiomeCompatibility(terrariumId, speciesDoc.biome)
 
@@ -150,7 +176,6 @@ export const createAnimal = async (req, res) => {
       notes
     })
 
-    // Poblar las referencias para la respuesta
     await animal.populate('species', 'commonName scientificName biome')
     await animal.populate('terrarium', 'name')
 
@@ -171,53 +196,51 @@ export const createAnimal = async (req, res) => {
 // PUT /api/animals/:id - Actualizar un animal
 export const updateAnimal = async (req, res) => {
   try {
-    const { terrarium: newTerrariumId, species: newSpeciesId } = req.body
+    const { species: newSpeciesId } = req.body
 
-    // Obtener todos los terrarios del usuario para verificar propiedad
-    const userTerrariums = await Terrarium.find({ 
-      user: req.user._id,
-      isActive: true 
-    }).select('_id')
-
-    const terrariumIds = userTerrariums.map(t => t._id)
-
-    // Verificar que el animal pertenezca al usuario (está en uno de sus terrarios O sin terrario asignado)
-    const currentAnimal = await Animal.findOne({
-      _id: req.params.id,
-      $or: [
-        { terrarium: { $in: terrariumIds } },
-        { terrarium: null }
-      ],
-      isActive: true
-    }).populate('species')
+    const currentAnimal = await Animal.findById(req.params.id).populate('species')
 
     if (!currentAnimal) {
       return res.status(404).json({
         success: false,
-        message: 'Animal no encontrado o no tienes permisos para editarlo'
+        message: 'Animal no encontrado'
       })
     }
 
-    // VALIDACIÓN DE SEGURIDAD: Si se incluye terrarium en el body, verificar que pertenezca al usuario
+    if (!await hasPermission(currentAnimal, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para editar este animal'
+      })
+    }
+
+    if (!currentAnimal.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: 'Animal no encontrado'
+      })
+    }
+
     if (req.body.terrarium !== undefined) {
       const newTerrariumId = req.body.terrarium
       
-      // Si se asigna a un terrario (no es null), verificar que exista y pertenezca al usuario
       if (newTerrariumId) {
-        const newTerrarium = await Terrarium.findOne({
-          _id: newTerrariumId,
-          user: req.user._id,
-          isActive: true
-        })
+        const newTerrarium = await Terrarium.findById(newTerrariumId)
 
         if (!newTerrarium) {
-          return res.status(403).json({
+          return res.status(404).json({
             success: false,
-            message: 'El terrario especificado no existe o no tienes permisos para usarlo'
+            message: 'El terrario especificado no existe'
           })
         }
 
-        // Verificar compatibilidad de biomas
+        if (!await hasPermission(newTerrarium, req.user)) {
+          return res.status(403).json({
+            success: false,
+            message: 'No tienes permisos para usar este terrario'
+          })
+        }
+
         let biomeToCheck
 
         if (newSpeciesId) {
@@ -233,27 +256,17 @@ export const updateAnimal = async (req, res) => {
           biomeToCheck = currentAnimal.species?.biome
         }
 
-        // Verificar compatibilidad (solo para logging, no bloquea la operación)
         if (biomeToCheck) {
-          const compatibilityCheck = await checkBiomeCompatibility(
+          await checkBiomeCompatibility(
             newTerrariumId,
             biomeToCheck,
-            req.params.id // Excluir el animal actual de la verificación
+            req.params.id
           )
-          // Permitir animales incompatibles, solo advertir visualmente en el frontend
         }
       }
     }
-
-    // Actualizar el animal
-    const animal = await Animal.findOneAndUpdate(
-      { 
-        _id: req.params.id, 
-        $or: [
-          { terrarium: { $in: terrariumIds } },
-          { terrarium: null }
-        ]
-      },
+    const animal = await Animal.findByIdAndUpdate(
+      req.params.id,
       req.body,
       { new: true, runValidators: true }
     )
@@ -284,11 +297,7 @@ export const updateAnimal = async (req, res) => {
 // DELETE /api/animals/:id - Eliminar un animal (soft delete)
 export const deleteAnimal = async (req, res) => {
   try {
-    const animal = await Animal.findByIdAndUpdate(
-      req.params.id,
-      { isActive: false, terrarium: null },
-      { new: true }
-    )
+    const animal = await Animal.findById(req.params.id)
 
     if (!animal) {
       return res.status(404).json({
@@ -296,6 +305,17 @@ export const deleteAnimal = async (req, res) => {
         message: 'Animal no encontrado'
       })
     }
+
+    if (!await hasPermission(animal, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para eliminar este animal'
+      })
+    }
+
+    animal.isActive = false
+    animal.terrarium = null
+    await animal.save()
 
     res.json({
       success: true,
@@ -324,14 +344,19 @@ export const moveAnimal = async (req, res) => {
       })
     }
 
-    // Si se mueve a un terrario (no se saca), verificar compatibilidad (solo para logging, no bloquea)
+    if (!await hasPermission(animal, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para mover este animal'
+      })
+    }
+
     if (terrariumId) {
-      const compatibilityCheck = await checkBiomeCompatibility(
+      await checkBiomeCompatibility(
         terrariumId,
         animal.species.biome,
         animal._id.toString()
       )
-      // Permitir animales incompatibles, solo advertir visualmente en el frontend
     }
 
     animal.terrarium = terrariumId || null
@@ -353,9 +378,7 @@ export const moveAnimal = async (req, res) => {
   }
 }
 
-// Función auxiliar para verificar compatibilidad de biomas
 async function checkBiomeCompatibility(terrariumId, newAnimalBiome, excludeAnimalId = null) {
-  // Obtener los animales actuales del terrario
   let query = {
     terrarium: terrariumId,
     isActive: true
@@ -371,7 +394,6 @@ async function checkBiomeCompatibility(terrariumId, newAnimalBiome, excludeAnima
     return { compatible: true }
   }
 
-  // Verificar si todos los animales tienen el mismo bioma
   const existingBiomes = [...new Set(existingAnimals.map(a => a.species?.biome).filter(Boolean))]
 
   if (existingBiomes.length === 0) {
@@ -406,39 +428,31 @@ export const updateProfileImage = async (req, res) => {
       })
     }
 
-    // Obtener todos los terrarios del usuario para verificar propiedad
-    const userTerrariums = await Terrarium.find({ 
-      user: req.user._id,
-      isActive: true 
-    }).select('_id')
-
-    const terrariumIds = userTerrariums.map(t => t._id)
-
-    // Buscar el animal y verificar que pertenezca al usuario (está en uno de sus terrarios O sin terrario asignado)
-    const animal = await Animal.findOne({
-      _id: req.params.id,
-      $or: [
-        { terrarium: { $in: terrariumIds } },
-        { terrarium: null }
-      ],
-      isActive: true
-    })
+    const animal = await Animal.findById(req.params.id)
 
     if (!animal) {
-      // Si el animal no existe, eliminar el archivo subido
       const filePath = path.join(__dirname, '../../public/uploads/animals', req.file.filename)
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath)
       }
       return res.status(404).json({
         success: false,
-        message: 'Animal no encontrado o no tienes permisos para editarlo'
+        message: 'Animal no encontrado'
       })
     }
 
-    // Si el animal ya tenía una imagen anterior (y es local), borrarla
+    if (!await hasPermission(animal, req.user)) {
+      const filePath = path.join(__dirname, '../../public/uploads/animals', req.file.filename)
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath)
+      }
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para editar este animal'
+      })
+    }
+
     if (animal.imageUrl && !animal.imageUrl.startsWith('http')) {
-      // Manejar tanto /uploads como /public/uploads
       const oldImagePath = animal.imageUrl.replace('/uploads', '').replace('/public', '')
       const fullOldPath = path.join(__dirname, '../../public', oldImagePath)
       
@@ -451,7 +465,6 @@ export const updateProfileImage = async (req, res) => {
       }
     }
 
-    // Guardar la nueva ruta de la imagen
     const imageUrl = `/uploads/animals/${req.file.filename}`
     animal.imageUrl = imageUrl
     await animal.save()
@@ -464,7 +477,6 @@ export const updateProfileImage = async (req, res) => {
       }
     })
   } catch (error) {
-    // Si hay error, eliminar el archivo subido
     if (req.file) {
       const filePath = path.join(__dirname, '../../public/uploads/animals', req.file.filename)
       if (fs.existsSync(filePath)) {
@@ -494,26 +506,9 @@ export const addToGallery = async (req, res) => {
       })
     }
 
-    // Obtener todos los terrarios del usuario para verificar propiedad
-    const userTerrariums = await Terrarium.find({ 
-      user: req.user._id,
-      isActive: true 
-    }).select('_id')
-
-    const terrariumIds = userTerrariums.map(t => t._id)
-
-    // Buscar el animal y verificar que pertenezca al usuario (está en uno de sus terrarios O sin terrario asignado)
-    const animal = await Animal.findOne({
-      _id: req.params.id,
-      $or: [
-        { terrarium: { $in: terrariumIds } },
-        { terrarium: null }
-      ],
-      isActive: true
-    })
+    const animal = await Animal.findById(req.params.id)
 
     if (!animal) {
-      // Si el animal no existe, eliminar los archivos subidos
       req.files.forEach(file => {
         const filePath = path.join(__dirname, '../../public/uploads/animals', file.filename)
         if (fs.existsSync(filePath)) {
@@ -526,11 +521,27 @@ export const addToGallery = async (req, res) => {
       })
       return res.status(404).json({
         success: false,
-        message: 'Animal no encontrado o no tienes permisos para editarlo'
+        message: 'Animal no encontrado'
       })
     }
 
-    // Añadir las nuevas imágenes a la galería
+    if (!await hasPermission(animal, req.user)) {
+      req.files.forEach(file => {
+        const filePath = path.join(__dirname, '../../public/uploads/animals', file.filename)
+        if (fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath)
+          } catch (error) {
+            console.error('Error al eliminar archivo:', error.message)
+          }
+        }
+      })
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para editar este animal'
+      })
+    }
+
     const newImageUrls = req.files.map(file => `/uploads/animals/${file.filename}`)
     animal.gallery = [...(animal.gallery || []), ...newImageUrls]
     await animal.save()
@@ -543,7 +554,6 @@ export const addToGallery = async (req, res) => {
       }
     })
   } catch (error) {
-    // Si hay error, eliminar los archivos subidos
     if (req.files) {
       req.files.forEach(file => {
         const filePath = path.join(__dirname, '../../public/uploads/animals', file.filename)
@@ -577,32 +587,22 @@ export const removeFromGallery = async (req, res) => {
       })
     }
 
-    // Obtener todos los terrarios del usuario para verificar propiedad
-    const userTerrariums = await Terrarium.find({ 
-      user: req.user._id,
-      isActive: true 
-    }).select('_id')
-
-    const terrariumIds = userTerrariums.map(t => t._id)
-
-    // Buscar el animal y verificar que pertenezca al usuario (está en uno de sus terrarios O sin terrario asignado)
-    const animal = await Animal.findOne({
-      _id: req.params.id,
-      $or: [
-        { terrarium: { $in: terrariumIds } },
-        { terrarium: null }
-      ],
-      isActive: true
-    })
+    const animal = await Animal.findById(req.params.id)
 
     if (!animal) {
       return res.status(404).json({
         success: false,
-        message: 'Animal no encontrado o no tienes permisos para editarlo'
+        message: 'Animal no encontrado'
       })
     }
 
-    // Verificar que la imagen esté en la galería
+    if (!await hasPermission(animal, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para editar este animal'
+      })
+    }
+
     if (!animal.gallery || !animal.gallery.includes(imageUrl)) {
       return res.status(404).json({
         success: false,
@@ -610,13 +610,10 @@ export const removeFromGallery = async (req, res) => {
       })
     }
 
-    // Eliminar la imagen del array en MongoDB usando $pull
     animal.gallery = animal.gallery.filter(url => url !== imageUrl)
     await animal.save()
 
-    // Si es una imagen local (no externa), eliminar el archivo físico
     if (!imageUrl.startsWith('http')) {
-      // Manejar tanto /uploads como /public/uploads
       const imagePath = imageUrl.replace('/uploads', '').replace('/public', '')
       const fullPath = path.join(__dirname, '../../public', imagePath)
       
@@ -625,7 +622,6 @@ export const removeFromGallery = async (req, res) => {
           fs.unlinkSync(fullPath)
         } catch (error) {
           console.error('Error al eliminar archivo físico:', error.message)
-          // No fallar la respuesta si no se puede eliminar el archivo
         }
       }
     }

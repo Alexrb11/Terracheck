@@ -251,7 +251,6 @@ const terrariumStore = useTerrariumStore()
 const speciesStore = useSpeciesStore()
 const animalStore = useAnimalStore()
 
-// Bloquear scroll cuando el modal está abierto
 useScrollLock(toRef(props, 'isOpen'))
 
 const form = ref({
@@ -324,13 +323,11 @@ const handleFileSelect = (event: Event) => {
   const file = target.files?.[0]
   
   if (file) {
-    // Validar tipo de archivo
     if (!file.type.startsWith('image/')) {
       localError.value = 'Por favor, selecciona un archivo de imagen válido'
       return
     }
     
-    // Validar tamaño (5MB máximo)
     if (file.size > 5 * 1024 * 1024) {
       localError.value = 'La imagen no puede superar los 5MB'
       return
@@ -338,7 +335,6 @@ const handleFileSelect = (event: Event) => {
     
     selectedImageFile.value = file
     
-    // Crear preview
     const reader = new FileReader()
     reader.onload = (e) => {
       selectedImagePreview.value = e.target?.result as string
@@ -372,7 +368,6 @@ const handleClose = () => {
 }
 
 const handleSubmit = async () => {
-  // Validar formulario
   if (!validateForm()) {
     return
   }
@@ -393,9 +388,7 @@ const handleSubmit = async () => {
 
     let animalId: string | null = null
 
-    // Si estamos en modo edición
     if (isEditMode.value && props.animalToEdit) {
-      // Si hay un terrariumId en props, añadirlo a los datos
       if (props.terrariumId) {
         animalData.terrarium = props.terrariumId
       }
@@ -405,7 +398,6 @@ const handleSubmit = async () => {
       if (updatedAnimal) {
         animalId = updatedAnimal._id
         
-        // Si hay una imagen seleccionada, subirla
         if (selectedImageFile.value && animalId) {
           const uploadSuccess = await animalStore.uploadProfileImage(animalId, selectedImageFile.value)
           if (!uploadSuccess) {
@@ -422,13 +414,10 @@ const handleSubmit = async () => {
         localError.value = animalStore.error || 'Error al actualizar el animal'
       }
     } else {
-      // Modo creación
       if (props.terrariumId) {
-        // Crear animal y asignarlo a un terrario
         const result = await terrariumStore.addAnimalToTerrarium(props.terrariumId, animalData)
 
         if (result.success) {
-          // Obtener el ID del animal recién creado
           await animalStore.fetchMyAnimals()
           const newAnimal = animalStore.myAnimals.find(a => 
             a.name === form.value.name && 
@@ -440,7 +429,6 @@ const handleSubmit = async () => {
           }
           
           if (result.message) {
-            // Hay un warning de compatibilidad pero el animal se añadió
             compatibilityWarning.value = result.message
           }
         } else {
@@ -449,7 +437,6 @@ const handleSubmit = async () => {
           return
         }
       } else {
-        // Crear animal sin asignar a terrario (modo creación pura)
         try {
           const token = localStorage.getItem('token')
           const response = await fetch('/api/animals', {
@@ -475,7 +462,6 @@ const handleSubmit = async () => {
         }
       }
 
-      // Si hay una imagen seleccionada y tenemos el ID, subirla
       if (selectedImageFile.value && animalId) {
         const uploadSuccess = await animalStore.uploadProfileImage(animalId, selectedImageFile.value)
         if (!uploadSuccess) {
@@ -485,7 +471,6 @@ const handleSubmit = async () => {
         }
       }
 
-      // Si hay un warning de compatibilidad, mostrar brevemente antes de cerrar
       if (compatibilityWarning.value) {
         setTimeout(() => {
           emit('saved')
@@ -505,7 +490,6 @@ const handleSubmit = async () => {
   }
 }
 
-// Cargar especies al abrir el modal y rellenar formulario si estamos en modo edición
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     speciesStore.fetchSpecies()
@@ -517,7 +501,6 @@ watch(() => props.isOpen, (isOpen) => {
   }
 })
 
-// También observar cambios en animalToEdit
 watch(() => props.animalToEdit, (animal) => {
   if (props.isOpen && animal) {
     fillFormFromAnimal(animal)

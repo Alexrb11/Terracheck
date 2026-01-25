@@ -269,12 +269,10 @@ const calculatedLiters = computed(() => {
 const validateForm = (): boolean => {
   errors.value = {}
 
-  // Validar nombre
   if (!form.value.name.trim()) {
     errors.value.name = 'El nombre del terrario es obligatorio'
   }
 
-  // Validar dimensiones
   const dimensionErrors: { width?: string; depth?: string; height?: string } = {}
   
   if (!form.value.dimensions.width || form.value.dimensions.width < 10) {
@@ -297,10 +295,8 @@ const validateForm = (): boolean => {
 }
 
 const handleSubmit = async () => {
-  // Limpiar errores previos
   errors.value = {}
 
-  // Validar formulario
   if (!validateForm()) {
     return
   }

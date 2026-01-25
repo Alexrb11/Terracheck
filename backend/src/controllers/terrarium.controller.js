@@ -1,14 +1,42 @@
 import Terrarium from '../models/Terrarium.js'
 import Animal from '../models/Animal.js'
+import User from '../models/User.js'
+
+const hasPermission = async (resource, user) => {
+  if (resource.user && resource.user.toString() === user._id.toString()) {
+    return true
+  }
+
+  let userWithRole = user
+  if (!user.role || typeof user.role === 'object' && !user.role.slug) {
+    userWithRole = await User.findById(user._id).populate('role', 'slug')
+  }
+
+  const roleSlug = userWithRole.role?.slug || (typeof userWithRole.role === 'object' ? userWithRole.role.slug : null)
+  
+  if (roleSlug === 'admin' || roleSlug === 'super_admin') {
+    return true
+  }
+
+  return false
+}
 
 // GET /api/terrariums - Obtener todos los terrarios del usuario con sus animales
 export const getAllTerrariums = async (req, res) => {
   try {
-    // Filtrar por usuario autenticado
-    const terrariums = await Terrarium.find({ 
-      user: req.user._id, 
-      isActive: true 
-    })
+    let userWithRole = req.user
+    if (!req.user.role || typeof req.user.role === 'object' && !req.user.role.slug) {
+      userWithRole = await User.findById(req.user._id).populate('role', 'slug')
+    }
+    const roleSlug = userWithRole.role?.slug || (typeof userWithRole.role === 'object' ? userWithRole.role.slug : null)
+    const isAdmin = roleSlug === 'admin' || roleSlug === 'super_admin'
+
+    const query = { isActive: true }
+    if (!isAdmin) {
+      query.user = req.user._id
+    }
+
+    const terrariums = await Terrarium.find(query)
       .populate({
         path: 'animals',
         match: { isActive: true },
@@ -19,7 +47,6 @@ export const getAllTerrariums = async (req, res) => {
       })
       .sort({ createdAt: -1 })
 
-    // Agregar información de compatibilidad y requisitos a cada terrario
     const terrariumsWithCompatibility = terrariums.map(terrarium => {
       const terrariumObj = terrarium.toObject()
       terrariumObj.hasCompatibilityIssue = checkCompatibilityIssues(terrariumObj.animals)
@@ -45,10 +72,7 @@ export const getAllTerrariums = async (req, res) => {
 // GET /api/terrariums/:id - Obtener un terrario por ID
 export const getTerrariumById = async (req, res) => {
   try {
-    const terrarium = await Terrarium.findOne({
-      _id: req.params.id,
-      user: req.user._id // Verificar propiedad
-    })
+    const terrarium = await Terrarium.findById(req.params.id)
       .populate({
         path: 'animals',
         match: { isActive: true },
@@ -59,6 +83,20 @@ export const getTerrariumById = async (req, res) => {
       })
 
     if (!terrarium) {
+      return res.status(404).json({
+        success: false,
+        message: 'Terrario no encontrado'
+      })
+    }
+
+    if (!await hasPermission(terrarium, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para ver este terrario'
+      })
+    }
+
+    if (!terrarium.isActive) {
       return res.status(404).json({
         success: false,
         message: 'Terrario no encontrado'
@@ -89,7 +127,7 @@ export const createTerrarium = async (req, res) => {
     const { name, dimensions, type, biome, notes } = req.body
 
     const terrarium = await Terrarium.create({
-      user: req.user._id, // Asignar al usuario autenticado
+      user: req.user._id,
       name,
       dimensions,
       type,
@@ -114,15 +152,7 @@ export const createTerrarium = async (req, res) => {
 // PUT /api/terrariums/:id - Actualizar un terrario
 export const updateTerrarium = async (req, res) => {
   try {
-    // Verificar que el terrario pertenece al usuario
-    const terrarium = await Terrarium.findOneAndUpdate(
-      { 
-        _id: req.params.id, 
-        user: req.user._id // Verificar propiedad
-      },
-      req.body,
-      { new: true, runValidators: true }
-    )
+    const terrarium = await Terrarium.findById(req.params.id)
 
     if (!terrarium) {
       return res.status(404).json({
@@ -131,10 +161,30 @@ export const updateTerrarium = async (req, res) => {
       })
     }
 
+    if (!await hasPermission(terrarium, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para editar este terrario'
+      })
+    }
+
+    if (!terrarium.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: 'Terrario no encontrado'
+      })
+    }
+
+    const updatedTerrarium = await Terrarium.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    )
+
     res.json({
       success: true,
       message: 'Terrario actualizado exitosamente',
-      data: terrarium
+      data: updatedTerrarium
     })
   } catch (error) {
     res.status(400).json({
@@ -148,15 +198,7 @@ export const updateTerrarium = async (req, res) => {
 // DELETE /api/terrariums/:id - Eliminar un terrario (soft delete)
 export const deleteTerrarium = async (req, res) => {
   try {
-    // Verificar que el terrario pertenece al usuario
-    const terrarium = await Terrarium.findOneAndUpdate(
-      { 
-        _id: req.params.id, 
-        user: req.user._id // Verificar propiedad
-      },
-      { isActive: false },
-      { new: true }
-    )
+    const terrarium = await Terrarium.findById(req.params.id)
 
     if (!terrarium) {
       return res.status(404).json({
@@ -165,7 +207,16 @@ export const deleteTerrarium = async (req, res) => {
       })
     }
 
-    // También desasignar los animales de este terrario
+    if (!await hasPermission(terrarium, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para eliminar este terrario'
+      })
+    }
+
+    terrarium.isActive = false
+    await terrarium.save()
+
     await Animal.updateMany(
       { terrarium: req.params.id },
       { terrarium: null }
@@ -184,7 +235,6 @@ export const deleteTerrarium = async (req, res) => {
   }
 }
 
-// Funciones helper para obtener parámetros (soportan estructura plana y anidada)
 const getTempMin = (params) => {
   if (params.tempMin !== undefined) return params.tempMin
   if (params.temperature?.min !== undefined) return params.temperature.min
@@ -209,15 +259,11 @@ const getHumMax = (params) => {
   return null
 }
 
-// Función auxiliar para calcular parámetros ideales del terrario (Terrario Inteligente)
 function calculateParameters(animals) {
-  // Si no hay animales, devolver null
   if (!animals || animals.length === 0) {
     return null
   }
 
-  // Filtrar animales con especies populadas y parámetros válidos
-  // Soporta estructura plana (tempMin, tempMax, humidityMin, humidityMax)
   const animalsWithSpecies = animals.filter(
     animal => animal.species && 
     animal.species.parameters && 
@@ -229,7 +275,6 @@ function calculateParameters(animals) {
     return null
   }
 
-  // Calcular la intersección de rangos para temperatura
   const tempMins = animalsWithSpecies
     .map(a => getTempMin(a.species.parameters))
     .filter(val => val !== null)
@@ -244,7 +289,6 @@ function calculateParameters(animals) {
   const idealTempMin = Math.max(...tempMins)
   const idealTempMax = Math.min(...tempMaxs)
 
-  // Calcular la intersección de rangos para humedad
   const humMins = animalsWithSpecies
     .map(a => getHumMin(a.species.parameters))
     .filter(val => val !== null)
@@ -259,7 +303,6 @@ function calculateParameters(animals) {
   const idealHumMin = Math.max(...humMins)
   const idealHumMax = Math.min(...humMaxs)
 
-  // Detectar conflictos y recopilar datos de especies incompatibles
   const errors = []
   let isCompatible = true
   const incompatibleSpecies = []
@@ -274,7 +317,6 @@ function calculateParameters(animals) {
     errors.push('Conflicto de humedad: los rangos de humedad de las especies no se intersectan')
   }
 
-  // Si hay incompatibilidad, recopilar los rangos individuales de cada especie
   if (!isCompatible) {
     animalsWithSpecies.forEach(animal => {
       const tempMin = getTempMin(animal.species.parameters)
@@ -314,15 +356,11 @@ function calculateParameters(animals) {
   }
 }
 
-// Función auxiliar para calcular requisitos ambientales del terrario
 function calculateTerrariumRequirements(animals) {
-  // Si no hay animales, devolver null
   if (!animals || animals.length === 0) {
     return null
   }
 
-  // Filtrar animales con especies populadas y parámetros válidos
-  // Soporta estructura plana (tempMin, tempMax, humidityMin, humidityMax)
   const animalsWithSpecies = animals.filter(
     animal => animal.species && 
     animal.species.parameters && 
@@ -334,7 +372,6 @@ function calculateTerrariumRequirements(animals) {
     return null
   }
 
-  // Calcular la intersección de rangos de temperatura
   const tempMins = animalsWithSpecies
     .map(a => getTempMin(a.species.parameters))
     .filter(val => val !== null)
@@ -349,7 +386,6 @@ function calculateTerrariumRequirements(animals) {
   const targetTempMin = Math.max(...tempMins)
   const targetTempMax = Math.min(...tempMaxs)
 
-  // Calcular la intersección de rangos de humedad
   const humMins = animalsWithSpecies
     .map(a => getHumMin(a.species.parameters))
     .filter(val => val !== null)
@@ -364,7 +400,6 @@ function calculateTerrariumRequirements(animals) {
   const targetHumMin = Math.max(...humMins)
   const targetHumMax = Math.min(...humMaxs)
 
-  // Detectar incompatibilidades
   const errors = []
   let isCompatible = true
 
@@ -396,26 +431,23 @@ function calculateTerrariumRequirements(animals) {
   }
 }
 
-// Función auxiliar para verificar problemas de compatibilidad
 function checkCompatibilityIssues(animals) {
   if (!animals || animals.length < 2) {
     return false
   }
 
-  // Verificar biomas diferentes
   const biomes = new Set(animals.map(a => a.species?.biome).filter(Boolean))
   if (biomes.size > 1) {
-    return true // Biomas incompatibles
+    return true
   }
 
-  // Verificar múltiples machos de la misma especie
   const malesBySpecies = {}
   for (const animal of animals) {
     if (animal.sex === 'male' && animal.species) {
       const speciesId = animal.species._id?.toString() || animal.species.toString()
       malesBySpecies[speciesId] = (malesBySpecies[speciesId] || 0) + 1
       if (malesBySpecies[speciesId] > 1) {
-        return true // Múltiples machos de la misma especie
+        return true
       }
     }
   }
