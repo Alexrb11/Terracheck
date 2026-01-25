@@ -93,7 +93,7 @@
           <!-- Separador -->
           <div class="nav-bar__separator"></div>
 
-          <!-- Usuario y Logout -->
+          <!-- Usuario y Configuración -->
           <div class="nav-bar__user">
             <div v-if="authStore.user" class="nav-bar__user-info">
               <div class="flex items-center gap-sm justify-end">
@@ -104,6 +104,15 @@
               </div>
               <p class="nav-bar__user-email">{{ authStore.user.email }}</p>
             </div>
+            <router-link
+              to="/settings"
+              class="nav-link nav-link--horizontal"
+              :class="{ 'nav-link--active': $route.path === '/settings' }"
+              title="Configuración"
+            >
+              <SettingsIcon :size="20" />
+              <span>Configuración</span>
+            </router-link>
             <button
               class="nav-link nav-link--horizontal nav-link--danger"
               @click="handleLogout"
@@ -126,7 +135,8 @@ import {
   BookOpenIcon,
   LogOutIcon,
   ShieldIcon,
-  PawPrintIcon
+  PawPrintIcon,
+  SettingsIcon
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()

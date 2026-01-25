@@ -12,9 +12,11 @@ export interface User {
   id: string
   name: string
   email: string
+  username?: string | null
   role: UserRole | null
   permissions: string[]
   createdAt: string
+  updatedAt?: string
 }
 
 export interface AuthResponse {
@@ -183,6 +185,93 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const updateProfile = async (data: { name: string, email: string, username?: string }): Promise<boolean> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch(`${API_URL}/profile`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Error al actualizar perfil')
+      }
+
+      // Actualizar el estado del usuario
+      if (result.data && user.value) {
+        user.value = {
+          ...user.value,
+          ...result.data
+        }
+      }
+
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error desconocido'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch(`${API_URL}/password`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ currentPassword, newPassword })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Error al cambiar contraseña')
+      }
+
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error desconocido'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const deleteAccount = async (): Promise<boolean> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch(`${API_URL}/account`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Error al eliminar cuenta')
+      }
+
+      // Si es exitoso, cerrar sesión
+      logout()
+      return true
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Error desconocido'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     // State
     user,
@@ -202,6 +291,9 @@ export const useAuthStore = defineStore('auth', () => {
     fetchCurrentUser,
     initializeAuth,
     clearError,
-    getAuthHeaders
+    getAuthHeaders,
+    updateProfile,
+    changePassword,
+    deleteAccount
   }
 })

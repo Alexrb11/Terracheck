@@ -190,6 +190,7 @@ export const getMe = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        username: user.username || null,
         role: user.role ? {
           id: user.role._id,
           name: user.role.name,
@@ -209,10 +210,10 @@ export const getMe = async (req, res) => {
   }
 }
 
-// PUT /api/auth/me - Actualizar perfil
+// PUT /api/auth/profile - Actualizar perfil
 export const updateProfile = async (req, res) => {
   try {
-    const { name, email } = req.body
+    const { name, email, username } = req.body
 
     // Verificar si el nuevo email ya existe (si se está cambiando)
     if (email && email !== req.user.email) {
@@ -225,11 +226,33 @@ export const updateProfile = async (req, res) => {
       }
     }
 
+    // Verificar si el nuevo username ya existe (si se está cambiando)
+    if (username && username !== req.user.username) {
+      const existingUser = await User.findOne({ username })
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Ya existe una cuenta con este username'
+        })
+      }
+    }
+
+    const updateData = {}
+    if (name) updateData.name = name
+    if (email) updateData.email = email.toLowerCase()
+    if (username !== undefined) updateData.username = username || null
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { name, email },
+      updateData,
       { new: true, runValidators: true }
-    )
+    ).populate({
+      path: 'role',
+      select: 'name slug',
+      populate: { path: 'permissions', select: 'slug' }
+    })
+
+    const permissions = user.role?.permissions?.map(p => p.slug) || []
 
     res.json({
       success: true,
@@ -237,10 +260,27 @@ export const updateProfile = async (req, res) => {
       data: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        username: user.username || null,
+        role: user.role ? {
+          id: user.role._id,
+          name: user.role.name,
+          slug: user.role.slug
+        } : null,
+        permissions,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
       }
     })
   } catch (error) {
+    if (error.code === 11000) {
+      // Error de duplicado
+      const field = Object.keys(error.keyPattern)[0]
+      return res.status(400).json({
+        success: false,
+        message: `Ya existe una cuenta con este ${field === 'email' ? 'email' : 'username'}`
+      })
+    }
     res.status(400).json({
       success: false,
       message: 'Error al actualizar perfil',
@@ -250,7 +290,7 @@ export const updateProfile = async (req, res) => {
 }
 
 // PUT /api/auth/password - Cambiar contraseña
-export const updatePassword = async (req, res) => {
+export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body
 
@@ -284,18 +324,43 @@ export const updatePassword = async (req, res) => {
     user.password = newPassword
     await user.save()
 
-    // Generar nuevo token
-    const token = generateToken(user._id)
-
     res.json({
       success: true,
-      message: 'Contraseña actualizada exitosamente',
-      data: { token }
+      message: 'Contraseña actualizada exitosamente'
     })
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error al cambiar contraseña',
+      error: error.message
+    })
+  }
+}
+
+// DELETE /api/auth/account - Eliminar cuenta (borrado lógico)
+export const deleteAccount = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      })
+    }
+
+    // Borrado lógico: establecer isActive en false
+    user.isActive = false
+    await user.save()
+
+    res.json({
+      success: true,
+      message: 'Cuenta eliminada exitosamente'
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error al eliminar cuenta',
       error: error.message
     })
   }
