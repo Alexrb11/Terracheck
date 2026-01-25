@@ -137,3 +137,12 @@
     display: block;
   }
 }
+
+/* Ajuste para header fijo en móvil */
+@media (max-width: 768px) {
+  /* Aplicar padding al contenedor raíz de la app para empujar todas las vistas */
+  #app {
+    padding-top: var(--header-height);
+    padding-bottom: var(--bottom-nav-height); /* Será 0px */
+  }
+}

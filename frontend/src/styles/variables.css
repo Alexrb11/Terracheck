@@ -7,6 +7,7 @@
   --color-background: #F2F1EE; /* Gris Piedra Cálido (No blanco clínico) */
   --color-text-main: #1A1C18;
   --color-text-muted: #757575;
+  --color-border: rgba(0, 0, 0, 0.1); /* Borde estándar para inputs y elementos */
   --glass-bg: rgba(30, 41, 59, 0.85); /* Para terrarios de cristal */
   
   /* Typography */
@@ -33,6 +34,7 @@
 
 @media (max-width: 768px) {
   :root {
-    --bottom-nav-height: 80px; /* Altura de la barra de navegación inferior (móvil) */
+    --header-height: 64px; /* Altura de la barra de navegación superior (móvil) */
+    --bottom-nav-height: 0px; /* Ya no usamos barra inferior en móvil */
   }
 }

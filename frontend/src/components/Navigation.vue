@@ -1,47 +1,131 @@
 <template>
-  <!-- Navegación Móvil (Bottom Bar) -->
-  <nav class="nav-bar nav-bar--mobile" aria-label="Navegación principal">
-    <div class="nav-bar__container">
+  <!-- Topbar Móvil -->
+  <nav class="nav-bar nav-bar--mobile" aria-label="Navegación móvil">
+    <div class="nav-bar__mobile-header">
+      <button
+        @click="isDrawerOpen = true"
+        class="nav-bar__menu-button"
+        aria-label="Abrir menú"
+      >
+        <MenuIcon :size="24" />
+      </button>
+      <router-link to="/" class="nav-bar__mobile-logo">
+        Terracheck
+      </router-link>
+      <div v-if="authStore.user" class="nav-bar__mobile-avatar">
+        <UserIcon :size="20" />
+      </div>
+    </div>
+  </nav>
+
+  <!-- Overlay del Drawer -->
+  <div
+    v-if="isDrawerOpen"
+    class="drawer-overlay"
+    @click="closeDrawer"
+  ></div>
+
+  <!-- Drawer (Menú Lateral) -->
+  <aside
+    class="drawer"
+    :class="{ 'drawer--open': isDrawerOpen }"
+    aria-label="Menú de navegación"
+  >
+    <!-- Header del Drawer -->
+    <div class="drawer__header">
+      <router-link to="/" class="drawer__logo" @click="closeDrawer">
+        Terracheck
+      </router-link>
+      <button
+        @click="closeDrawer"
+        class="drawer__close-button"
+        aria-label="Cerrar menú"
+      >
+        <XIcon :size="24" />
+      </button>
+    </div>
+
+    <!-- Navegación del Drawer -->
+    <nav class="drawer__nav" aria-label="Navegación principal">
       <router-link
         to="/"
-        class="nav-link"
-        :class="{ 'nav-link--active': $route.path === '/' }"
-        aria-label="Mis Terrarios"
+        class="drawer__nav-item"
+        :class="{ 'drawer__nav-item--active': $route.path === '/' }"
+        @click="closeDrawer"
       >
         <LayoutGridIcon :size="24" />
-        <span class="nav-link__text">Terrarios</span>
+        <span>Terrarios</span>
+        <ChevronRightIcon :size="20" class="drawer__nav-chevron" />
       </router-link>
 
       <router-link
         to="/species"
-        class="nav-link"
-        :class="{ 'nav-link--active': $route.path === '/species' }"
-        aria-label="Especies"
+        class="drawer__nav-item"
+        :class="{ 'drawer__nav-item--active': $route.path === '/species' }"
+        @click="closeDrawer"
       >
         <BookOpenIcon :size="24" />
-        <span class="nav-link__text">Especies</span>
+        <span>Especies</span>
+        <ChevronRightIcon :size="20" class="drawer__nav-chevron" />
       </router-link>
 
       <router-link
         to="/my-animals"
-        class="nav-link"
-        :class="{ 'nav-link--active': $route.path === '/my-animals' }"
-        aria-label="Mis Especies"
+        class="drawer__nav-item"
+        :class="{ 'drawer__nav-item--active': $route.path === '/my-animals' }"
+        @click="closeDrawer"
       >
         <PawPrintIcon :size="24" />
-        <span class="nav-link__text">Mis Especies</span>
+        <span>Mis Especies</span>
+        <ChevronRightIcon :size="20" class="drawer__nav-chevron" />
       </router-link>
 
-      <button
-        class="nav-link nav-link--danger"
-        aria-label="Cerrar Sesión"
-        @click="handleLogout"
+      <router-link
+        v-if="authStore.isAdmin"
+        to="/admin"
+        class="drawer__nav-item drawer__nav-item--admin"
+        :class="{ 'drawer__nav-item--active': $route.path.startsWith('/admin') }"
+        @click="closeDrawer"
       >
-        <LogOutIcon :size="24" />
-        <span class="nav-link__text">Salir</span>
-      </button>
+        <ShieldIcon :size="24" />
+        <span>Admin</span>
+        <ChevronRightIcon :size="20" class="drawer__nav-chevron" />
+      </router-link>
+    </nav>
+
+    <!-- Footer del Drawer (Perfil) -->
+    <div class="drawer__footer">
+      <div v-if="authStore.user" class="drawer__user-info">
+        <div class="drawer__user-avatar">
+          <UserIcon :size="24" />
+        </div>
+        <div class="drawer__user-details">
+          <p class="drawer__user-name">{{ authStore.user.name }}</p>
+          <p class="drawer__user-email">{{ authStore.user.email }}</p>
+        </div>
+      </div>
+
+      <div class="drawer__user-actions">
+        <router-link
+          to="/settings"
+          class="drawer__action-item"
+          :class="{ 'drawer__action-item--active': $route.path === '/settings' }"
+          @click="closeDrawer"
+        >
+          <SettingsIcon :size="20" />
+          <span>Configuración</span>
+        </router-link>
+
+        <button
+          class="drawer__action-item drawer__action-item--danger"
+          @click="handleLogout"
+        >
+          <LogOutIcon :size="20" />
+          <span>Cerrar Sesión</span>
+        </button>
+      </div>
     </div>
-  </nav>
+  </aside>
 
   <!-- Navegación Desktop (Top Bar) -->
   <nav class="nav-bar nav-bar--desktop" aria-label="Navegación principal">
@@ -93,34 +177,54 @@
           <!-- Separador -->
           <div class="nav-bar__separator"></div>
 
-          <!-- Usuario y Configuración -->
-          <div class="nav-bar__user">
-            <div v-if="authStore.user" class="nav-bar__user-info">
-              <div class="flex items-center gap-sm justify-end">
-                <p class="nav-bar__user-name">{{ authStore.user.name }}</p>
-                <span v-if="authStore.isAdmin" class="badge badge-primary">
-                  Admin
-                </span>
-              </div>
-              <p class="nav-bar__user-email">{{ authStore.user.email }}</p>
-            </div>
-            <router-link
-              to="/settings"
-              class="nav-link nav-link--horizontal"
-              :class="{ 'nav-link--active': $route.path === '/settings' }"
-              title="Configuración"
-            >
-              <SettingsIcon :size="20" />
-              <span>Configuración</span>
-            </router-link>
+          <!-- Usuario con Dropdown -->
+          <div class="nav-bar__user" ref="userDropdownRef">
             <button
-              class="nav-link nav-link--horizontal nav-link--danger"
-              @click="handleLogout"
-              title="Cerrar Sesión"
+              @click="toggleDropdown"
+              class="nav-bar__user-button"
+              :class="{ 'nav-bar__user-button--active': showDropdown }"
+              aria-label="Menú de usuario"
+              :aria-expanded="showDropdown"
             >
-              <LogOutIcon :size="20" />
-              <span>Salir</span>
+              <div v-if="authStore.user" class="nav-bar__user-info">
+                <div class="flex items-center gap-sm justify-end">
+                  <p class="nav-bar__user-name">{{ authStore.user.name }}</p>
+                  <span v-if="authStore.isAdmin" class="badge badge-primary">
+                    Admin
+                  </span>
+                </div>
+                <p class="nav-bar__user-email">{{ authStore.user.email }}</p>
+              </div>
+              <ChevronDownIcon
+                :size="20"
+                class="nav-bar__chevron"
+                :class="{ 'nav-bar__chevron--rotated': showDropdown }"
+              />
             </button>
+
+            <!-- Dropdown Menu -->
+            <div
+              v-if="showDropdown"
+              class="nav-bar__dropdown"
+            >
+              <router-link
+                to="/settings"
+                class="nav-bar__dropdown-item"
+                :class="{ 'nav-bar__dropdown-item--active': $route.path === '/settings' }"
+                @click="closeDropdown"
+              >
+                <SettingsIcon :size="18" />
+                <span>Configuración</span>
+              </router-link>
+              <div class="nav-bar__dropdown-divider"></div>
+              <button
+                class="nav-bar__dropdown-item nav-bar__dropdown-item--danger"
+                @click="handleLogout"
+              >
+                <LogOutIcon :size="18" />
+                <span>Cerrar Sesión</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -129,6 +233,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import {
   LayoutGridIcon,
@@ -136,13 +241,54 @@ import {
   LogOutIcon,
   ShieldIcon,
   PawPrintIcon,
-  SettingsIcon
+  SettingsIcon,
+  ChevronDownIcon,
+  MenuIcon,
+  XIcon,
+  UserIcon,
+  ChevronRightIcon
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 
+// Estado del drawer móvil
+const isDrawerOpen = ref(false)
+
+const closeDrawer = () => {
+  isDrawerOpen.value = false
+}
+
+// Estado del dropdown (desktop)
+const showDropdown = ref(false)
+const userDropdownRef = ref<HTMLElement | null>(null)
+
+const toggleDropdown = () => {
+  showDropdown.value = !showDropdown.value
+}
+
+const closeDropdown = () => {
+  showDropdown.value = false
+}
+
+// Cerrar dropdown al hacer clic fuera
+const handleClickOutside = (event: MouseEvent) => {
+  if (userDropdownRef.value && !userDropdownRef.value.contains(event.target as Node)) {
+    closeDropdown()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
 const handleLogout = () => {
   if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+    closeDropdown()
+    closeDrawer()
     authStore.logout()
   }
 }
@@ -156,24 +302,295 @@ const handleLogout = () => {
   z-index: 1030;
 }
 
-/* Navegación Móvil */
+/* Navegación Móvil - Topbar */
 .nav-bar--mobile {
+  display: block;
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  border-bottom: none;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  z-index: 1030;
 }
 
-.nav-bar--mobile .nav-bar__container {
+.nav-bar__mobile-header {
   display: flex;
-  justify-content: space-around;
   align-items: center;
-  height: var(--bottom-nav-height);
-  min-height: var(--bottom-nav-height);
+  justify-content: space-between;
+  padding: 1rem;
+  height: 60px;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-bar__menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: var(--color-text-main);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.nav-bar__menu-button:hover {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.nav-bar__mobile-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.nav-bar__mobile-logo:hover {
+  opacity: 0.8;
+}
+
+.nav-bar__mobile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* Drawer Overlay */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Drawer (Menú Lateral) */
+.drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 80%;
+  max-width: 320px;
+  background-color: var(--color-surface);
+  z-index: 50;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.drawer--open {
+  transform: translateX(0);
+}
+
+.drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.drawer__logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.drawer__close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: var(--color-text-main);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.drawer__close-button:hover {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* Navegación del Drawer */
+.drawer__nav {
+  flex: 1;
+  padding: 1rem 0;
+  overflow-y: auto;
+}
+
+.drawer__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  color: var(--color-text-main);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.drawer__nav-item:hover {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.drawer__nav-item--active {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.drawer__nav-item--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--color-primary);
+  border-radius: 0 2px 2px 0;
+}
+
+.drawer__nav-item--admin {
+  color: #9333ea;
+}
+
+.drawer__nav-item--admin:hover,
+.drawer__nav-item--admin.drawer__nav-item--active {
+  background-color: #f3e8ff;
+  color: #9333ea;
+}
+
+.drawer__nav-chevron {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  opacity: 0.5;
+}
+
+.drawer__nav-item--active .drawer__nav-chevron {
+  color: var(--color-primary);
+  opacity: 1;
+}
+
+/* Footer del Drawer (Perfil) */
+.drawer__footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  background-color: var(--color-background);
+}
+
+.drawer__user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.drawer__user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.drawer__user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.drawer__user-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin: 0 0 0.25rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drawer__user-email {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drawer__user-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.drawer__action-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: var(--color-text-main);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.drawer__action-item:hover {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.drawer__action-item--active {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.drawer__action-item--danger {
+  color: var(--color-accent);
+}
+
+.drawer__action-item--danger:hover {
+  background-color: rgba(239, 108, 0, 0.2);
+  color: #d84315;
 }
 
 /* Navegación Desktop - Barra flotante con glass-bg (versión clara) */
@@ -218,9 +635,30 @@ const handleLogout = () => {
 }
 
 .nav-bar__user {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 1rem;
+}
+
+.nav-bar__user-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: right;
+}
+
+.nav-bar__user-button:hover {
+  background-color: var(--color-primary-light);
+}
+
+.nav-bar__user-button--active {
+  background-color: var(--color-primary-light);
 }
 
 .nav-bar__user-info {
@@ -236,6 +674,74 @@ const handleLogout = () => {
 .nav-bar__user-email {
   font-size: 0.75rem;
   color: var(--color-text-muted);
+}
+
+.nav-bar__chevron {
+  color: var(--color-text-muted);
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.nav-bar__chevron--rotated {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.nav-bar__dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 200px;
+  padding: 0.5rem;
+  z-index: 1000;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.nav-bar__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: var(--color-text-main);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.nav-bar__dropdown-item:hover {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.nav-bar__dropdown-item--active {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.nav-bar__dropdown-item--danger {
+  color: var(--color-accent);
+}
+
+.nav-bar__dropdown-item--danger:hover {
+  background-color: rgba(239, 108, 0, 0.2);
+  color: #d84315;
+}
+
+.nav-bar__dropdown-divider {
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.1);
+  margin: 0.5rem 0;
 }
 
 /* Enlaces de navegación */
@@ -297,6 +803,11 @@ const handleLogout = () => {
 
 @media (min-width: 768px) {
   .nav-bar--mobile {
+    display: none;
+  }
+
+  .drawer-overlay,
+  .drawer {
     display: none;
   }
 
