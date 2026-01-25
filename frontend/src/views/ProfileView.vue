@@ -1,0 +1,477 @@
+<template>
+  <div class="profile-view">
+    <Navigation />
+
+    <main class="container profile-view__main">
+      <!-- Loading -->
+      <div v-if="loading" class="profile-view__loading">
+        <LoaderIcon :size="48" class="profile-view__loader-icon" />
+      </div>
+
+      <template v-else>
+        <!-- Tarjeta de Perfil -->
+        <div class="profile-card">
+          <div class="profile-card__header">
+            <!-- Avatar -->
+            <div 
+              class="profile-card__avatar"
+              :style="{ backgroundColor: avatarColor }"
+            >
+              <span class="profile-card__initial">
+                {{ userInitial }}
+              </span>
+            </div>
+
+            <!-- Info -->
+            <div class="profile-card__info">
+              <h1 class="profile-card__name">{{ authStore.user?.name }}</h1>
+              <p v-if="authStore.user?.username" class="profile-card__username">
+                @{{ authStore.user.username }}
+              </p>
+              <div class="profile-card__meta">
+                <span 
+                  class="profile-card__badge"
+                  :class="authStore.isAdmin ? 'profile-card__badge--admin' : 'profile-card__badge--user'"
+                >
+                  <ShieldIcon v-if="authStore.isAdmin" :size="14" />
+                  <UserIcon v-else :size="14" />
+                  {{ authStore.user?.role?.name || 'Usuario' }}
+                </span>
+                <span class="profile-card__date">
+                  <CalendarIcon :size="14" />
+                  Miembro desde {{ memberSince }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="profile-card__actions">
+              <router-link to="/settings" class="btn btn-outline">
+                <SettingsIcon :size="18" />
+                <span>Editar Perfil</span>
+              </router-link>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid de Estadísticas -->
+        <div class="stats-grid">
+          <!-- Terrarios -->
+          <div class="stat-card">
+            <div class="stat-card__icon stat-card__icon--terrarium">
+              <BoxIcon :size="28" />
+            </div>
+            <div class="stat-card__content">
+              <p class="stat-card__value">{{ totalTerrariums }}</p>
+              <p class="stat-card__label">Terrarios</p>
+            </div>
+          </div>
+
+          <!-- Animales -->
+          <div class="stat-card">
+            <div class="stat-card__icon stat-card__icon--animal">
+              <PawPrintIcon :size="28" />
+            </div>
+            <div class="stat-card__content">
+              <p class="stat-card__value">{{ totalAnimals }}</p>
+              <p class="stat-card__label">Animales</p>
+            </div>
+          </div>
+
+          <!-- Bioma Favorito -->
+          <div class="stat-card">
+            <div 
+              class="stat-card__icon"
+              :class="`stat-card__icon--${favoriteBiome.key}`"
+            >
+              <component :is="favoriteBiome.icon" :size="28" />
+            </div>
+            <div class="stat-card__content">
+              <p class="stat-card__value">{{ favoriteBiome.name }}</p>
+              <p class="stat-card__label">Bioma Favorito</p>
+            </div>
+          </div>
+        </div>
+      </template>
+    </main>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useTerrariumStore } from '@/stores/terrarium'
+import { useAnimalStore } from '@/stores/animal'
+import Navigation from '@/components/Navigation.vue'
+import {
+  LoaderIcon,
+  BoxIcon,
+  PawPrintIcon,
+  UserIcon,
+  ShieldIcon,
+  CalendarIcon,
+  SettingsIcon,
+  PalmtreeIcon,
+  SunIcon,
+  TreesIcon,
+  HelpCircleIcon
+} from 'lucide-vue-next'
+
+const authStore = useAuthStore()
+const terrariumStore = useTerrariumStore()
+const animalStore = useAnimalStore()
+
+const loading = ref(true)
+
+// Colores para el avatar basados en el nombre
+const avatarColors = [
+  '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', 
+  '#f59e0b', '#ef4444', '#06b6d4', '#84cc16'
+]
+
+const avatarColor = computed(() => {
+  if (!authStore.user?.name) return avatarColors[0]
+  const charCode = authStore.user.name.charCodeAt(0)
+  return avatarColors[charCode % avatarColors.length]
+})
+
+const userInitial = computed(() => {
+  return authStore.user?.name?.charAt(0).toUpperCase() || '?'
+})
+
+const memberSince = computed(() => {
+  if (!authStore.user?.createdAt) return 'Fecha desconocida'
+  const date = new Date(authStore.user.createdAt)
+  return date.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long'
+  })
+})
+
+const totalTerrariums = computed(() => terrariumStore.terrariums.length)
+const totalAnimals = computed(() => animalStore.myAnimals.length)
+
+// Bioma favorito (el más repetido en los terrarios)
+const biomeConfig = {
+  tropical: { name: 'Tropical', icon: PalmtreeIcon, key: 'tropical' },
+  desert: { name: 'Desértico', icon: SunIcon, key: 'desert' },
+  temperate: { name: 'Templado', icon: TreesIcon, key: 'temperate' },
+  none: { name: 'Sin datos', icon: HelpCircleIcon, key: 'none' }
+}
+
+const favoriteBiome = computed(() => {
+  if (terrariumStore.terrariums.length === 0) {
+    return biomeConfig.none
+  }
+
+  const biomeCount: Record<string, number> = {}
+  
+  terrariumStore.terrariums.forEach(t => {
+    if (t.biome) {
+      biomeCount[t.biome] = (biomeCount[t.biome] || 0) + 1
+    }
+  })
+
+  const entries = Object.entries(biomeCount)
+  if (entries.length === 0) {
+    return biomeConfig.none
+  }
+
+  const [topBiome] = entries.sort((a, b) => b[1] - a[1])[0]
+  return biomeConfig[topBiome as keyof typeof biomeConfig] || biomeConfig.none
+})
+
+onMounted(async () => {
+  loading.value = true
+  
+  await Promise.all([
+    terrariumStore.fetchTerrariums(),
+    animalStore.fetchMyAnimals()
+  ])
+  
+  loading.value = false
+})
+</script>
+
+<style scoped>
+.profile-view {
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+.profile-view__main {
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+/* Loading */
+.profile-view__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 0;
+}
+
+.profile-view__loader-icon {
+  color: var(--color-primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Tarjeta de Perfil */
+.profile-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border-light);
+  margin-bottom: 2rem;
+}
+
+.profile-card__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+}
+
+.profile-card__avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.profile-card__initial {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.profile-card__info {
+  flex: 1;
+}
+
+.profile-card__name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0 0 0.25rem 0;
+}
+
+.profile-card__username {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  margin: 0 0 1rem 0;
+}
+
+.profile-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.profile-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.profile-card__badge--admin {
+  background: rgba(147, 51, 234, 0.15);
+  color: #9333ea;
+}
+
+.profile-card__badge--user {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.profile-card__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.profile-card__actions {
+  width: 100%;
+}
+
+.profile-card__actions .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Grid de Estadísticas */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-card__icon--terrarium {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.stat-card__icon--animal {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.stat-card__icon--tropical {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.stat-card__icon--desert {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.stat-card__icon--temperate {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.stat-card__icon--none {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
+
+.stat-card__content {
+  flex: 1;
+}
+
+.stat-card__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.stat-card__label {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Responsive */
+@media (min-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .profile-card__header {
+    flex-direction: row;
+    text-align: left;
+    gap: 2rem;
+  }
+
+  .profile-card__meta {
+    justify-content: flex-start;
+  }
+
+  .profile-card__actions {
+    width: auto;
+    margin-left: auto;
+  }
+
+  .profile-card__actions .btn {
+    width: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .profile-card {
+    padding: 2.5rem;
+  }
+
+  .profile-card__avatar {
+    width: 120px;
+    height: 120px;
+  }
+
+  .profile-card__initial {
+    font-size: 3rem;
+  }
+
+  .profile-card__name {
+    font-size: 2rem;
+  }
+}
+
+/* Dark Mode */
+[data-theme='dark'] .profile-card__badge--admin {
+  background: rgba(147, 51, 234, 0.25);
+  color: #a855f7;
+}
+
+[data-theme='dark'] .stat-card__icon--terrarium {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme='dark'] .stat-card__icon--animal {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme='dark'] .stat-card__icon--tropical {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme='dark'] .stat-card__icon--desert {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+[data-theme='dark'] .stat-card__icon--temperate {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+[data-theme='dark'] .stat-card__icon--none {
+  background: rgba(148, 163, 184, 0.2);
+}
+</style>

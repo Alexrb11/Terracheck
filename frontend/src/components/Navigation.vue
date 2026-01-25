@@ -117,6 +117,16 @@
         </button>
 
         <router-link
+          to="/profile"
+          class="drawer__action-item"
+          :class="{ 'drawer__action-item--active': $route.path === '/profile' }"
+          @click="closeDrawer"
+        >
+          <UserIcon :size="20" />
+          <span>Mi Perfil</span>
+        </router-link>
+
+        <router-link
           to="/settings"
           class="drawer__action-item"
           :class="{ 'drawer__action-item--active': $route.path === '/settings' }"
@@ -238,6 +248,15 @@
                 <span>{{ theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro' }}</span>
               </button>
               <div class="nav-bar__dropdown-divider"></div>
+              <router-link
+                to="/profile"
+                class="nav-bar__dropdown-item"
+                :class="{ 'nav-bar__dropdown-item--active': $route.path === '/profile' }"
+                @click="closeDropdown"
+              >
+                <UserIcon :size="18" />
+                <span>Mi Perfil</span>
+              </router-link>
               <router-link
                 to="/settings"
                 class="nav-bar__dropdown-item"

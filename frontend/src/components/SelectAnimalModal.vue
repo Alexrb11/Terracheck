@@ -379,7 +379,7 @@ onMounted(() => {
   }
 
   .animal-select-card__location {
-    width: 100%;
+    width: calc(100% - 72px);
     margin-left: 72px;
     margin-top: -0.25rem;
     order: 3;
