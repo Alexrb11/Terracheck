@@ -180,10 +180,11 @@ onMounted(() => {
 .select-animal-modal__list {
   max-height: 60vh;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding-right: 0.5rem;
+  padding: 0.25rem 0.5rem;
 }
 
 /* Scrollbar personalizado */
@@ -354,5 +355,39 @@ onMounted(() => {
   color: var(--color-text-muted);
   font-size: 0.95rem;
   margin: 0;
+}
+
+/* ============================================
+   RESPONSIVE: AJUSTE PARA MÓVILES
+   ============================================ */
+@media (max-width: 640px) {
+  .select-animal-modal__list {
+    padding: 0.25rem 0.75rem;
+  }
+
+  .animal-select-card {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .animal-select-card:hover {
+    transform: none;
+  }
+
+  .animal-select-card__info {
+    min-width: calc(100% - 80px); 
+  }
+
+  .animal-select-card__location {
+    width: 100%;
+    margin-left: 72px;
+    margin-top: -0.25rem;
+    order: 3;
+  }
+  
+  .location-badge {
+    white-space: normal; 
+    text-align: left;
+  }
 }
 </style>
