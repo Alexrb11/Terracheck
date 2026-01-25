@@ -36,8 +36,10 @@
               type="text"
               required
               class="input-field"
+              :class="{ 'input-field--error': errors.name }"
               placeholder="Ej: Terrario Desierto"
             />
+            <span v-if="errors.name" class="form-error">{{ errors.name }}</span>
           </div>
 
           <!-- Tipo -->
@@ -150,7 +152,9 @@
                   required
                   min="10"
                   class="input-field"
+                  :class="{ 'input-field--error': errors.dimensions?.width }"
                 />
+                <span v-if="errors.dimensions?.width" class="form-error">{{ errors.dimensions.width }}</span>
               </div>
               <div>
                 <label for="depth" class="dimensions-grid__label">
@@ -163,7 +167,9 @@
                   required
                   min="10"
                   class="input-field"
+                  :class="{ 'input-field--error': errors.dimensions?.depth }"
                 />
+                <span v-if="errors.dimensions?.depth" class="form-error">{{ errors.dimensions.depth }}</span>
               </div>
               <div>
                 <label for="height" class="dimensions-grid__label">
@@ -176,7 +182,9 @@
                   required
                   min="10"
                   class="input-field"
+                  :class="{ 'input-field--error': errors.dimensions?.height }"
                 />
+                <span v-if="errors.dimensions?.height" class="form-error">{{ errors.dimensions.height }}</span>
               </div>
             </div>
             <p class="add-terrarium-view__capacity">
@@ -209,7 +217,7 @@
             </button>
             <button
               type="submit"
-              :disabled="store.loading || !isFormValid"
+              :disabled="store.loading"
               class="btn btn-primary"
             >
               <LoaderIcon v-if="store.loading" :size="20" class="add-terrarium-view__loader" />
@@ -244,22 +252,58 @@ const form = ref({
   notes: ''
 })
 
+const errors = ref<{
+  name?: string
+  dimensions?: {
+    width?: string
+    depth?: string
+    height?: string
+  }
+}>({})
+
 const calculatedLiters = computed(() => {
   const { width, depth, height } = form.value.dimensions
   return Math.round((width * depth * height) / 1000)
 })
 
-const isFormValid = computed(() => {
-  return (
-    form.value.name.trim() !== '' &&
-    form.value.dimensions.width >= 10 &&
-    form.value.dimensions.depth >= 10 &&
-    form.value.dimensions.height >= 10
-  )
-})
+const validateForm = (): boolean => {
+  errors.value = {}
+
+  // Validar nombre
+  if (!form.value.name.trim()) {
+    errors.value.name = 'El nombre del terrario es obligatorio'
+  }
+
+  // Validar dimensiones
+  const dimensionErrors: { width?: string; depth?: string; height?: string } = {}
+  
+  if (!form.value.dimensions.width || form.value.dimensions.width < 10) {
+    dimensionErrors.width = 'El ancho debe ser al menos 10 cm'
+  }
+  
+  if (!form.value.dimensions.depth || form.value.dimensions.depth < 10) {
+    dimensionErrors.depth = 'El fondo debe ser al menos 10 cm'
+  }
+  
+  if (!form.value.dimensions.height || form.value.dimensions.height < 10) {
+    dimensionErrors.height = 'La altura debe ser al menos 10 cm'
+  }
+
+  if (Object.keys(dimensionErrors).length > 0) {
+    errors.value.dimensions = dimensionErrors
+  }
+
+  return Object.keys(errors.value).length === 0
+}
 
 const handleSubmit = async () => {
-  if (!isFormValid.value) return
+  // Limpiar errores previos
+  errors.value = {}
+
+  // Validar formulario
+  if (!validateForm()) {
+    return
+  }
 
   const newTerrarium = await store.addTerrarium({
     name: form.value.name,
@@ -521,5 +565,17 @@ const handleSubmit = async () => {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Errores de formulario */
+.form-error {
+  color: var(--color-accent);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.input-field--error {
+  border-color: var(--color-accent);
 }
 </style>

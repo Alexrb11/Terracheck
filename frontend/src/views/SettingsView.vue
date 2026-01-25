@@ -33,9 +33,11 @@
               v-model="profileForm.name"
               type="text"
               class="input-field"
+              :class="{ 'input-field--error': profileErrors.name }"
               placeholder="Tu nombre completo"
               required
             />
+            <span v-if="profileErrors.name" class="form-error">{{ profileErrors.name }}</span>
           </div>
 
           <div class="form-group">
@@ -57,9 +59,11 @@
               v-model="profileForm.email"
               type="email"
               class="input-field"
+              :class="{ 'input-field--error': profileErrors.email }"
               placeholder="tu@email.com"
               required
             />
+            <span v-if="profileErrors.email" class="form-error">{{ profileErrors.email }}</span>
           </div>
 
           <div v-if="profileError" class="alert alert-danger mb-md">
@@ -101,9 +105,11 @@
               v-model="passwordForm.currentPassword"
               type="password"
               class="input-field"
+              :class="{ 'input-field--error': passwordErrors.currentPassword }"
               placeholder="Ingresa tu contraseña actual"
               required
             />
+            <span v-if="passwordErrors.currentPassword" class="form-error">{{ passwordErrors.currentPassword }}</span>
           </div>
 
           <div class="form-group">
@@ -113,10 +119,12 @@
               v-model="passwordForm.newPassword"
               type="password"
               class="input-field"
+              :class="{ 'input-field--error': passwordErrors.newPassword }"
               placeholder="Mínimo 6 caracteres"
               required
               minlength="6"
             />
+            <span v-if="passwordErrors.newPassword" class="form-error">{{ passwordErrors.newPassword }}</span>
           </div>
 
           <div v-if="passwordError" class="alert alert-danger mb-md">
@@ -210,6 +218,10 @@ const profileForm = reactive({
 const profileLoading = ref(false)
 const profileError = ref<string | null>(null)
 const profileSuccess = ref(false)
+const profileErrors = ref<{
+  name?: string
+  email?: string
+}>({})
 
 // Estado del formulario de contraseña
 const passwordForm = reactive({
@@ -220,6 +232,10 @@ const passwordForm = reactive({
 const passwordLoading = ref(false)
 const passwordError = ref<string | null>(null)
 const passwordSuccess = ref(false)
+const passwordErrors = ref<{
+  currentPassword?: string
+  newPassword?: string
+}>({})
 
 // Estado para eliminar cuenta
 const deleteLoading = ref(false)
@@ -235,11 +251,36 @@ onMounted(() => {
   }
 })
 
+// Validar formulario de perfil
+const validateProfile = (): boolean => {
+  profileErrors.value = {}
+
+  if (!profileForm.name.trim()) {
+    profileErrors.value.name = 'El nombre es obligatorio'
+  }
+
+  if (!profileForm.email.trim()) {
+    profileErrors.value.email = 'El email es obligatorio'
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileForm.email)) {
+    profileErrors.value.email = 'Por favor ingresa un email válido'
+  }
+
+  return Object.keys(profileErrors.value).length === 0
+}
+
 // Manejar actualización de perfil
 const handleUpdateProfile = async () => {
+  // Limpiar errores previos
+  profileErrors.value = {}
   profileLoading.value = true
   profileError.value = null
   profileSuccess.value = false
+
+  // Validar formulario
+  if (!validateProfile()) {
+    profileLoading.value = false
+    return
+  }
 
   try {
     const success = await authStore.updateProfile({
@@ -264,11 +305,36 @@ const handleUpdateProfile = async () => {
   }
 }
 
+// Validar formulario de contraseña
+const validatePassword = (): boolean => {
+  passwordErrors.value = {}
+
+  if (!passwordForm.currentPassword.trim()) {
+    passwordErrors.value.currentPassword = 'La contraseña actual es obligatoria'
+  }
+
+  if (!passwordForm.newPassword.trim()) {
+    passwordErrors.value.newPassword = 'La nueva contraseña es obligatoria'
+  } else if (passwordForm.newPassword.length < 6) {
+    passwordErrors.value.newPassword = 'La nueva contraseña debe tener al menos 6 caracteres'
+  }
+
+  return Object.keys(passwordErrors.value).length === 0
+}
+
 // Manejar cambio de contraseña
 const handleChangePassword = async () => {
+  // Limpiar errores previos
+  passwordErrors.value = {}
   passwordLoading.value = true
   passwordError.value = null
   passwordSuccess.value = false
+
+  // Validar formulario
+  if (!validatePassword()) {
+    passwordLoading.value = false
+    return
+  }
 
   try {
     const success = await authStore.changePassword(
@@ -448,5 +514,17 @@ const handleDeleteAccount = async () => {
   .settings-view__title {
     font-size: 2.5rem;
   }
+}
+
+/* Errores de formulario */
+.form-error {
+  color: var(--color-accent);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.input-field--error {
+  border-color: var(--color-accent);
 }
 </style>

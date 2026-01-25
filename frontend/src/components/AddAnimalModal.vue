@@ -83,11 +83,13 @@
                   id="animal-name"
                   v-model="form.name" 
                   type="text" 
-                  class="input-field" 
+                  class="input-field"
+                  :class="{ 'input-field--error': errors.name }"
                   placeholder="Ej: Leo, Coco, Verde..."
                   required 
                 />
               </div>
+              <span v-if="errors.name" class="form-error">{{ errors.name }}</span>
             </div>
 
             <!-- Especie -->
@@ -98,7 +100,8 @@
                 <select 
                   id="animal-species" 
                   v-model="form.species" 
-                  class="input-field" 
+                  class="input-field"
+                  :class="{ 'input-field--error': errors.species }"
                   required
                 >
                   <option value="" disabled>Selecciona una especie</option>
@@ -112,6 +115,7 @@
                 </select>
                 <ChevronDownIcon :size="16" class="select-arrow" />
               </div>
+              <span v-if="errors.species" class="form-error">{{ errors.species }}</span>
               <!-- Info de especie seleccionada -->
               <div v-if="selectedSpecies" class="species-info">
                 <p class="species-info__name">{{ selectedSpecies.scientificName }}</p>
@@ -204,7 +208,7 @@
       <button 
         type="button" 
         class="btn btn-primary" 
-        :disabled="isSubmitting || !isFormValid || speciesStore.loading"
+        :disabled="isSubmitting || speciesStore.loading"
         @click="handleSubmit"
       >
         <LoaderIcon v-if="isSubmitting" :size="20" class="modal-footer__loader" />
@@ -265,6 +269,7 @@ const isSubmitting = ref(false)
 const selectedImageFile = ref<File | null>(null)
 const selectedImagePreview = ref<string | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const errors = ref<Record<string, string>>({})
 
 const today = new Date().toISOString().split('T')[0]
 
@@ -275,6 +280,20 @@ const isEditMode = computed(() => {
 const isFormValid = computed(() => {
   return form.value.name.trim() !== '' && form.value.species !== ''
 })
+
+const validateForm = (): boolean => {
+  errors.value = {}
+
+  if (!form.value.name.trim()) {
+    errors.value.name = 'El nombre del animal es obligatorio'
+  }
+
+  if (!form.value.species) {
+    errors.value.species = 'Debes seleccionar una especie'
+  }
+
+  return Object.keys(errors.value).length === 0
+}
 
 const selectedSpecies = computed(() => {
   if (!form.value.species) return null
@@ -294,6 +313,7 @@ const resetForm = () => {
   compatibilityWarning.value = null
   selectedImageFile.value = null
   selectedImagePreview.value = null
+  errors.value = {}
   if (fileInputRef.value) {
     fileInputRef.value.value = ''
   }
@@ -352,7 +372,10 @@ const handleClose = () => {
 }
 
 const handleSubmit = async () => {
-  if (!isFormValid.value) return
+  // Validar formulario
+  if (!validateForm()) {
+    return
+  }
 
   localError.value = null
   compatibilityWarning.value = null
@@ -811,5 +834,20 @@ textarea.input-field {
 :deep(.modal-footer .btn) {
   flex: 1;
   max-width: 200px;
+}
+
+/* ============================================
+   ERRORES DE FORMULARIO
+   ============================================ */
+.form-error {
+  color: #d84315;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+  font-weight: 500;
+}
+
+.input-field--error {
+  border-color: #d84315;
 }
 </style>
