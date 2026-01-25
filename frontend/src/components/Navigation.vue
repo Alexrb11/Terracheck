@@ -106,6 +106,16 @@
       </div>
 
       <div class="drawer__user-actions">
+        <button
+          class="drawer__action-item"
+          @click="toggleTheme"
+          aria-label="Cambiar tema"
+        >
+          <SunIcon v-if="theme === 'dark'" :size="20" />
+          <MoonIcon v-else :size="20" />
+          <span>{{ theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+        </button>
+
         <router-link
           to="/settings"
           class="drawer__action-item"
@@ -177,6 +187,17 @@
           <!-- Separador -->
           <div class="nav-bar__separator"></div>
 
+          <!-- Botón de cambio de tema -->
+          <button
+            @click="toggleTheme"
+            class="nav-bar__theme-toggle"
+            aria-label="Cambiar tema"
+            :title="theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+          >
+            <SunIcon v-if="theme === 'dark'" :size="20" />
+            <MoonIcon v-else :size="20" />
+          </button>
+
           <!-- Usuario con Dropdown -->
           <div class="nav-bar__user" ref="userDropdownRef">
             <button
@@ -207,6 +228,16 @@
               v-if="showDropdown"
               class="nav-bar__dropdown"
             >
+              <button
+                class="nav-bar__dropdown-item"
+                @click="toggleTheme"
+                aria-label="Cambiar tema"
+              >
+                <SunIcon v-if="theme === 'dark'" :size="18" />
+                <MoonIcon v-else :size="18" />
+                <span>{{ theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+              </button>
+              <div class="nav-bar__dropdown-divider"></div>
               <router-link
                 to="/settings"
                 class="nav-bar__dropdown-item"
@@ -235,6 +266,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useTheme } from '@/composables/useTheme'
 import {
   LayoutGridIcon,
   BookOpenIcon,
@@ -246,10 +278,13 @@ import {
   MenuIcon,
   XIcon,
   UserIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  MoonIcon,
+  SunIcon
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
+const { theme, toggleTheme } = useTheme()
 
 // Estado del drawer móvil
 const isDrawerOpen = ref(false)
@@ -297,7 +332,7 @@ const handleLogout = () => {
 <style scoped>
 .nav-bar {
   background-color: var(--color-surface);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--color-border-light);
   box-shadow: var(--shadow-sm);
   z-index: 1030;
 }
@@ -319,7 +354,7 @@ const handleLogout = () => {
   padding: 1rem;
   height: 60px;
   background-color: var(--color-surface);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--color-border-light);
   box-shadow: var(--shadow-sm);
 }
 
@@ -368,7 +403,7 @@ const handleLogout = () => {
 .drawer-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--color-overlay);
   z-index: 40;
   animation: fadeIn 0.3s ease-in-out;
 }
@@ -409,7 +444,7 @@ const handleLogout = () => {
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .drawer__logo {
@@ -500,7 +535,7 @@ const handleLogout = () => {
 
 /* Footer del Drawer (Perfil) */
 .drawer__footer {
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-top: 1px solid var(--color-border-light);
   padding: 1.5rem;
   background-color: var(--color-background);
 }
@@ -511,7 +546,7 @@ const handleLogout = () => {
   gap: 1rem;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .drawer__user-avatar {
@@ -603,6 +638,10 @@ const handleLogout = () => {
   -webkit-backdrop-filter: blur(10px);
 }
 
+[data-theme='dark'] .nav-bar--desktop {
+  background: rgba(15, 23, 42, 0.85); /* Slate 900 con transparencia */
+}
+
 .nav-bar__content {
   display: flex;
   align-items: center;
@@ -631,7 +670,25 @@ const handleLogout = () => {
 .nav-bar__separator {
   width: 1px;
   height: 32px;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--color-border);
+}
+
+.nav-bar__theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: var(--color-text-main);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.nav-bar__theme-toggle:hover {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .nav-bar__user {
@@ -697,7 +754,7 @@ const handleLogout = () => {
   min-width: 200px;
   padding: 0.5rem;
   z-index: 1000;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border-light);
 }
 
 .nav-bar__dropdown-item {
@@ -740,7 +797,7 @@ const handleLogout = () => {
 
 .nav-bar__dropdown-divider {
   height: 1px;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--color-border);
   margin: 0.5rem 0;
 }
 

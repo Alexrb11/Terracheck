@@ -8,6 +8,8 @@
   --color-text-main: #1A1C18;
   --color-text-muted: #757575;
   --color-border: rgba(0, 0, 0, 0.1); /* Borde estándar para inputs y elementos */
+  --color-border-light: rgba(0, 0, 0, 0.05); /* Borde sutil */
+  --color-overlay: rgba(0, 0, 0, 0.5); /* Overlay para modales */
   --glass-bg: rgba(30, 41, 59, 0.85); /* Para terrarios de cristal */
   
   /* Typography */
@@ -37,4 +39,25 @@
     --header-height: 64px; /* Altura de la barra de navegación superior (móvil) */
     --bottom-nav-height: 0px; /* Ya no usamos barra inferior en móvil */
   }
+}
+
+/* Modo Oscuro - Paleta Slate */
+[data-theme='dark'] {
+  /* Brand Colors - Ajustados para modo oscuro */
+  --color-primary: #4ade80; /* Verde más brillante para contraste en oscuro */
+  --color-primary-light: rgba(74, 222, 128, 0.15); /* Verde con transparencia */
+  --color-accent: #fb923c; /* Naranja más brillante */
+  --color-surface: #1e293b; /* Slate 800 - Tarjetas */
+  --color-background: #0f172a; /* Slate 900 - Fondo principal */
+  --color-text-main: #f1f5f9; /* Slate 100 - Texto principal */
+  --color-text-muted: #94a3b8; /* Slate 400 - Texto secundario */
+  --color-border: #334155; /* Slate 700 - Bordes con más contraste */
+  --color-border-light: rgba(255, 255, 255, 0.1); /* Borde sutil en modo oscuro */
+  --color-overlay: rgba(0, 0, 0, 0.7); /* Overlay más oscuro para modales */
+  --glass-bg: rgba(30, 41, 59, 0.7); /* Slate 800 con transparencia */
+  
+  /* Elevation - Sombras más sutiles en modo oscuro */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
 }

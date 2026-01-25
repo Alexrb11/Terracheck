@@ -198,6 +198,27 @@
 }
 
 .badge-secondary {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--color-border-light);
   color: var(--color-text-muted);
+}
+
+/* Ajustes para modo oscuro */
+
+/* Alerts en modo oscuro */
+[data-theme='dark'] .alert-danger {
+  background-color: rgba(239, 108, 0, 0.15);
+  border-color: rgba(239, 108, 0, 0.4);
+  color: #fb923c;
+}
+
+[data-theme='dark'] .alert-warning {
+  background-color: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+/* Badge primary ajustado para modo oscuro - mejorar contraste */
+[data-theme='dark'] .badge-primary {
+  background-color: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
 }

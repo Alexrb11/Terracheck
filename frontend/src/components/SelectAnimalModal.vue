@@ -300,6 +300,38 @@ onMounted(() => {
   color: #14532d;
 }
 
+/* Ajustes para modo oscuro */
+[data-theme='dark'] .location-badge--warning {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+}
+
+[data-theme='dark'] .location-badge--success {
+  background: rgba(34, 197, 94, 0.25);
+  color: #4ade80;
+}
+
+[data-theme='dark'] .animal-select-card {
+  border-color: var(--color-border-light);
+}
+
+[data-theme='dark'] .animal-select-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Scrollbar en modo oscuro */
+[data-theme='dark'] .select-animal-modal__list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme='dark'] .select-animal-modal__list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme='dark'] .select-animal-modal__list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 /* ============================================
    ESTADO VACÍO
    ============================================ */

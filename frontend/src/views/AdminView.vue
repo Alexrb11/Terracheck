@@ -1058,6 +1058,19 @@ onMounted(async () => {
   color: #3b82f6;
 }
 
+/* Colores de estadísticas en modo oscuro */
+[data-theme='dark'] .card__stats-value--green {
+  color: #4ade80;
+}
+
+[data-theme='dark'] .card__stats-value--purple {
+  color: #c084fc;
+}
+
+[data-theme='dark'] .card__stats-value--blue {
+  color: #60a5fa;
+}
+
 /* Table Card */
 .table-card {
   overflow: hidden;
@@ -1216,7 +1229,24 @@ onMounted(async () => {
 }
 
 .admin-table__role-select--default {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--color-border-light);
+  color: var(--color-text-main);
+}
+
+/* Ajustes para modo oscuro */
+[data-theme='dark'] .admin-table__role-select--purple {
+  background-color: rgba(168, 85, 247, 0.25);
+  color: #c084fc;
+}
+
+[data-theme='dark'] .admin-table__role-select--blue {
+  background-color: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+}
+
+/* Opciones del select en modo oscuro */
+.admin-table__role-select option {
+  background-color: var(--color-surface);
   color: var(--color-text-main);
 }
 
@@ -1253,7 +1283,7 @@ onMounted(async () => {
 }
 
 .admin-table__action-btn:hover:not(:disabled) {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--color-border-light);
 }
 
 .admin-table__action-btn--success {
@@ -1280,6 +1310,15 @@ onMounted(async () => {
   background-color: rgba(239, 108, 0, 0.1);
 }
 
+/* Botones de acción en modo oscuro */
+[data-theme='dark'] .admin-table__action-btn--success {
+  color: #4ade80;
+}
+
+[data-theme='dark'] .admin-table__action-btn--warning {
+  color: #fbbf24;
+}
+
 .admin-table__action-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1302,6 +1341,17 @@ onMounted(async () => {
 .status-badge--inactive {
   background-color: #fee2e2; /* Red 100 */
   color: #b91c1c; /* Red 700 */
+}
+
+/* Status Badge en modo oscuro */
+[data-theme='dark'] .status-badge--active {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+[data-theme='dark'] .status-badge--inactive {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #f87171;
 }
 
 /* Pagination */
@@ -1406,6 +1456,11 @@ onMounted(async () => {
   border-radius: var(--radius-full);
 }
 
+[data-theme='dark'] .admin-view__permission-tag {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
 .admin-view__permission-empty {
   font-size: 0.75rem;
   color: var(--color-text-muted);
@@ -1419,8 +1474,9 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-.badge-secondary {
-  background-color: rgba(0, 0, 0, 0.05);
+/* Badge secondary ya definido en components.css, pero sobrescribimos si es necesario */
+.admin-view .badge-secondary {
+  background-color: var(--color-border-light);
   color: var(--color-text-muted);
 }
 
