@@ -42,7 +42,11 @@ const speciesData = [
     commonName: 'Gecko Leopardo',
     family: 'Eublepharidae',
     biome: 'desert',
-    parameters: { tempMin: 24, tempMax: 32, humidityMin: 30, humidityMax: 40, uvIndex: 2 },
+    parameters: { 
+      temperature: { min: 24, max: 32 }, 
+      humidity: { min: 30, max: 40 }, 
+      uvIndex: 2 
+    },
     requirements: { minLiters: 75, minHeight: 30, arboreal: false },
     compatibility: ['solitary', 'female-groups'],
     description: 'Gecko nocturno originario de Afganistán, Pakistán e India. Ideal para principiantes.',
@@ -53,7 +57,11 @@ const speciesData = [
     commonName: 'Gecko Crestado',
     family: 'Diplodactylidae',
     biome: 'tropical',
-    parameters: { tempMin: 22, tempMax: 27, humidityMin: 60, humidityMax: 80, uvIndex: 2 },
+    parameters: { 
+      temperature: { min: 22, max: 27 }, 
+      humidity: { min: 60, max: 80 }, 
+      uvIndex: 2 
+    },
     requirements: { minLiters: 60, minHeight: 45, arboreal: true },
     compatibility: ['communal', 'female-groups'],
     description: 'Gecko arborícola de Nueva Caledonia. No requiere iluminación especial y es muy dócil.',
@@ -64,7 +72,11 @@ const speciesData = [
     commonName: 'Pitón Bola',
     family: 'Pythonidae',
     biome: 'tropical',
-    parameters: { tempMin: 26, tempMax: 32, humidityMin: 50, humidityMax: 60, uvIndex: 0 },
+    parameters: { 
+      temperature: { min: 26, max: 32 }, 
+      humidity: { min: 50, max: 60 }, 
+      uvIndex: 0 
+    },
     requirements: { minLiters: 120, minHeight: 30, arboreal: false },
     compatibility: ['solitary'],
     description: 'Serpiente africana conocida por enrollarse en bola cuando se siente amenazada.',
@@ -75,7 +87,11 @@ const speciesData = [
     commonName: 'Dragón Barbudo',
     family: 'Agamidae',
     biome: 'desert',
-    parameters: { tempMin: 25, tempMax: 40, humidityMin: 30, humidityMax: 40, uvIndex: 10 },
+    parameters: { 
+      temperature: { min: 25, max: 40 }, 
+      humidity: { min: 30, max: 40 }, 
+      uvIndex: 10 
+    },
     requirements: { minLiters: 200, minHeight: 40, arboreal: false },
     compatibility: ['solitary', 'male-female-pair'],
     description: 'Lagarto australiano muy popular por su carácter sociable y apariencia única.',
@@ -86,7 +102,11 @@ const speciesData = [
     commonName: 'Rana Dardo Azul',
     family: 'Dendrobatidae',
     biome: 'tropical',
-    parameters: { tempMin: 22, tempMax: 26, humidityMin: 80, humidityMax: 100, uvIndex: 2 },
+    parameters: { 
+      temperature: { min: 22, max: 26 }, 
+      humidity: { min: 80, max: 100 }, 
+      uvIndex: 2 
+    },
     requirements: { minLiters: 40, minHeight: 30, arboreal: false },
     compatibility: ['communal', 'same-species-groups'],
     description: 'Rana venenosa de Surinam con colores vibrantes. En cautividad pierde su toxicidad.',
