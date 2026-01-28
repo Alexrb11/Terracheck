@@ -331,6 +331,14 @@
       @added="handleAnimalAdded"
     />
 
+    <!-- Modal Editar Terrario -->
+    <EditTerrariumModal
+      :is-open="showEditModal"
+      :terrarium="terrarium"
+      @close="showEditModal = false"
+      @updated="handleTerrariumUpdate"
+    />
+
     <!-- Confirmation Modal -->
     <ConfirmationModal
       :is-open="confirmModal.isOpen"
@@ -352,6 +360,7 @@ import { useTerrariumStore } from '@/stores/terrarium'
 import Navigation from '@/components/Navigation.vue'
 import SelectAnimalModal from '@/components/SelectAnimalModal.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
+import EditTerrariumModal from '@/components/EditTerrariumModal.vue'
 import { getImageUrl } from '@/utils/image'
 import {
   ArrowLeftIcon,
@@ -378,6 +387,7 @@ const router = useRouter()
 const store = useTerrariumStore()
 const loading = ref(true)
 const showSelectAnimalModal = ref(false)
+const showEditModal = ref(false)
 const isIncompatibilityExpanded = ref(false)
 
 // Confirmation Modal
@@ -506,9 +516,13 @@ const handleDeleteAnimal = (animalId: string, animalName: string) => {
 }
 
 const handleEdit = () => {
-  // Navegar a la vista de edición cuando esté implementada
-  // Por ahora, redirigir al dashboard
-  router.push('/')
+  if (!terrarium.value) return
+  showEditModal.value = true
+}
+
+const handleTerrariumUpdate = async () => {
+  showEditModal.value = false
+  await store.fetchTerrariumById(route.params.id as string)
 }
 
 const handleDelete = () => {
