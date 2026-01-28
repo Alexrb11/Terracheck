@@ -254,7 +254,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useFriendsStore, type FriendItem } from '@/stores/friends'
 import Navigation from '@/components/Navigation.vue'
 import {
@@ -266,7 +267,27 @@ import {
 } from 'lucide-vue-next'
 
 const friendsStore = useFriendsStore()
-const activeTab = ref<'friends' | 'requests' | 'search'>('friends')
+
+const route = useRoute()
+const router = useRouter()
+
+const activeTab = computed<'friends' | 'requests' | 'search'>({
+  get() {
+    const tab = route.query.tab
+    if (tab === 'friends' || tab === 'requests' || tab === 'search') {
+      return tab
+    }
+    return 'friends'
+  },
+  set(newValue) {
+    router.push({
+      query: {
+        ...route.query,
+        tab: newValue
+      }
+    })
+  }
+})
 const searchQuery = ref('')
 const searchResults = ref<{ id: string; name: string; username: string | null }[]>([])
 const searchLoading = ref(false)

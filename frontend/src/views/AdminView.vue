@@ -465,7 +465,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useRolesStore, type Role } from '@/stores/roles'
 import Navigation from '@/components/Navigation.vue'
@@ -529,7 +530,26 @@ interface Pagination {
 const authStore = useAuthStore()
 const rolesStore = useRolesStore()
 
-const activeTab = ref<'stats' | 'users' | 'roles'>('stats')
+const route = useRoute()
+const router = useRouter()
+
+const activeTab = computed<'stats' | 'users' | 'roles'>({
+  get() {
+    const tab = route.query.tab
+    if (tab === 'stats' || tab === 'users' || tab === 'roles') {
+      return tab
+    }
+    return 'stats'
+  },
+  set(newValue) {
+    router.push({
+      query: {
+        ...route.query,
+        tab: newValue
+      }
+    })
+  }
+})
 const loading = ref(true)
 const users = ref<AdminUser[]>([])
 const availableRoles = ref<UserRole[]>([])
@@ -847,9 +867,18 @@ const handleDeleteRole = (role: Role) => {
   )
 }
 
+watch(
+  () => activeTab.value,
+  (newTab) => {
+    if (newTab === 'users' && users.value.length === 0) {
+      fetchUsers()
+    }
+  },
+  { immediate: true }
+)
+
 onMounted(async () => {
   fetchStats()
-  fetchUsers()
   fetchAvailableRoles()
   await rolesStore.fetchRoles()
   await rolesStore.fetchPermissions()
