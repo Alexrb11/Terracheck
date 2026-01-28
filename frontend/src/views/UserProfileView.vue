@@ -3,6 +3,11 @@
     <Navigation />
 
     <main class="container user-profile-view__main">
+      <button @click="$router.back()" class="btn-text mb-md">
+        <ArrowLeftIcon :size="20" />
+        <span>Volver</span>
+      </button>
+
       <!-- Loading -->
       <div v-if="loading" class="user-profile-view__loading">
         <LoaderIcon :size="48" class="user-profile-view__loader-icon" />
@@ -72,20 +77,12 @@
                   <UserPlusIcon :size="18" />
                   <span>{{ friendActionLoading ? '…' : 'Añadir Amigo' }}</span>
                 </button>
-                <router-link to="/" class="btn btn-outline">
-                  <ArrowLeftIcon :size="18" />
-                  <span>Volver</span>
-                </router-link>
               </template>
               <template v-else-if="profileData.friendshipStatus === 'pending_sent'">
                 <span class="profile-card__btn-muted">
                   <UserPlusIcon :size="18" />
                   <span>Solicitud Enviada</span>
                 </span>
-                <router-link to="/" class="btn btn-outline">
-                  <ArrowLeftIcon :size="18" />
-                  <span>Volver</span>
-                </router-link>
               </template>
               <template v-else-if="profileData.friendshipStatus === 'pending_received'">
                 <button
@@ -97,26 +94,12 @@
                   <UserCheckIcon :size="18" />
                   <span>{{ friendActionLoading ? '…' : 'Aceptar Solicitud' }}</span>
                 </button>
-                <router-link to="/" class="btn btn-outline">
-                  <ArrowLeftIcon :size="18" />
-                  <span>Volver</span>
-                </router-link>
               </template>
               <template v-else-if="profileData.friendshipStatus === 'friends'">
                 <span class="profile-card__btn-friends">
                   <UserCheckIcon :size="18" />
                   <span>Amigos</span>
                 </span>
-                <router-link to="/" class="btn btn-outline">
-                  <ArrowLeftIcon :size="18" />
-                  <span>Volver</span>
-                </router-link>
-              </template>
-              <template v-else>
-                <router-link to="/" class="btn btn-outline">
-                  <ArrowLeftIcon :size="18" />
-                  <span>Volver</span>
-                </router-link>
               </template>
             </div>
           </div>
@@ -277,6 +260,23 @@ onMounted(loadProfile)
 .user-profile-view__main {
   padding-top: 2rem;
   padding-bottom: 3rem;
+}
+
+.btn-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0;
+  transition: color var(--transition-fast);
+}
+
+.btn-text:hover {
+  color: var(--color-primary);
 }
 
 .user-profile-view__loading {

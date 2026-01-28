@@ -165,7 +165,10 @@
             <tbody>
               <tr v-for="user in users" :key="user._id" class="admin-table__row">
                 <td>
-                  <div class="admin-table__user">
+                  <router-link
+                    class="admin-table__user-link admin-table__user"
+                    :to="{ name: 'user-profile', params: { username: user.username } }"
+                  >
                     <div class="admin-table__avatar">
                       <span>{{ user.name.charAt(0) }}</span>
                     </div>
@@ -173,7 +176,7 @@
                       <p class="admin-table__user-name">{{ user.name }}</p>
                       <p class="admin-table__user-email">{{ user.email }}</p>
                     </div>
-                  </div>
+                  </router-link>
                 </td>
                 <td>
                   <select
@@ -501,6 +504,7 @@ interface AdminUser {
   _id: string
   name: string
   email: string
+  username?: string | null
   role: UserRole | null
   isActive: boolean
   createdAt: string
@@ -1204,6 +1208,19 @@ onMounted(async () => {
 
 .admin-table__row:last-child td {
   border-bottom: none;
+}
+
+.admin-table__user-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity var(--transition-fast);
+}
+
+.admin-table__user-link:hover {
+  opacity: 0.7;
 }
 
 .admin-table__user {
