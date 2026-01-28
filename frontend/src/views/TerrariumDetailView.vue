@@ -236,8 +236,13 @@
                 class="animal-card"
                 :class="{ 'animal-card--incompatible': isBiomeIncompatible(animal) }"
               >
-                <div class="animal-avatar">
-                  {{ animal.name.charAt(0) }}
+                <div class="animal-avatar-large">
+                  <img
+                    v-if="animal.imageUrl || animal.species?.imageUrl"
+                    :src="getImageUrl(animal.imageUrl || animal.species?.imageUrl)"
+                    :alt="animal.name"
+                  />
+                  <span v-else>{{ animal.name.charAt(0) }}</span>
                 </div>
                 <div class="animal-card__info">
                   <p class="animal-card__name">{{ animal.name }}</p>
@@ -347,6 +352,7 @@ import { useTerrariumStore } from '@/stores/terrarium'
 import Navigation from '@/components/Navigation.vue'
 import SelectAnimalModal from '@/components/SelectAnimalModal.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
+import { getImageUrl } from '@/utils/image'
 import {
   ArrowLeftIcon,
   SquareIcon,
@@ -1108,8 +1114,14 @@ onMounted(async () => {
 /* Grid de Animales */
 .animals-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .animals-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .animal-card {
@@ -1118,7 +1130,9 @@ onMounted(async () => {
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
   border: 2px solid transparent;
@@ -1136,11 +1150,12 @@ onMounted(async () => {
 
 .animal-card__info {
   flex: 1;
+  width: 100%;
 }
 
 .animal-card__name {
   font-weight: 600;
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   color: var(--color-text-main);
   margin: 0 0 0.25rem 0;
 }
@@ -1161,8 +1176,11 @@ onMounted(async () => {
 .animal-card__biome {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.375rem;
   margin-top: 0.5rem;
+  margin-left: auto;
+  margin-right: auto;
   padding: 0.375rem 0.625rem;
   background: rgba(0, 0, 0, 0.03);
   border-radius: var(--radius-md);
@@ -1196,10 +1214,11 @@ onMounted(async () => {
 .animal-card__actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
+  width: 100%;
 }
 
 .animal-card__delete-btn {
@@ -1220,9 +1239,9 @@ onMounted(async () => {
   color: var(--color-accent);
 }
 
-.animal-avatar {
-  width: 3rem;
-  height: 3rem;
+.animal-avatar-large {
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   background: var(--color-primary-light);
   color: var(--color-primary);
@@ -1230,9 +1249,17 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 2.5rem;
   flex-shrink: 0;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.animal-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* Badge de Sexo */
