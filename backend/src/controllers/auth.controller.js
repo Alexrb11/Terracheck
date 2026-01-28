@@ -1,11 +1,17 @@
 import User from '../models/User.js'
 import Role from '../models/Role.js'
+import Terrarium from '../models/Terrarium.js'
+import Animal from '../models/Animal.js'
+import Friendship from '../models/Friendship.js'
 import { generateToken } from '../middleware/auth.middleware.js'
+
+// Regex para validar username: solo letras, números, guión bajo y guión (evita inyecciones)
+const USERNAME_REGEX = /^[a-zA-Z0-9_-]{3,50}$/
 
 // POST /api/auth/register - Registrar nuevo usuario
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body
+    const { name, email, password, username } = req.body
 
     // Validar campos requeridos
     if (!name || !email || !password) {
@@ -14,13 +20,41 @@ export const register = async (req, res) => {
         message: 'Por favor proporciona nombre, email y contraseña'
       })
     }
+    if (!username || typeof username !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'El username es obligatorio'
+      })
+    }
+    const usernameTrim = username.trim()
+    if (usernameTrim.length < 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'El username debe tener al menos 3 caracteres'
+      })
+    }
+    if (!USERNAME_REGEX.test(usernameTrim)) {
+      return res.status(400).json({
+        success: false,
+        message: 'El username solo puede contener letras, números, guión bajo (_) y guión (-). No se permiten espacios ni símbolos especiales.'
+      })
+    }
 
     // Verificar si el email ya existe
-    const existingUser = await User.findOne({ email: email.toLowerCase() })
-    if (existingUser) {
+    const existingEmail = await User.findOne({ email: email.toLowerCase() })
+    if (existingEmail) {
       return res.status(400).json({
         success: false,
         message: 'Ya existe una cuenta con este email'
+      })
+    }
+
+    // Verificar si el username ya existe (case-insensitive, guardamos en lowercase)
+    const existingUsername = await User.findOne({ username: usernameTrim.toLowerCase() })
+    if (existingUsername) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ya existe una cuenta con este username'
       })
     }
 
@@ -37,6 +71,7 @@ export const register = async (req, res) => {
     const user = await User.create({
       name,
       email,
+      username: usernameTrim.toLowerCase(),
       password,
       role: defaultRole._id
     })
@@ -62,6 +97,7 @@ export const register = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          username: user.username,
           role: {
             id: user.role._id,
             name: user.role.name,
@@ -80,6 +116,13 @@ export const register = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: messages.join('. ')
+      })
+    }
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern || {})[0]
+      return res.status(400).json({
+        success: false,
+        message: field === 'username' ? 'Ya existe una cuenta con este username' : 'Ya existe una cuenta con este email'
       })
     }
 
@@ -152,6 +195,7 @@ export const login = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          username: user.username || null,
           role: user.role ? {
             id: user.role._id,
             name: user.role.name,
@@ -167,6 +211,109 @@ export const login = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error al iniciar sesión',
+      error: error.message
+    })
+  }
+}
+
+// GET /api/auth/users/:username - Obtener perfil público de un usuario por username (con privacidad y amistad)
+export const getProfileByUsername = async (req, res) => {
+  try {
+    const usernameParam = (req.params.username || '').trim()
+    if (!usernameParam) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username no proporcionado'
+      })
+    }
+    const targetUser = await User.findOne({ username: usernameParam.toLowerCase(), isActive: true }).populate({
+      path: 'role',
+      select: 'name slug'
+    })
+
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      })
+    }
+
+    const viewerId = req.user._id
+    const isSelf = targetUser._id.toString() === viewerId.toString()
+
+    let isAdmin = false
+    if (!isSelf) {
+      const viewer = await User.findById(viewerId).populate('role', 'slug')
+      const slug = viewer?.role?.slug
+      isAdmin = slug === 'super_admin' || slug === 'admin'
+    }
+
+    const friendship = await Friendship.findOne({
+      $or: [
+        { requester: viewerId, recipient: targetUser._id },
+        { requester: targetUser._id, recipient: viewerId }
+      ]
+    })
+
+    let friendshipStatus = 'none'
+    if (isSelf) {
+      friendshipStatus = 'self'
+    } else if (friendship) {
+      if (friendship.status === 'accepted') {
+        friendshipStatus = 'friends'
+      } else if (friendship.requester.toString() === viewerId.toString()) {
+        friendshipStatus = 'pending_sent'
+      } else {
+        friendshipStatus = 'pending_received'
+      }
+    }
+
+    const canSeeFullProfile = isSelf || isAdmin || (friendship?.status === 'accepted')
+
+    const baseUser = {
+      id: targetUser._id,
+      name: targetUser.name,
+      username: targetUser.username || null,
+      avatar: null,
+      role: targetUser.role ? {
+        id: targetUser.role._id,
+        name: targetUser.role.name,
+        slug: targetUser.role.slug
+      } : null,
+      createdAt: targetUser.createdAt
+    }
+
+    if (canSeeFullProfile) {
+      const [terrariumCount, animalCount] = await Promise.all([
+        Terrarium.countDocuments({ user: targetUser._id, isActive: true }),
+        Animal.countDocuments({ user: targetUser._id, isActive: true })
+      ])
+      const payload = {
+        user: baseUser,
+        stats: { terrariums: terrariumCount, animals: animalCount },
+        isPrivate: false,
+        friendshipStatus
+      }
+      if (friendshipStatus === 'pending_received' && friendship) {
+        payload.pendingRequestId = friendship._id
+      }
+      return res.json({ success: true, data: payload })
+    }
+
+    const payload = {
+      user: baseUser,
+      stats: { terrariums: 0, animals: 0 },
+      isPrivate: true,
+      friendshipStatus
+    }
+    if (friendshipStatus === 'pending_received' && friendship) {
+      payload.pendingRequestId = friendship._id
+    }
+    return res.json({ success: true, data: payload })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener perfil',
       error: error.message
     })
   }
@@ -215,32 +362,48 @@ export const updateProfile = async (req, res) => {
   try {
     const { name, email, username } = req.body
 
-    // Verificar si el nuevo email ya existe (si se está cambiando)
-    if (email && email !== req.user.email) {
-      const existingUser = await User.findOne({ email: email.toLowerCase() })
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: 'Ya existe una cuenta con este email'
-        })
-      }
-    }
-
-    // Verificar si el nuevo username ya existe (si se está cambiando)
-    if (username && username !== req.user.username) {
-      const existingUser = await User.findOne({ username })
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: 'Ya existe una cuenta con este username'
-        })
-      }
-    }
-
     const updateData = {}
     if (name) updateData.name = name
-    if (email) updateData.email = email.toLowerCase()
-    if (username !== undefined) updateData.username = username || null
+    if (email) {
+      if (email !== req.user.email) {
+        const existingUser = await User.findOne({ email: email.toLowerCase() })
+        if (existingUser) {
+          return res.status(400).json({
+            success: false,
+            message: 'Ya existe una cuenta con este email'
+          })
+        }
+      }
+      updateData.email = email.toLowerCase()
+    }
+
+    // Validar y actualizar username si se proporciona
+    if (username !== undefined && username !== null) {
+      const usernameTrim = String(username).trim()
+      if (usernameTrim.length < 3) {
+        return res.status(400).json({
+          success: false,
+          message: 'El username debe tener al menos 3 caracteres'
+        })
+      }
+      if (!USERNAME_REGEX.test(usernameTrim)) {
+        return res.status(400).json({
+          success: false,
+          message: 'El username solo puede contener letras, números, guión bajo (_) y guión (-). No se permiten espacios ni símbolos especiales.'
+        })
+      }
+      const usernameLower = usernameTrim.toLowerCase()
+      if (usernameLower !== (req.user.username || '').toLowerCase()) {
+        const existingUser = await User.findOne({ username: usernameLower })
+        if (existingUser) {
+          return res.status(400).json({
+            success: false,
+            message: 'Ya existe una cuenta con este username'
+          })
+        }
+        updateData.username = usernameLower
+      }
+    }
 
     const user = await User.findByIdAndUpdate(
       req.user._id,

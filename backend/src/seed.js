@@ -6,6 +6,7 @@ import Role from './models/Role.js'
 import Species from './models/Species.js'
 import Terrarium from './models/Terrarium.js'
 import Animal from './models/Animal.js'
+import Friendship from './models/Friendship.js'
 
 dotenv.config()
 
@@ -122,6 +123,7 @@ async function seed() {
 
     // Limpiar base de datos
     console.log('🗑️  Limpiando base de datos...')
+    await Friendship.deleteMany({})
     await User.deleteMany({})
     await Permission.deleteMany({})
     await Role.deleteMany({})
@@ -184,18 +186,20 @@ async function seed() {
     const adminUser = await User.create({
       name: 'Admin TerraCheck',
       email: 'admin@terracheck.com',
+      username: 'admin',
       password: 'admin123',
       role: superAdminRole._id
     })
-    console.log(`   ✅ ${adminUser.email} (Super Admin)`)
+    console.log(`   ✅ ${adminUser.email} @${adminUser.username} (Super Admin)`)
 
     const regularUser = await User.create({
       name: 'Usuario Demo',
       email: 'user@terracheck.com',
+      username: 'demo',
       password: 'user123',
       role: userRole._id
     })
-    console.log(`   ✅ ${regularUser.email} (Usuario)`)
+    console.log(`   ✅ ${regularUser.email} @${regularUser.username} (Usuario)`)
 
     // ============== CREAR ESPECIES ==============
     console.log('🦎 Insertando especies...')
@@ -268,13 +272,15 @@ async function seed() {
     console.log(`   - ${animals.length} animales`)
     console.log('\n🔐 Credenciales de prueba:')
     console.log('   ┌─────────────────────────────────────────────────┐')
-    console.log('   │ SUPER ADMIN (acceso completo)                  │')
-    console.log('   │   Email:    admin@terracheck.com               │')
-    console.log('   │   Password: admin123                           │')
+    console.log('   │ SUPER ADMIN (acceso completo)                    │')
+    console.log('   │   Email:    admin@terracheck.com                 │')
+    console.log('   │   Username: admin                               │')
+    console.log('   │   Password: admin123                            │')
     console.log('   ├─────────────────────────────────────────────────┤')
-    console.log('   │ USUARIO (acceso limitado)                      │')
-    console.log('   │   Email:    user@terracheck.com                │')
-    console.log('   │   Password: user123                            │')
+    console.log('   │ USUARIO (acceso limitado)                       │')
+    console.log('   │   Email:    user@terracheck.com                 │')
+    console.log('   │   Username: demo                                │')
+    console.log('   │   Password: user123                             │')
     console.log('   └─────────────────────────────────────────────────┘')
     console.log('\n🚀 Puedes iniciar el servidor con: npm run dev\n')
 

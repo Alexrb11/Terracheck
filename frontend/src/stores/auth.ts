@@ -96,7 +96,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+  const register = async (name: string, email: string, password: string, username: string): Promise<boolean> => {
     loading.value = true
     error.value = null
 
@@ -106,7 +106,7 @@ export const useAuthStore = defineStore('auth', () => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password, username: username.trim() })
       })
 
       const data: AuthResponse = await response.json()
@@ -136,6 +136,32 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     localStorage.removeItem('token')
     router.push('/login')
+  }
+
+  const fetchUserByUsername = async (username: string): Promise<{
+    user: User & { avatar?: string | null }
+    stats: { terrariums: number; animals: number }
+    isPrivate?: boolean
+    friendshipStatus?: 'none' | 'pending_sent' | 'pending_received' | 'friends' | 'self'
+    pendingRequestId?: string
+  } | null> => {
+    if (!token.value) return null
+    try {
+      const response = await fetch(`${API_URL}/users/${encodeURIComponent(username)}`, {
+        headers: { 'Authorization': `Bearer ${token.value}` }
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) return null
+      return {
+        user: data.data.user,
+        stats: data.data.stats,
+        isPrivate: data.data.isPrivate ?? false,
+        friendshipStatus: data.data.friendshipStatus ?? 'none',
+        pendingRequestId: data.data.pendingRequestId ?? undefined
+      }
+    } catch {
+      return null
+    }
   }
 
   const fetchCurrentUser = async (): Promise<boolean> => {
@@ -289,6 +315,7 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     logout,
     fetchCurrentUser,
+    fetchUserByUsername,
     initializeAuth,
     clearError,
     getAuthHeaders,

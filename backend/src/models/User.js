@@ -21,10 +21,16 @@ const userSchema = new mongoose.Schema({
   },
   username: {
     type: String,
+    required: [true, 'El username es requerido'],
     unique: true,
-    sparse: true,
     trim: true,
-    maxlength: [50, 'El username no puede exceder 50 caracteres']
+    lowercase: true,
+    minlength: [3, 'El username debe tener al menos 3 caracteres'],
+    maxlength: [50, 'El username no puede exceder 50 caracteres'],
+    match: [
+      /^[a-zA-Z0-9_-]+$/,
+      'El username solo puede contener letras, números, guión bajo (_) y guión (-). No se permiten espacios ni símbolos especiales.'
+    ]
   },
   password: {
     type: String,
@@ -77,8 +83,9 @@ userSchema.methods.hasPermission = async function(permissionSlug) {
   return this.role.permissions.some(p => p.slug === permissionSlug)
 }
 
-// Índice para búsquedas por email y rol
+// Índice para búsquedas por email, username y rol
 userSchema.index({ email: 1 })
+userSchema.index({ username: 1 })
 userSchema.index({ role: 1 })
 
 const User = mongoose.model('User', userSchema)

@@ -3,6 +3,7 @@ import {
   register,
   login,
   getMe,
+  getProfileByUsername,
   updateProfile,
   changePassword,
   deleteAccount
@@ -17,6 +18,7 @@ router.post('/login', login)
 
 // Rutas protegidas
 router.get('/me', protect, getMe)
+router.get('/users/:username', protect, getProfileByUsername)
 router.put('/profile', protect, updateProfile)
 router.put('/password', protect, changePassword)
 router.delete('/account', protect, deleteAccount)

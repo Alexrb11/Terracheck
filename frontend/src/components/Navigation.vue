@@ -81,6 +81,17 @@
       </router-link>
 
       <router-link
+        to="/friends"
+        class="drawer__nav-item"
+        :class="{ 'drawer__nav-item--active': $route.path === '/friends' }"
+        @click="closeDrawer"
+      >
+        <UsersIcon :size="24" />
+        <span>Amigos</span>
+        <ChevronRightIcon :size="20" class="drawer__nav-chevron" />
+      </router-link>
+
+      <router-link
         v-if="authStore.isAdmin"
         to="/admin"
         class="drawer__nav-item drawer__nav-item--admin"
@@ -181,6 +192,15 @@
           >
             <PawPrintIcon :size="20" />
             <span>Mis Especies</span>
+          </router-link>
+
+          <router-link
+            to="/friends"
+            class="nav-link nav-link--horizontal"
+            :class="{ 'nav-link--active': $route.path === '/friends' }"
+          >
+            <UsersIcon :size="20" />
+            <span>Amigos</span>
           </router-link>
 
           <!-- Admin Panel (solo visible para admins) -->
@@ -297,6 +317,7 @@ import {
   MenuIcon,
   XIcon,
   UserIcon,
+  UsersIcon,
   ChevronRightIcon,
   MoonIcon,
   SunIcon

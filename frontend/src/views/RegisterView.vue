@@ -56,6 +56,29 @@
           </div>
 
           <div class="form-group">
+            <label for="username" class="form-label">Nombre de usuario</label>
+            <div class="input-wrapper">
+              <AtSign :size="20" class="input-icon" />
+              <input
+                id="username"
+                v-model="form.username"
+                type="text"
+                required
+                autocomplete="username"
+                class="input-field input-with-icon"
+                placeholder="minimo_3_caracteres"
+                maxlength="50"
+              />
+            </div>
+            <p v-if="usernameError" class="form-hint warning">
+              {{ usernameError }}
+            </p>
+            <p v-else class="form-hint">
+              Solo letras, números, guión bajo (_) y guión (-). Mínimo 3 caracteres.
+            </p>
+          </div>
+
+          <div class="form-group">
             <label for="password" class="form-label">Contraseña</label>
             <div class="input-wrapper">
               <LockIcon :size="20" class="input-icon" />
@@ -117,24 +140,40 @@ import {
   EyeOffIcon,
   AlertCircleIcon,
   XIcon,
-  LoaderIcon
+  LoaderIcon,
+  AtSign
 } from 'lucide-vue-next'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
+const USERNAME_REGEX = /^[a-zA-Z0-9_-]+$/
+
 const form = ref({
   name: '',
   email: '',
+  username: '',
   password: ''
 })
 
 const showPassword = ref(false)
 
+const usernameError = computed(() => {
+  const u = form.value.username.trim()
+  if (!u) return ''
+  if (u.length < 3) return 'El nombre de usuario debe tener al menos 3 caracteres.'
+  if (!USERNAME_REGEX.test(u)) {
+    return 'Solo letras, números, guión bajo (_) y guión (-). No espacios ni símbolos especiales.'
+  }
+  return ''
+})
+
 const isFormValid = computed(() => {
   return (
     form.value.name.trim() !== '' &&
     form.value.email.trim() !== '' &&
+    form.value.username.trim().length >= 3 &&
+    USERNAME_REGEX.test(form.value.username.trim()) &&
     form.value.password.length >= 6
   )
 })
@@ -144,7 +183,8 @@ const handleRegister = async () => {
   const success = await authStore.register(
     form.value.name,
     form.value.email,
-    form.value.password
+    form.value.password,
+    form.value.username.trim()
   )
   if (success) {
     router.push('/')

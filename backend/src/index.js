@@ -13,6 +13,7 @@ import terrariumRoutes from './routes/terrarium.routes.js'
 import animalRoutes from './routes/animal.routes.js'
 import adminRoutes from './routes/admin.routes.js'
 import roleRoutes from './routes/role.routes.js'
+import friendshipRoutes from './routes/friendship.routes.js'
 
 // Load environment variables
 dotenv.config()
@@ -54,6 +55,7 @@ app.use('/api/terrariums', terrariumRoutes)
 app.use('/api/animals', animalRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/admin/roles', roleRoutes)
+app.use('/api/friends', friendshipRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
