@@ -147,6 +147,10 @@
             </select>
           </div>
 
+          <p class="settings-section__privacy-note">
+            Nota: Los administradores del sistema pueden ver tu contenido para fines de moderación, independientemente de estos ajustes.
+          </p>
+
           <div v-if="privacyError" class="alert alert-danger mb-md">
             {{ privacyError }}
           </div>
@@ -614,6 +618,16 @@ const handleDeleteAccount = async () => {
   font-size: 0.875rem;
   color: var(--color-text-muted);
   margin: 0;
+}
+
+.settings-section__privacy-note {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-md);
+  border-left: 3px solid #9333ea;
 }
 
 /* Alertas */

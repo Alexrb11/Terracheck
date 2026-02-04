@@ -22,11 +22,9 @@ export const getPublicProfile = async (req, res) => {
     const targetUserId = user._id
     const isSelf = requesterId && requesterId.toString() === targetUserId.toString()
 
-    // Verificar si es admin
-    let isAdmin = false
-    if (req.user && (req.user.role?.slug === 'admin' || req.user.role?.slug === 'super_admin')) {
-      isAdmin = true
-    }
+    // Rol del solicitante: admin tiene acceso total (maestro), ignora privacidad
+    const requesterRoleSlug = req.user?.role?.slug
+    const isAdmin = requesterRoleSlug === 'admin' || requesterRoleSlug === 'super_admin'
 
     // 2. Determinar estado de amistad
     let friendshipStatus = 'none'
@@ -69,19 +67,15 @@ export const getPublicProfile = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Este perfil es privado' })
     }
 
-    // 4. Filtrar datos: quién puede ver terrarios
-    let canViewTerrariums = isSelf || isAdmin
-    if (!canViewTerrariums) {
-      if (showTerrariums === 'everyone') canViewTerrariums = true
-      else if (showTerrariums === 'friends_only' && isFriend) canViewTerrariums = true
-    }
+    // 4. Filtrar datos: quién puede ver terrarios (admin siempre ve todo)
+    const canViewTerrariums = isAdmin || isSelf ||
+      (showTerrariums === 'everyone') ||
+      (showTerrariums === 'friends_only' && isFriend)
 
-    // 5. Filtrar datos: quién puede ver animales
-    let canViewAnimals = isSelf || isAdmin
-    if (!canViewAnimals) {
-      if (showAnimals === 'everyone') canViewAnimals = true
-      else if (showAnimals === 'friends_only' && isFriend) canViewAnimals = true
-    }
+    // 5. Filtrar datos: quién puede ver animales (admin siempre ve todo)
+    const canViewAnimals = isAdmin || isSelf ||
+      (showAnimals === 'everyone') ||
+      (showAnimals === 'friends_only' && isFriend)
 
     // 6. Obtener estadísticas (devolver 0 si no tiene permiso para no filtrar por conteo)
     const [terrariumTotal, animalTotal] = await Promise.all([

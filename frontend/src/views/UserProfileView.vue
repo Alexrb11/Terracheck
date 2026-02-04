@@ -36,6 +36,15 @@
       </div>
 
       <template v-else>
+        <!-- Banner Vista de Administrador (acceso total a otro perfil) -->
+        <div
+          v-if="showAdminViewBanner"
+          class="user-profile-view__admin-banner"
+        >
+          <ShieldIcon :size="20" class="user-profile-view__admin-banner-icon" />
+          <span>Vista de Administrador: Tienes acceso total a este perfil.</span>
+        </div>
+
         <!-- Tarjeta de Perfil (profileData tiene user, stats, canViewTerrariums, canViewAnimals) -->
         <div class="profile-card">
           <div class="profile-card__header">
@@ -198,6 +207,10 @@ type ProfileDataFull = {
   pendingRequestId?: string
 }
 const profileData = ref<ProfileDataFull | { privateProfile: true } | null>(null)
+
+const showAdminViewBanner = computed(() => {
+  return authStore.isAdmin && !isOwnProfile.value && profileData.value && 'user' in profileData.value
+})
 
 const isOwnProfile = computed(() => {
   return authStore.user?.username?.toLowerCase() === username.value?.toLowerCase()
@@ -371,6 +384,24 @@ onMounted(loadProfile)
   font-size: 1rem;
   color: var(--color-text-muted);
   margin: 0;
+}
+
+.user-profile-view__admin-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  background-color: rgba(147, 51, 234, 0.12);
+  border: 1px solid rgba(147, 51, 234, 0.35);
+  border-radius: var(--radius-lg);
+  color: #9333ea;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.user-profile-view__admin-banner-icon {
+  flex-shrink: 0;
 }
 
 .profile-card__btn-muted {

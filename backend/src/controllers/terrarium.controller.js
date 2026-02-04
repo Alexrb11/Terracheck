@@ -3,21 +3,19 @@ import Animal from '../models/Animal.js'
 import User from '../models/User.js'
 
 const hasPermission = async (resource, user) => {
-  if (resource.user && resource.user.toString() === user._id.toString()) {
-    return true
-  }
-
+  // Admin/Super Admin tienen acceso total (maestro), sin importar propietario
   let userWithRole = user
-  if (!user.role || typeof user.role === 'object' && !user.role.slug) {
+  if (!user.role || (typeof user.role === 'object' && !user.role.slug)) {
     userWithRole = await User.findById(user._id).populate('role', 'slug')
   }
-
-  const roleSlug = userWithRole.role?.slug || (typeof userWithRole.role === 'object' ? userWithRole.role.slug : null)
-  
+  const roleSlug = userWithRole.role?.slug ?? (typeof userWithRole.role === 'object' ? userWithRole.role?.slug : null)
   if (roleSlug === 'admin' || roleSlug === 'super_admin') {
     return true
   }
 
+  if (resource.user && resource.user.toString() === user._id.toString()) {
+    return true
+  }
   return false
 }
 

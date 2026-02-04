@@ -100,12 +100,10 @@ export const getUserById = async (req, res) => {
       })
     }
 
-    // Obtener terrarios y animales del usuario
+    // Obtener terrarios y todos los animales del usuario (no solo los asignados a terrario)
     const terrariums = await Terrarium.find({ user: user._id, isActive: true })
-    const animals = await Animal.find({
-      terrarium: { $in: terrariums.map(t => t._id) },
-      isActive: true
-    }).populate('species', 'commonName scientificName')
+    const animals = await Animal.find({ user: user._id, isActive: true })
+      .populate('species', 'commonName scientificName')
 
     res.json({
       success: true,
