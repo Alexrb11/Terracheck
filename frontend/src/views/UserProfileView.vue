@@ -13,6 +13,18 @@
         <LoaderIcon :size="48" class="user-profile-view__loader-icon" />
       </div>
 
+      <!-- Perfil privado (403): candado pantalla completa -->
+      <div
+        v-else-if="profileData && 'privateProfile' in profileData && profileData.privateProfile"
+        class="user-profile-view__private"
+      >
+        <LockIcon :size="64" class="user-profile-view__private-icon" />
+        <h2 class="user-profile-view__private-title">Este perfil es privado</h2>
+        <p class="user-profile-view__private-text">
+          Este usuario ha decidido no mostrar su perfil de forma pública.
+        </p>
+      </div>
+
       <!-- No encontrado -->
       <div v-else-if="!profileData" class="user-profile-view__not-found">
         <UserIcon :size="64" class="user-profile-view__not-found-icon" />
@@ -24,7 +36,7 @@
       </div>
 
       <template v-else>
-        <!-- Tarjeta de Perfil -->
+        <!-- Tarjeta de Perfil (profileData tiene user, stats, canViewTerrariums, canViewAnimals) -->
         <div class="profile-card">
           <div class="profile-card__header">
             <!-- Avatar -->
@@ -105,37 +117,43 @@
           </div>
         </div>
 
-        <!-- Perfil privado: candado y mensaje -->
-        <div
-          v-if="showPrivateLock"
-          class="user-profile-view__private"
-        >
-          <LockIcon :size="64" class="user-profile-view__private-icon" />
-          <h2 class="user-profile-view__private-title">Este perfil es privado</h2>
-          <p class="user-profile-view__private-text">
-            Añade a este usuario para ver su contenido.
-          </p>
-        </div>
-
-        <!-- Grid de Estadísticas (solo si no es privado o es admin/propio) -->
-        <div v-else class="stats-grid">
+        <!-- Grid de Estadísticas y placeholders por privacidad -->
+        <div class="stats-grid">
+          <!-- Terrarios: visible o placeholder -->
           <div class="stat-card">
             <div class="stat-card__icon stat-card__icon--terrarium">
               <BoxIcon :size="28" />
             </div>
             <div class="stat-card__content">
-              <p class="stat-card__value">{{ profileData.stats.terrariums }}</p>
-              <p class="stat-card__label">Terrarios</p>
+              <template v-if="profileData.canViewTerrariums">
+                <p class="stat-card__value">{{ profileData.stats.terrariums }}</p>
+                <p class="stat-card__label">Terrarios</p>
+              </template>
+              <template v-else>
+                <p class="stat-card__placeholder">
+                  <EyeOffIcon :size="20" class="stat-card__placeholder-icon" />
+                  El usuario ha ocultado sus terrarios
+                </p>
+              </template>
             </div>
           </div>
 
+          <!-- Animales: visible o placeholder -->
           <div class="stat-card">
             <div class="stat-card__icon stat-card__icon--animal">
               <PawPrintIcon :size="28" />
             </div>
             <div class="stat-card__content">
-              <p class="stat-card__value">{{ profileData.stats.animals }}</p>
-              <p class="stat-card__label">Animales</p>
+              <template v-if="profileData.canViewAnimals">
+                <p class="stat-card__value">{{ profileData.stats.animals }}</p>
+                <p class="stat-card__label">Animales</p>
+              </template>
+              <template v-else>
+                <p class="stat-card__placeholder">
+                  <EyeOffIcon :size="20" class="stat-card__placeholder-icon" />
+                  El usuario ha ocultado sus animales
+                </p>
+              </template>
             </div>
           </div>
         </div>
@@ -160,7 +178,8 @@ import {
   ArrowLeftIcon,
   UserPlusIcon,
   UserCheckIcon,
-  LockIcon
+  LockIcon,
+  EyeOffIcon
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -170,26 +189,23 @@ const friendsStore = useFriendsStore()
 const username = computed(() => (route.params.username as string) ?? '')
 const loading = ref(true)
 const friendActionLoading = ref(false)
-const profileData = ref<{
+type ProfileDataFull = {
   user: { id: string; name: string; username?: string | null; role?: { name: string; slug: string } | null; createdAt: string }
   stats: { terrariums: number; animals: number }
-  isPrivate?: boolean
+  canViewTerrariums: boolean
+  canViewAnimals: boolean
   friendshipStatus?: 'none' | 'pending_sent' | 'pending_received' | 'friends' | 'self'
   pendingRequestId?: string
-} | null>(null)
-
-const showPrivateLock = computed(() => {
-  if (!profileData.value) return false
-  if (isOwnProfile.value || authStore.isAdmin) return false
-  return profileData.value.isPrivate === true
-})
+}
+const profileData = ref<ProfileDataFull | { privateProfile: true } | null>(null)
 
 const isOwnProfile = computed(() => {
   return authStore.user?.username?.toLowerCase() === username.value?.toLowerCase()
 })
 
 const isAdmin = computed(() => {
-  return profileData.value?.user?.role?.slug === 'super_admin' || profileData.value?.user?.role?.slug === 'admin'
+  const p = profileData.value
+  return p && 'user' in p ? (p.user?.role?.slug === 'super_admin' || p.user?.role?.slug === 'admin') : false
 })
 
 const avatarColors = [
@@ -198,17 +214,20 @@ const avatarColors = [
 ]
 
 const avatarColor = computed(() => {
-  const name = profileData.value?.user?.name
+  const p = profileData.value
+  const name = p && 'user' in p ? p.user?.name : undefined
   if (!name) return avatarColors[0]
   return avatarColors[name.charCodeAt(0) % avatarColors.length]
 })
 
 const userInitial = computed(() => {
-  return profileData.value?.user?.name?.charAt(0).toUpperCase() || '?'
+  const p = profileData.value
+  return p && 'user' in p ? (p.user?.name?.charAt(0).toUpperCase() || '?') : '?'
 })
 
 const memberSince = computed(() => {
-  const createdAt = profileData.value?.user?.createdAt
+  const p = profileData.value
+  const createdAt = p && 'user' in p ? p.user?.createdAt : undefined
   if (!createdAt) return 'Fecha desconocida'
   return new Date(createdAt).toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -230,16 +249,18 @@ async function loadProfile () {
 }
 
 async function handleAddFriend () {
-  if (!profileData.value?.user?.id) return
+  const p = profileData.value
+  if (!p || !('user' in p) || !p.user?.id) return
   friendActionLoading.value = true
-  const r = await friendsStore.sendRequest(profileData.value.user.id)
+  const r = await friendsStore.sendRequest(p.user.id)
   friendActionLoading.value = false
   if (r.ok) await loadProfile()
   else if (r.message) alert(r.message)
 }
 
 async function handleAcceptRequest () {
-  const id = profileData.value?.pendingRequestId
+  const p = profileData.value
+  const id = p && 'pendingRequestId' in p ? p.pendingRequestId : undefined
   if (!id) return
   friendActionLoading.value = true
   await friendsStore.acceptRequest(id)
@@ -537,6 +558,20 @@ onMounted(loadProfile)
   font-size: 0.875rem;
   color: var(--color-text-muted);
   margin: 0;
+}
+
+.stat-card__placeholder {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.stat-card__placeholder-icon {
+  flex-shrink: 0;
+  opacity: 0.8;
 }
 
 @media (min-width: 640px) {

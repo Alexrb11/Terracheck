@@ -46,6 +46,23 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  privacySettings: {
+    profileVisibility: {
+      type: String,
+      enum: ['public', 'friends_only', 'private'],
+      default: 'public' // Quién puede ver que existes y tu info básica
+    },
+    showTerrariums: {
+      type: String,
+      enum: ['everyone', 'friends_only', 'private'],
+      default: 'friends_only'
+    },
+    showAnimals: {
+      type: String,
+      enum: ['everyone', 'friends_only', 'private'],
+      default: 'friends_only'
+    }
   }
 }, {
   timestamps: true

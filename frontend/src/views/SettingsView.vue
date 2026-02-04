@@ -86,6 +86,87 @@
         </form>
       </div>
 
+      <!-- Sección: Privacidad -->
+      <div class="card settings-section">
+        <div class="settings-section__header">
+          <div class="settings-section__header-content">
+            <div class="settings-section__icon-wrapper settings-section__icon-wrapper--privacy">
+              <EyeIcon :size="24" />
+            </div>
+            <h3 class="settings-section__title">Privacidad</h3>
+          </div>
+        </div>
+
+        <div class="settings-section__form">
+          <div class="form-group">
+            <label for="profileVisibility" class="form-label">
+              <GlobeIcon :size="18" class="form-label-icon" />
+              Visibilidad del Perfil
+            </label>
+            <select
+              id="profileVisibility"
+              v-model="profileForm.privacySettings.profileVisibility"
+              class="input-field input-field--select"
+            >
+              <option value="public">Público</option>
+              <option value="friends_only">Solo Amigos</option>
+              <option value="private">Privado</option>
+            </select>
+            <p class="form-hint">Quién puede ver que existes y tu información básica.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="showTerrariums" class="form-label">
+              <UsersIcon :size="18" class="form-label-icon" />
+              Quién puede ver mis Terrarios
+            </label>
+            <select
+              id="showTerrariums"
+              v-model="profileForm.privacySettings.showTerrariums"
+              class="input-field input-field--select"
+            >
+              <option value="everyone">Todos</option>
+              <option value="friends_only">Solo Amigos</option>
+              <option value="private">Nadie</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="showAnimals" class="form-label">
+              <EyeOffIcon :size="18" class="form-label-icon" />
+              Quién puede ver mis Animales
+            </label>
+            <select
+              id="showAnimals"
+              v-model="profileForm.privacySettings.showAnimals"
+              class="input-field input-field--select"
+            >
+              <option value="everyone">Todos</option>
+              <option value="friends_only">Solo Amigos</option>
+              <option value="private">Nadie</option>
+            </select>
+          </div>
+
+          <div v-if="privacyError" class="alert alert-danger mb-md">
+            {{ privacyError }}
+          </div>
+          <div v-if="privacySuccess" class="alert alert-success mb-md">
+            Configuración de privacidad guardada
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            :disabled="privacyLoading"
+            @click="handleSavePrivacy"
+          >
+            <SaveIcon :size="20" />
+            <span v-if="!privacyLoading">Guardar Privacidad</span>
+            <span v-else>Guardando...</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Sección: Seguridad -->
       <div class="card settings-section">
         <div class="settings-section__header">
@@ -203,15 +284,27 @@ import {
   UserIcon,
   LockIcon,
   TrashIcon,
-  SaveIcon
+  SaveIcon,
+  EyeIcon,
+  EyeOffIcon,
+  UsersIcon,
+  GlobeIcon
 } from 'lucide-vue-next'
+import type { PrivacySettings } from '@/stores/auth'
 
 const authStore = useAuthStore()
+
+const defaultPrivacy: PrivacySettings = {
+  profileVisibility: 'public',
+  showTerrariums: 'friends_only',
+  showAnimals: 'friends_only'
+}
 
 const profileForm = reactive({
   name: '',
   email: '',
-  username: ''
+  username: '',
+  privacySettings: { ...defaultPrivacy }
 })
 
 const profileLoading = ref(false)
@@ -235,6 +328,10 @@ const passwordErrors = ref<{
   newPassword?: string
 }>({})
 
+const privacyLoading = ref(false)
+const privacyError = ref<string | null>(null)
+const privacySuccess = ref(false)
+
 const deleteLoading = ref(false)
 const deleteError = ref<string | null>(null)
 const showDeleteModal = ref(false)
@@ -244,6 +341,13 @@ onMounted(() => {
     profileForm.name = authStore.user.name
     profileForm.email = authStore.user.email
     profileForm.username = authStore.user.username || ''
+    if (authStore.user.privacySettings) {
+      profileForm.privacySettings = {
+        profileVisibility: authStore.user.privacySettings.profileVisibility ?? defaultPrivacy.profileVisibility,
+        showTerrariums: authStore.user.privacySettings.showTerrariums ?? defaultPrivacy.showTerrariums,
+        showAnimals: authStore.user.privacySettings.showAnimals ?? defaultPrivacy.showAnimals
+      }
+    }
   }
 })
 
@@ -278,7 +382,8 @@ const handleUpdateProfile = async () => {
     const success = await authStore.updateProfile({
       name: profileForm.name,
       email: profileForm.email,
-      username: profileForm.username || undefined
+      username: profileForm.username || undefined,
+      privacySettings: profileForm.privacySettings
     })
 
     if (success) {
@@ -293,6 +398,30 @@ const handleUpdateProfile = async () => {
     profileError.value = error instanceof Error ? error.message : 'Error desconocido'
   } finally {
     profileLoading.value = false
+  }
+}
+
+const handleSavePrivacy = async () => {
+  privacyLoading.value = true
+  privacyError.value = null
+  privacySuccess.value = false
+  try {
+    const success = await authStore.updateProfile({
+      name: profileForm.name,
+      email: profileForm.email,
+      username: profileForm.username || undefined,
+      privacySettings: profileForm.privacySettings
+    })
+    if (success) {
+      privacySuccess.value = true
+      setTimeout(() => { privacySuccess.value = false }, 3000)
+    } else {
+      privacyError.value = authStore.error || 'Error al guardar privacidad'
+    }
+  } catch (error) {
+    privacyError.value = error instanceof Error ? error.message : 'Error desconocido'
+  } finally {
+    privacyLoading.value = false
   }
 }
 
@@ -423,9 +552,24 @@ const handleDeleteAccount = async () => {
   flex-shrink: 0;
 }
 
+.settings-section__icon-wrapper--privacy {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+}
+
 .settings-section__icon-wrapper--danger {
   background-color: rgba(239, 108, 0, 0.1);
   color: var(--color-accent);
+}
+
+.form-label-icon {
+  vertical-align: middle;
+  margin-right: 0.35rem;
+}
+
+.input-field--select {
+  cursor: pointer;
+  appearance: auto;
 }
 
 .settings-section__title {

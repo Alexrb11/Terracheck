@@ -8,6 +8,12 @@ export interface UserRole {
   slug: string
 }
 
+export interface PrivacySettings {
+  profileVisibility: 'public' | 'friends_only' | 'private'
+  showTerrariums: 'everyone' | 'friends_only' | 'private'
+  showAnimals: 'everyone' | 'friends_only' | 'private'
+}
+
 export interface User {
   id: string
   name: string
@@ -17,6 +23,7 @@ export interface User {
   permissions: string[]
   createdAt: string
   updatedAt?: string
+  privacySettings?: PrivacySettings
 }
 
 export interface AuthResponse {
@@ -141,21 +148,25 @@ export const useAuthStore = defineStore('auth', () => {
   const fetchUserByUsername = async (username: string): Promise<{
     user: User & { avatar?: string | null }
     stats: { terrariums: number; animals: number }
-    isPrivate?: boolean
+    canViewTerrariums: boolean
+    canViewAnimals: boolean
     friendshipStatus?: 'none' | 'pending_sent' | 'pending_received' | 'friends' | 'self'
     pendingRequestId?: string
-  } | null> => {
-    if (!token.value) return null
+  } | { privateProfile: true } | null> => {
     try {
-      const response = await fetch(`${API_URL}/users/${encodeURIComponent(username)}`, {
-        headers: { 'Authorization': `Bearer ${token.value}` }
-      })
+      const headers: HeadersInit = { 'Content-Type': 'application/json' }
+      if (token.value) headers['Authorization'] = `Bearer ${token.value}`
+      const response = await fetch(`/api/users/profile/${encodeURIComponent(username)}`, { headers })
       const data = await response.json()
+      if (response.status === 403 && !data.success) {
+        return { privateProfile: true }
+      }
       if (!response.ok || !data.success) return null
       return {
         user: data.data.user,
         stats: data.data.stats,
-        isPrivate: data.data.isPrivate ?? false,
+        canViewTerrariums: data.data.canViewTerrariums ?? false,
+        canViewAnimals: data.data.canViewAnimals ?? false,
         friendshipStatus: data.data.friendshipStatus ?? 'none',
         pendingRequestId: data.data.pendingRequestId ?? undefined
       }
@@ -211,7 +222,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const updateProfile = async (data: { name: string, email: string, username?: string }): Promise<boolean> => {
+  const updateProfile = async (data: {
+    name: string
+    email: string
+    username?: string
+    privacySettings?: Partial<PrivacySettings>
+  }): Promise<boolean> => {
     loading.value = true
     error.value = null
 

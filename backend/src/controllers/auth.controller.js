@@ -345,7 +345,12 @@ export const getMe = async (req, res) => {
         } : null,
         permissions,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
+        privacySettings: user.privacySettings || {
+          profileVisibility: 'public',
+          showTerrariums: 'friends_only',
+          showAnimals: 'friends_only'
+        }
       }
     })
   } catch (error) {
@@ -360,7 +365,7 @@ export const getMe = async (req, res) => {
 // PUT /api/auth/profile - Actualizar perfil
 export const updateProfile = async (req, res) => {
   try {
-    const { name, email, username } = req.body
+    const { name, email, username, privacySettings } = req.body
 
     const updateData = {}
     if (name) updateData.name = name
@@ -405,6 +410,19 @@ export const updateProfile = async (req, res) => {
       }
     }
 
+    if (privacySettings && typeof privacySettings === 'object') {
+      const validEnums = {
+        profileVisibility: ['public', 'friends_only', 'private'],
+        showTerrariums: ['everyone', 'friends_only', 'private'],
+        showAnimals: ['everyone', 'friends_only', 'private']
+      }
+      for (const key of ['profileVisibility', 'showTerrariums', 'showAnimals']) {
+        if (privacySettings[key] != null && validEnums[key]?.includes(privacySettings[key])) {
+          updateData[`privacySettings.${key}`] = privacySettings[key]
+        }
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       updateData,
@@ -432,7 +450,12 @@ export const updateProfile = async (req, res) => {
         } : null,
         permissions,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
+        privacySettings: user.privacySettings || {
+          profileVisibility: 'public',
+          showTerrariums: 'friends_only',
+          showAnimals: 'friends_only'
+        }
       }
     })
   } catch (error) {

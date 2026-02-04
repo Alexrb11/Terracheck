@@ -67,6 +67,35 @@ export const protect = async (req, res, next) => {
 }
 
 /**
+ * Middleware de autenticación opcional
+ * Si hay token válido, adjunta el usuario a req.user (con role poblado); si no, continúa sin req.user
+ * No devuelve 401 cuando no hay token (permite rutas públicas que adaptan respuesta al usuario)
+ */
+export const authenticate = async (req, res, next) => {
+  try {
+    let token
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1]
+    }
+    if (!token) {
+      return next()
+    }
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET)
+      const user = await User.findById(decoded.id).select('-password').populate('role')
+      if (user && user.isActive) {
+        req.user = user
+      }
+    } catch (e) {
+      // Token inválido o expirado - continuar sin usuario
+    }
+    next()
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
  * Genera un token JWT para un usuario
  */
 export const generateToken = (userId) => {
@@ -77,4 +106,4 @@ export const generateToken = (userId) => {
   )
 }
 
-export default { protect, generateToken }
+export default { protect, authenticate, generateToken }
