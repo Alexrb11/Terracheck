@@ -2,13 +2,10 @@
   <div class="dashboard-view">
     <Navigation />
 
-    <!-- Contenido Principal -->
     <main class="container dashboard-view__main">
       <div class="dashboard-view__header">
         <div class="dashboard-view__header-top">
-          <h2 class="dashboard-view__title">
-            Mis Terrarios
-          </h2>
+          <h2 class="dashboard-view__title">Mis Terrarios</h2>
           <button
             @click="$router.push('/add')"
             class="btn btn-primary dashboard-view__add-button"
@@ -43,7 +40,7 @@
         </button>
       </div>
 
-      <!-- Grid de Terrarios -->
+      <!-- Grid de Terrarios (solo los tuyos) -->
       <div
         v-else-if="store.terrariums.length > 0"
         class="grid-gallery"
@@ -63,9 +60,7 @@
         <div class="dashboard-view__empty-icon-wrapper">
           <BoxIcon :size="48" class="dashboard-view__empty-icon" />
         </div>
-        <h3 class="dashboard-view__empty-title">
-          No tienes terrarios aún
-        </h3>
+        <h3 class="dashboard-view__empty-title">No tienes terrarios aún</h3>
         <p class="dashboard-view__empty-text">Comienza agregando tu primer terrario</p>
         <button
           @click="$router.push('/add')"
@@ -171,40 +166,7 @@ onMounted(() => {
 .dashboard-view__subtitle {
   font-size: 1.125rem;
   color: var(--color-text-muted);
-}
-
-/* Loading State */
-.dashboard-view__loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 0;
-}
-
-.dashboard-view__loader-icon {
-  color: var(--color-primary);
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Error State */
-.dashboard-view__alert-icon {
-  color: var(--color-accent);
-  margin: 0 auto 1rem;
-  display: block;
-}
-
-.dashboard-view__error-text {
-  color: #991b1b;
-  margin-bottom: 1rem;
+  margin: 0;
 }
 
 /* Empty State */
@@ -243,4 +205,39 @@ onMounted(() => {
   color: var(--color-text-muted);
   margin-bottom: 1.5rem;
 }
+
+/* Loading State */
+.dashboard-view__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+.dashboard-view__loader-icon {
+  color: var(--color-primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.dashboard-view__alert-icon {
+  color: var(--color-accent);
+  margin: 0 auto 1rem;
+  display: block;
+}
+
+.dashboard-view__error-text {
+  color: #991b1b;
+  margin-bottom: 1rem;
+}
+
 </style>

@@ -152,6 +152,8 @@ export const useAuthStore = defineStore('auth', () => {
     canViewAnimals: boolean
     friendshipStatus?: 'none' | 'pending_sent' | 'pending_received' | 'friends' | 'self'
     pendingRequestId?: string
+    terrariums?: unknown[]
+    animals?: unknown[]
   } | { privateProfile: true } | null> => {
     try {
       const headers: HeadersInit = { 'Content-Type': 'application/json' }
@@ -168,7 +170,9 @@ export const useAuthStore = defineStore('auth', () => {
         canViewTerrariums: data.data.canViewTerrariums ?? false,
         canViewAnimals: data.data.canViewAnimals ?? false,
         friendshipStatus: data.data.friendshipStatus ?? 'none',
-        pendingRequestId: data.data.pendingRequestId ?? undefined
+        pendingRequestId: data.data.pendingRequestId ?? undefined,
+        terrariums: data.data.terrariums ?? [],
+        animals: data.data.animals ?? []
       }
     } catch {
       return null

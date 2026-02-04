@@ -13,13 +13,11 @@
         <div class="profile-card">
           <div class="profile-card__header">
             <!-- Avatar -->
-            <div 
+            <div
               class="profile-card__avatar"
               :style="{ backgroundColor: avatarColor }"
             >
-              <span class="profile-card__initial">
-                {{ userInitial }}
-              </span>
+              <span class="profile-card__initial">{{ userInitial }}</span>
             </div>
 
             <!-- Info -->
@@ -29,7 +27,7 @@
                 @{{ authStore.user.username }}
               </p>
               <div class="profile-card__meta">
-                <span 
+                <span
                   class="profile-card__badge"
                   :class="authStore.isAdmin ? 'profile-card__badge--admin' : 'profile-card__badge--user'"
                 >
@@ -54,42 +52,141 @@
           </div>
         </div>
 
-        <!-- Grid de Estadísticas -->
-        <div class="stats-grid">
-          <!-- Terrarios -->
-          <div class="stat-card">
-            <div class="stat-card__icon stat-card__icon--terrarium">
-              <BoxIcon :size="28" />
+        <!-- Pestañas -->
+        <div class="profile-view__tabs">
+          <button
+            type="button"
+            class="profile-view__tab"
+            :class="{ 'profile-view__tab--active': activeTab === 'info' }"
+            @click="activeTab = 'info'"
+          >
+            <UserIcon :size="18" />
+            <span>Información</span>
+          </button>
+          <button
+            type="button"
+            class="profile-view__tab"
+            :class="{ 'profile-view__tab--active': activeTab === 'terrariums' }"
+            @click="activeTab = 'terrariums'"
+          >
+            <BoxIcon :size="18" />
+            <span>Terrarios</span>
+          </button>
+          <button
+            type="button"
+            class="profile-view__tab"
+            :class="{ 'profile-view__tab--active': activeTab === 'animals' }"
+            @click="activeTab = 'animals'"
+          >
+            <PawPrintIcon :size="18" />
+            <span>Animales</span>
+          </button>
+        </div>
+
+        <!-- Contenido: Información -->
+        <div v-show="activeTab === 'info'" class="profile-view__panel">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-card__icon stat-card__icon--terrarium">
+                <BoxIcon :size="28" />
+              </div>
+              <div class="stat-card__content">
+                <p class="stat-card__value">{{ totalTerrariums }}</p>
+                <p class="stat-card__label">Terrarios</p>
+              </div>
             </div>
-            <div class="stat-card__content">
-              <p class="stat-card__value">{{ totalTerrariums }}</p>
-              <p class="stat-card__label">Terrarios</p>
+            <div class="stat-card">
+              <div class="stat-card__icon stat-card__icon--animal">
+                <PawPrintIcon :size="28" />
+              </div>
+              <div class="stat-card__content">
+                <p class="stat-card__value">{{ totalAnimals }}</p>
+                <p class="stat-card__label">Animales</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div
+                class="stat-card__icon"
+                :class="`stat-card__icon--${favoriteBiome.key}`"
+              >
+                <component :is="favoriteBiome.icon" :size="28" />
+              </div>
+              <div class="stat-card__content">
+                <p class="stat-card__value">{{ favoriteBiome.name }}</p>
+                <p class="stat-card__label">Bioma Favorito</p>
+              </div>
             </div>
           </div>
+        </div>
 
-          <!-- Animales -->
-          <div class="stat-card">
-            <div class="stat-card__icon stat-card__icon--animal">
-              <PawPrintIcon :size="28" />
-            </div>
-            <div class="stat-card__content">
-              <p class="stat-card__value">{{ totalAnimals }}</p>
-              <p class="stat-card__label">Animales</p>
-            </div>
+        <!-- Contenido: Terrarios -->
+        <div v-show="activeTab === 'terrariums'" class="profile-view__panel">
+          <div class="profile-view__panel-header">
+            <h3 class="profile-view__panel-title">Mis Terrarios</h3>
+            <router-link to="/add" class="btn btn-primary btn-sm">
+              <PlusIcon :size="18" />
+              <span>Nuevo Terrario</span>
+            </router-link>
           </div>
+          <div v-if="terrariumStore.terrariums.length > 0" class="grid-gallery">
+            <TerrariumCard
+              v-for="t in terrariumStore.terrariums"
+              :key="t._id"
+              :terrarium="t"
+            />
+          </div>
+          <div v-else class="profile-view__empty">
+            <BoxIcon :size="48" class="profile-view__empty-icon" />
+            <p class="profile-view__empty-text">No tienes terrarios aún</p>
+            <router-link to="/add" class="btn btn-primary">Agregar Terrario</router-link>
+          </div>
+        </div>
 
-          <!-- Bioma Favorito -->
-          <div class="stat-card">
-            <div 
-              class="stat-card__icon"
-              :class="`stat-card__icon--${favoriteBiome.key}`"
+        <!-- Contenido: Animales -->
+        <div v-show="activeTab === 'animals'" class="profile-view__panel">
+          <div class="profile-view__panel-header">
+            <h3 class="profile-view__panel-title">Mis Animales</h3>
+            <router-link to="/animals" class="btn btn-primary btn-sm">
+              <PawPrintIcon :size="18" />
+              <span>Ver todos</span>
+            </router-link>
+          </div>
+          <div v-if="animalStore.myAnimals.length > 0" class="grid-gallery profile-view__animals-grid">
+            <article
+              v-for="animal in animalStore.myAnimals"
+              :key="animal._id"
+              class="card profile-view__animal-card"
+              @click="$router.push(`/my-animals/${animal._id}`)"
+              tabindex="0"
+              @keydown.enter.prevent="$router.push(`/my-animals/${animal._id}`)"
+              @keydown.space.prevent="$router.push(`/my-animals/${animal._id}`)"
             >
-              <component :is="favoriteBiome.icon" :size="28" />
-            </div>
-            <div class="stat-card__content">
-              <p class="stat-card__value">{{ favoriteBiome.name }}</p>
-              <p class="stat-card__label">Bioma Favorito</p>
-            </div>
+              <div class="profile-view__animal-card__avatar">
+                <img
+                  v-if="animal.imageUrl || animal.species?.imageUrl"
+                  :src="getImageUrl(animal.imageUrl || animal.species?.imageUrl)"
+                  :alt="animal.name"
+                  class="profile-view__animal-card__image"
+                />
+                <span v-else class="profile-view__animal-card__initial">
+                  {{ animal.name?.charAt(0)?.toUpperCase() || '?' }}
+                </span>
+              </div>
+              <div class="profile-view__animal-card__info">
+                <h3 class="profile-view__animal-card__name">{{ animal.name }}</h3>
+                <p class="profile-view__animal-card__species">
+                  {{ animal.species?.commonName || 'Especie desconocida' }}
+                </p>
+                <p v-if="animal.terrarium?.name" class="profile-view__animal-card__location">
+                  {{ animal.terrarium.name }}
+                </p>
+              </div>
+            </article>
+          </div>
+          <div v-else class="profile-view__empty">
+            <PawPrintIcon :size="48" class="profile-view__empty-icon" />
+            <p class="profile-view__empty-text">No tienes animales aún</p>
+            <router-link to="/animals" class="btn btn-primary">Ir a Animales</router-link>
           </div>
         </div>
       </template>
@@ -103,6 +200,8 @@ import { useAuthStore } from '@/stores/auth'
 import { useTerrariumStore } from '@/stores/terrarium'
 import { useAnimalStore } from '@/stores/animal'
 import Navigation from '@/components/Navigation.vue'
+import TerrariumCard from '@/components/TerrariumCard.vue'
+import { getImageUrl } from '@/utils/image'
 import {
   LoaderIcon,
   BoxIcon,
@@ -114,7 +213,8 @@ import {
   PalmtreeIcon,
   SunIcon,
   TreesIcon,
-  HelpCircleIcon
+  HelpCircleIcon,
+  PlusIcon
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
@@ -122,6 +222,7 @@ const terrariumStore = useTerrariumStore()
 const animalStore = useAnimalStore()
 
 const loading = ref(true)
+const activeTab = ref<'info' | 'terrariums' | 'animals'>('info')
 
 // Colores para el avatar basados en el nombre
 const avatarColors = [
@@ -473,5 +574,154 @@ onMounted(async () => {
 
 [data-theme='dark'] .stat-card__icon--none {
   background: rgba(148, 163, 184, 0.2);
+}
+
+/* Tabs */
+.profile-view__tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  padding: 0.25rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  overflow-x: auto;
+}
+
+.profile-view__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.profile-view__tab:hover {
+  color: var(--color-text-main);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.profile-view__tab--active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.profile-view__panel {
+  min-height: 200px;
+}
+
+.profile-view__panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.profile-view__panel-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.profile-view__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-light);
+}
+
+.profile-view__empty-icon {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+  margin-bottom: 1rem;
+}
+
+.profile-view__empty-text {
+  color: var(--color-text-muted);
+  margin: 0 0 1rem 0;
+}
+
+.profile-view__animals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.profile-view__animal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.profile-view__animal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.profile-view__animal-card__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.profile-view__animal-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-view__animal-card__initial {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.profile-view__animal-card__info {
+  width: 100%;
+}
+
+.profile-view__animal-card__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin: 0 0 0.25rem 0;
+}
+
+.profile-view__animal-card__species,
+.profile-view__animal-card__location {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
 }
 </style>

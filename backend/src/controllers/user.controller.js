@@ -85,7 +85,28 @@ export const getPublicProfile = async (req, res) => {
     const terrariumCount = canViewTerrariums ? terrariumTotal : 0
     const animalCount = canViewAnimals ? animalTotal : 0
 
-    // 7. Construir respuesta (no exponer privacySettings al cliente)
+    // 7. Si admin o con permiso, incluir arrays completos de terrarios y animales (ignorando privacidad para admin)
+    let terrariums = []
+    let animals = []
+    if (canViewTerrariums) {
+      terrariums = await Terrarium.find({ user: targetUserId, isActive: true })
+        .populate({
+          path: 'animals',
+          match: { isActive: true },
+          populate: { path: 'species', select: 'commonName scientificName biome' }
+        })
+        .sort({ createdAt: -1 })
+        .lean()
+    }
+    if (canViewAnimals) {
+      animals = await Animal.find({ user: targetUserId, isActive: true })
+        .populate('species', 'commonName scientificName biome')
+        .populate('terrarium', 'name')
+        .sort({ createdAt: -1 })
+        .lean()
+    }
+
+    // 8. Construir respuesta (no exponer privacySettings al cliente)
     const responseData = {
       user: {
         id: user._id,
@@ -100,7 +121,9 @@ export const getPublicProfile = async (req, res) => {
       },
       friendshipStatus,
       canViewTerrariums,
-      canViewAnimals
+      canViewAnimals,
+      terrariums,
+      animals
     }
 
     if (friendshipStatus === 'pending_received') {

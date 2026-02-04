@@ -148,7 +148,7 @@
           </div>
 
           <p class="settings-section__privacy-note">
-            Nota: Los administradores del sistema pueden ver tu contenido para fines de moderación, independientemente de estos ajustes.
+            Los administradores del sistema pueden ver tu contenido por motivos de seguridad y moderación.
           </p>
 
           <div v-if="privacyError" class="alert alert-danger mb-md">

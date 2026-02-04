@@ -42,7 +42,7 @@
           class="user-profile-view__admin-banner"
         >
           <ShieldIcon :size="20" class="user-profile-view__admin-banner-icon" />
-          <span>Vista de Administrador: Tienes acceso total a este perfil.</span>
+          <span>Modo Administrador: Tienes acceso total a este perfil.</span>
         </div>
 
         <!-- Tarjeta de Perfil (profileData tiene user, stats, canViewTerrariums, canViewAnimals) -->
@@ -126,44 +126,131 @@
           </div>
         </div>
 
-        <!-- Grid de Estadísticas y placeholders por privacidad -->
-        <div class="stats-grid">
-          <!-- Terrarios: visible o placeholder -->
-          <div class="stat-card">
-            <div class="stat-card__icon stat-card__icon--terrarium">
-              <BoxIcon :size="28" />
+        <!-- Pestañas -->
+        <div class="user-profile-view__tabs">
+          <button
+            type="button"
+            class="user-profile-view__tab"
+            :class="{ 'user-profile-view__tab--active': activeTab === 'info' }"
+            @click="activeTab = 'info'"
+          >
+            <UserIcon :size="18" />
+            <span>Información</span>
+          </button>
+          <button
+            v-if="profileData.canViewTerrariums"
+            type="button"
+            class="user-profile-view__tab"
+            :class="{ 'user-profile-view__tab--active': activeTab === 'terrariums' }"
+            @click="activeTab = 'terrariums'"
+          >
+            <BoxIcon :size="18" />
+            <span>Terrarios</span>
+          </button>
+          <button
+            v-if="profileData.canViewAnimals"
+            type="button"
+            class="user-profile-view__tab"
+            :class="{ 'user-profile-view__tab--active': activeTab === 'animals' }"
+            @click="activeTab = 'animals'"
+          >
+            <PawPrintIcon :size="18" />
+            <span>Animales</span>
+          </button>
+        </div>
+
+        <!-- Panel Información -->
+        <div v-show="activeTab === 'info'" class="user-profile-view__panel">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-card__icon stat-card__icon--terrarium">
+                <BoxIcon :size="28" />
+              </div>
+              <div class="stat-card__content">
+                <template v-if="profileData.canViewTerrariums">
+                  <p class="stat-card__value">{{ profileData.stats.terrariums }}</p>
+                  <p class="stat-card__label">Terrarios</p>
+                </template>
+                <template v-else>
+                  <p class="stat-card__placeholder">
+                    <EyeOffIcon :size="20" class="stat-card__placeholder-icon" />
+                    El usuario ha ocultado sus terrarios
+                  </p>
+                </template>
+              </div>
             </div>
-            <div class="stat-card__content">
-              <template v-if="profileData.canViewTerrariums">
-                <p class="stat-card__value">{{ profileData.stats.terrariums }}</p>
-                <p class="stat-card__label">Terrarios</p>
-              </template>
-              <template v-else>
-                <p class="stat-card__placeholder">
-                  <EyeOffIcon :size="20" class="stat-card__placeholder-icon" />
-                  El usuario ha ocultado sus terrarios
-                </p>
-              </template>
+            <div class="stat-card">
+              <div class="stat-card__icon stat-card__icon--animal">
+                <PawPrintIcon :size="28" />
+              </div>
+              <div class="stat-card__content">
+                <template v-if="profileData.canViewAnimals">
+                  <p class="stat-card__value">{{ profileData.stats.animals }}</p>
+                  <p class="stat-card__label">Animales</p>
+                </template>
+                <template v-else>
+                  <p class="stat-card__placeholder">
+                    <EyeOffIcon :size="20" class="stat-card__placeholder-icon" />
+                    El usuario ha ocultado sus animales
+                  </p>
+                </template>
+              </div>
             </div>
           </div>
+        </div>
 
-          <!-- Animales: visible o placeholder -->
-          <div class="stat-card">
-            <div class="stat-card__icon stat-card__icon--animal">
-              <PawPrintIcon :size="28" />
-            </div>
-            <div class="stat-card__content">
-              <template v-if="profileData.canViewAnimals">
-                <p class="stat-card__value">{{ profileData.stats.animals }}</p>
-                <p class="stat-card__label">Animales</p>
-              </template>
-              <template v-else>
-                <p class="stat-card__placeholder">
-                  <EyeOffIcon :size="20" class="stat-card__placeholder-icon" />
-                  El usuario ha ocultado sus animales
+        <!-- Panel Terrarios -->
+        <div v-show="activeTab === 'terrariums' && profileData.canViewTerrariums" class="user-profile-view__panel">
+          <div v-if="profileTerrariums.length > 0" class="grid-gallery">
+            <TerrariumCard
+              v-for="t in profileTerrariums"
+              :key="t._id"
+              :terrarium="terrariumForCard(t)"
+            />
+          </div>
+          <div v-else class="user-profile-view__empty">
+            <BoxIcon :size="48" class="user-profile-view__empty-icon" />
+            <p class="user-profile-view__empty-text">Sin terrarios</p>
+          </div>
+        </div>
+
+        <!-- Panel Animales -->
+        <div v-show="activeTab === 'animals' && profileData.canViewAnimals" class="user-profile-view__panel">
+          <div v-if="profileAnimals.length > 0" class="grid-gallery user-profile-view__animals-grid">
+            <article
+              v-for="animal in profileAnimals"
+              :key="animal._id"
+              class="card user-profile-view__animal-card"
+              @click="$router.push(`/my-animals/${animal._id}`)"
+              tabindex="0"
+              @keydown.enter.prevent="$router.push(`/my-animals/${animal._id}`)"
+              @keydown.space.prevent="$router.push(`/my-animals/${animal._id}`)"
+            >
+              <div class="user-profile-view__animal-card__avatar">
+                <img
+                  v-if="animal.imageUrl || animal.species?.imageUrl"
+                  :src="getImageUrl(animal.imageUrl || animal.species?.imageUrl)"
+                  :alt="animal.name"
+                  class="user-profile-view__animal-card__image"
+                />
+                <span v-else class="user-profile-view__animal-card__initial">
+                  {{ animal.name?.charAt(0)?.toUpperCase() || '?' }}
+                </span>
+              </div>
+              <div class="user-profile-view__animal-card__info">
+                <h3 class="user-profile-view__animal-card__name">{{ animal.name }}</h3>
+                <p class="user-profile-view__animal-card__species">
+                  {{ animal.species?.commonName || 'Especie desconocida' }}
                 </p>
-              </template>
-            </div>
+                <p v-if="animal.terrarium?.name" class="user-profile-view__animal-card__location">
+                  {{ animal.terrarium.name }}
+                </p>
+              </div>
+            </article>
+          </div>
+          <div v-else class="user-profile-view__empty">
+            <PawPrintIcon :size="48" class="user-profile-view__empty-icon" />
+            <p class="user-profile-view__empty-text">Sin animales</p>
           </div>
         </div>
       </template>
@@ -177,6 +264,8 @@ import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useFriendsStore } from '@/stores/friends'
 import Navigation from '@/components/Navigation.vue'
+import TerrariumCard from '@/components/TerrariumCard.vue'
+import { getImageUrl } from '@/utils/image'
 import {
   LoaderIcon,
   BoxIcon,
@@ -205,8 +294,35 @@ type ProfileDataFull = {
   canViewAnimals: boolean
   friendshipStatus?: 'none' | 'pending_sent' | 'pending_received' | 'friends' | 'self'
   pendingRequestId?: string
+  terrariums?: unknown[]
+  animals?: unknown[]
 }
 const profileData = ref<ProfileDataFull | { privateProfile: true } | null>(null)
+const activeTab = ref<'info' | 'terrariums' | 'animals'>('info')
+
+const profileTerrariums = computed(() => {
+  const p = profileData.value
+  if (!p || !('terrariums' in p)) return []
+  return (p.terrariums ?? []) as Array<{ _id: string; name: string; type?: string; biome?: string; dimensions?: unknown; animals?: unknown[] }>
+})
+
+const profileAnimals = computed(() => {
+  const p = profileData.value
+  if (!p || !('animals' in p)) return []
+  return (p.animals ?? []) as Array<{ _id: string; name: string; species?: { commonName?: string; imageUrl?: string }; terrarium?: { name: string }; imageUrl?: string }>
+})
+
+function terrariumForCard (t: { _id: string; name: string; type?: string; biome?: string; dimensions?: unknown; animals?: unknown[] }) {
+  return {
+    _id: t._id,
+    name: t.name,
+    type: t.type ?? 'glass',
+    biome: t.biome ?? 'tropical',
+    dimensions: t.dimensions ?? { width: 0, height: 0, depth: 0 },
+    animals: t.animals ?? [],
+    hasCompatibilityIssue: false
+  }
+}
 
 const showAdminViewBanner = computed(() => {
   return authStore.isAdmin && !isOwnProfile.value && profileData.value && 'user' in profileData.value
@@ -603,6 +719,133 @@ onMounted(loadProfile)
 .stat-card__placeholder-icon {
   flex-shrink: 0;
   opacity: 0.8;
+}
+
+.user-profile-view__tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  padding: 0.25rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  overflow-x: auto;
+}
+
+.user-profile-view__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.user-profile-view__tab:hover {
+  color: var(--color-text-main);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.user-profile-view__tab--active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.user-profile-view__panel {
+  min-height: 120px;
+}
+
+.user-profile-view__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-light);
+}
+
+.user-profile-view__empty-icon {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+  margin-bottom: 1rem;
+}
+
+.user-profile-view__empty-text {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.user-profile-view__animals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.user-profile-view__animal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.user-profile-view__animal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.user-profile-view__animal-card__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.user-profile-view__animal-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-profile-view__animal-card__initial {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.user-profile-view__animal-card__info {
+  width: 100%;
+}
+
+.user-profile-view__animal-card__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin: 0 0 0.25rem 0;
+}
+
+.user-profile-view__animal-card__species,
+.user-profile-view__animal-card__location {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0;
 }
 
 @media (min-width: 640px) {

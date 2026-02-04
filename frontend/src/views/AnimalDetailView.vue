@@ -27,7 +27,7 @@
       <div v-else-if="animal" class="view-detail__content">
         <!-- Botón volver -->
         <button
-          @click="$router.push('/my-animals')"
+          @click="goBack"
           class="btn-text view-detail__back-btn"
         >
           <ArrowLeftIcon :size="20" />
@@ -501,6 +501,14 @@ const calculateAge = (birthDate: string): string => {
   }
 }
 
+
+const goBack = () => {
+  if (window.history.length > 2) {
+    router.back()
+  } else {
+    router.push('/my-animals')
+  }
+}
 
 const goToTerrarium = () => {
   if (animal.value?.terrarium?._id) {
