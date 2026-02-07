@@ -26,48 +26,36 @@
         </button>
       </div>
 
-      <!-- Feed de Actividades - Diseño Anti-Grid -->
+      <!-- Feed de Actividades - Estilo Red Social -->
       <div v-else-if="activities.length > 0" class="community-view__feed">
         <article
-          v-for="(activity, index) in activities"
+          v-for="activity in activities"
           :key="activity._id"
-          :class="[
-            'activity-card',
-            `activity-card--offset-${(index % 4) + 1}`,
-            'fade-in-up'
-          ]"
-          :style="{ animationDelay: `${index * 0.1}s` }"
-          @click="handleActivityClick(activity)"
+          class="activity-card"
         >
-          <!-- Imagen del animal/terrario si existe -->
-          <div v-if="getActivityImage(activity)" class="activity-card__image-wrapper">
-            <img
-              :src="getActivityImage(activity)"
-              :alt="getActivityTitle(activity)"
-              class="activity-card__image"
-              @error="handleImageError"
-            />
-            <div class="activity-card__image-overlay"></div>
+          <!-- Header: Avatar, Usuario, Fecha -->
+          <div class="activity-card__header">
+            <div 
+              class="activity-card__avatar"
+              @click.stop="handleActivityClick(activity)"
+            >
+              {{ activity.user?.name?.charAt(0).toUpperCase() || '?' }}
+            </div>
+            <div class="activity-card__header-info">
+              <h3 
+                class="activity-card__username"
+                @click.stop="handleActivityClick(activity)"
+              >
+                {{ activity.user?.name || 'Usuario' }}
+              </h3>
+              <time class="activity-card__time">
+                {{ formatTimeAgo(activity.createdAt) }}
+              </time>
+            </div>
           </div>
 
-          <!-- Contenido -->
-          <div class="activity-card__content">
-            <!-- Avatar y usuario -->
-            <div class="activity-card__user">
-              <div class="activity-card__avatar">
-                {{ activity.user?.name?.charAt(0).toUpperCase() || '?' }}
-              </div>
-              <div class="activity-card__user-info">
-                <h3 class="activity-card__username">
-                  {{ activity.user?.name || 'Usuario' }}
-                </h3>
-                <time class="activity-card__time">
-                  {{ formatTimeAgo(activity.createdAt) }}
-                </time>
-              </div>
-            </div>
-
-            <!-- Mensaje de actividad -->
+          <!-- Contenido: Mensaje -->
+          <div class="activity-card__body">
             <p class="activity-card__message">
               {{ getActivityMessage(activity) }}
             </p>
@@ -75,40 +63,54 @@
             <!-- Detalles de la especie si es un animal -->
             <div
               v-if="activity.type === 'new_animal' && activity.animal?.species"
-              class="activity-card__species"
+              class="activity-card__tag"
             >
-              <LeafIcon :size="16" />
-              <span class="activity-card__species-name">
-                {{ activity.animal.species.commonName }}
-              </span>
+              <LeafIcon :size="14" />
+              <span>{{ activity.animal.species.commonName }}</span>
             </div>
 
             <!-- Detalles del bioma si es un terrario -->
             <div
               v-if="activity.type === 'new_terrarium' && activity.terrarium"
-              class="activity-card__biome"
+              class="activity-card__tag"
             >
-              <BoxIcon :size="16" />
-              <span class="activity-card__biome-name">
-                {{ getBiomeName(activity.terrarium.biome) }}
-              </span>
+              <BoxIcon :size="14" />
+              <span>{{ getBiomeName(activity.terrarium.biome) }}</span>
             </div>
+          </div>
 
-            <!-- Footer con likes -->
-            <div class="activity-card__footer">
-              <button
-                @click.stop="toggleLike(activity)"
-                :class="[
-                  'activity-card__like-btn',
-                  { 'activity-card__like-btn--active': isLiked(activity) }
-                ]"
-              >
-                <HeartIcon :size="20" :fill="isLiked(activity) ? 'currentColor' : 'none'" />
-                <span v-if="activity.likes?.length > 0">
-                  {{ activity.likes.length }}
-                </span>
-              </button>
-            </div>
+          <!-- Media: Imagen Full Width -->
+          <div v-if="getActivityImage(activity)" class="activity-card__media">
+            <img
+              :src="getActivityImage(activity)"
+              :alt="getActivityTitle(activity)"
+              class="activity-card__image"
+              @error="handleImageError"
+            />
+          </div>
+
+          <!-- Footer: Acciones (Like) -->
+          <div class="activity-card__actions">
+            <button
+              @click.stop="toggleLike(activity)"
+              :class="[
+                'activity-card__action-btn',
+                { 'activity-card__action-btn--liked': isLiked(activity) }
+              ]"
+              aria-label="Me gusta"
+            >
+              <HeartIcon 
+                :size="24" 
+                :fill="isLiked(activity) ? 'currentColor' : 'none'" 
+                :stroke-width="isLiked(activity) ? 0 : 2"
+              />
+            </button>
+            <span 
+              v-if="activity.likes?.length > 0" 
+              class="activity-card__likes-count"
+            >
+              {{ activity.likes.length }} me gusta
+            </span>
           </div>
         </article>
 
@@ -279,7 +281,11 @@ const toggleLike = async (activity: Activity) => {
 
 // Verificar si el usuario dio like
 const isLiked = (activity: Activity) => {
-  return activity.likes?.includes(authStore.user?._id || '')
+  if (!authStore.user?.id) return false
+  const userLiked = activity.likes?.includes(authStore.user.id)
+  // Debug: descomentar para ver los likes
+  // console.log('Activity:', activity._id, 'Likes:', activity.likes, 'User ID:', authStore.user.id, 'IsLiked:', userLiked)
+  return userLiked
 }
 
 // Obtener imagen de la actividad
@@ -376,19 +382,20 @@ onMounted(() => {
 
 .community-view__main {
   padding-top: 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding-bottom: 2rem;
 }
 
 /* Header */
 .community-view__header {
-  margin-bottom: 2rem;
+  max-width: 600px;
+  margin: 0 auto 2rem;
   text-align: center;
+  padding: 0 1rem;
 }
 
 .community-view__title {
-  font-family: var(--font-family-serif);
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-size: 1.75rem;
+  font-weight: 700;
   color: var(--color-text-main);
   display: flex;
   align-items: center;
@@ -399,7 +406,7 @@ onMounted(() => {
 
 .community-view__subtitle {
   color: var(--color-text-muted);
-  font-size: 1rem;
+  font-size: 0.9375rem;
 }
 
 /* Loading */
@@ -411,6 +418,8 @@ onMounted(() => {
   gap: 1rem;
   padding: 4rem 1rem;
   color: var(--color-text-muted);
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .community-view__loader-icon {
@@ -426,236 +435,176 @@ onMounted(() => {
   }
 }
 
-/* Feed - Diseño Anti-Grid */
+/* Feed - Columna Central Estilo Red Social */
 .community-view__feed {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-@media (min-width: 768px) {
-  .community-view__feed {
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 2.5rem;
-  }
-}
-
-/* Activity Card - Estética de Cuaderno */
+/* Activity Card - Estilo Instagram/Facebook */
 .activity-card {
-  background: var(--color-bg-paper);
-  border-radius: var(--radius-blob);
-  box-shadow: var(--shadow-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  cursor: pointer;
-  transition: all var(--transition-base);
-  position: relative;
-  transform: rotate(-1deg);
+  transition: box-shadow 0.2s ease;
 }
 
-/* Offsets para Anti-Grid (desfases ligeros) */
-.activity-card--offset-1 {
-  transform: rotate(-1.5deg) translateY(-8px);
-}
-
-.activity-card--offset-2 {
-  transform: rotate(1deg) translateY(4px);
-}
-
-.activity-card--offset-3 {
-  transform: rotate(-0.5deg) translateY(-4px);
-}
-
-.activity-card--offset-4 {
-  transform: rotate(1.5deg) translateY(8px);
-}
-
-/* Micro-interacción: enderezar al hover */
 .activity-card:hover {
-  transform: rotate(0deg) translateY(-8px);
-  box-shadow: var(--shadow-float);
-  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
 }
 
-/* Imagen con clip-path orgánico */
-.activity-card__image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 240px;
-  overflow: hidden;
-}
-
-.activity-card__image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  clip-path: polygon(
-    0 0,
-    100% 0,
-    100% 85%,
-    95% 90%,
-    90% 92%,
-    80% 95%,
-    70% 96%,
-    60% 97%,
-    50% 98%,
-    40% 97%,
-    30% 95%,
-    20% 92%,
-    10% 88%,
-    5% 85%,
-    0 80%
-  );
-  transition: transform var(--transition-base);
-}
-
-.activity-card:hover .activity-card__image {
-  transform: scale(1.05);
-}
-
-.activity-card__image-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(
-    to top,
-    var(--color-bg-paper),
-    transparent
-  );
-  pointer-events: none;
-}
-
-/* Contenido */
-.activity-card__content {
-  padding: 1.5rem;
-}
-
-/* Usuario */
-.activity-card__user {
+/* Header: Avatar + Usuario + Fecha */
+.activity-card__header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  padding: 1rem;
 }
 
 .activity-card__avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-blob);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   background: var(--color-primary);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-family-serif);
-  font-size: 1.25rem;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 600;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
-.activity-card__user-info {
+.activity-card__avatar:hover {
+  transform: scale(1.05);
+}
+
+.activity-card__header-info {
   flex: 1;
   min-width: 0;
 }
 
 .activity-card__username {
-  font-family: var(--font-family-serif);
-  font-size: 1.125rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
   color: var(--color-text-main);
-  margin: 0;
+  margin: 0 0 0.125rem 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.activity-card__username:hover {
+  color: var(--color-primary);
 }
 
 .activity-card__time {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--color-text-muted);
+  display: block;
 }
 
-/* Mensaje */
+/* Body: Contenido de texto */
+.activity-card__body {
+  padding: 0 1rem 1rem;
+}
+
 .activity-card__message {
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 0.9375rem;
+  line-height: 1.5;
   color: var(--color-text-main);
-  margin-bottom: 1rem;
+  margin: 0 0 0.75rem 0;
 }
 
-/* Detalles de especie/bioma */
-.activity-card__species,
-.activity-card__biome {
+/* Tag de especie/bioma */
+.activity-card__tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
   background: var(--color-accent);
   color: var(--color-primary);
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
-/* Footer con likes */
-.activity-card__footer {
+/* Media: Imagen Full Width */
+.activity-card__media {
+  width: 100%;
+  max-height: 600px;
+  overflow: hidden;
+  background: var(--color-background);
+}
+
+.activity-card__image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  aspect-ratio: 4 / 3;
+}
+
+/* Actions: Footer con botones */
+.activity-card__actions {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-top: 1rem;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
   border-top: 1px solid var(--color-border-light);
 }
 
-/* Botón de like orgánico con palpitación */
-.activity-card__like-btn {
+.activity-card__action-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-main);
+  cursor: pointer;
+  padding: 0.25rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: transparent;
-  border: 2px solid var(--color-border);
-  color: var(--color-text-muted);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  font-family: var(--font-family);
-  font-size: 0.875rem;
+  justify-content: center;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.activity-card__like-btn:hover {
-  background: var(--color-accent);
-  border-color: var(--color-primary);
+.activity-card__action-btn:hover {
+  transform: scale(1.1);
+}
+
+.activity-card__action-btn--liked {
   color: var(--color-primary);
-  transform: scale(1.05);
+  animation: likePopIn 0.3s ease-in-out;
 }
 
-.activity-card__like-btn--active {
-  background: var(--color-secondary);
-  border-color: var(--color-secondary);
-  color: white;
-  animation: heartbeat 0.6s ease-in-out;
-}
-
-@keyframes heartbeat {
+@keyframes likePopIn {
   0%, 100% {
     transform: scale(1);
   }
-  10%, 30% {
-    transform: scale(1.1);
+  50% {
+    transform: scale(1.2);
   }
-  20%, 40%, 60%, 80% {
-    transform: scale(0.9);
-  }
-  50%, 70% {
-    transform: scale(1.05);
-  }
+}
+
+.activity-card__likes-count {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-main);
 }
 
 /* Cargar más */
 .community-view__load-more {
   display: flex;
   justify-content: center;
-  margin-top: 2rem;
+  max-width: 600px;
+  margin: 0 auto 2rem;
 }
 
 /* Empty state */
@@ -667,12 +616,14 @@ onMounted(() => {
   gap: 1rem;
   padding: 4rem 1rem;
   text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .community-view__empty-icon-wrapper {
   width: 80px;
   height: 80px;
-  border-radius: var(--radius-blob);
+  border-radius: 50%;
   background: var(--color-accent);
   display: flex;
   align-items: center;
@@ -682,8 +633,8 @@ onMounted(() => {
 }
 
 .community-view__empty-title {
-  font-family: var(--font-family-serif);
   font-size: 1.5rem;
+  font-weight: 600;
   color: var(--color-text-main);
   margin: 0;
 }
@@ -691,23 +642,6 @@ onMounted(() => {
 .community-view__empty-text {
   color: var(--color-text-muted);
   max-width: 400px;
-}
-
-/* Animación de entrada - Scrollytelling */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px) rotate(-1deg);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) rotate(-1deg);
-  }
-}
-
-.fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
-  opacity: 0;
 }
 
 /* Spinner en botón */
