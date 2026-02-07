@@ -12,8 +12,18 @@
       <router-link to="/" class="nav-bar__mobile-logo">
         Terracheck
       </router-link>
-      <div v-if="authStore.user" class="nav-bar__mobile-avatar">
-        <UserIcon :size="20" />
+      <div class="nav-bar__mobile-actions">
+        <router-link
+          to="/community"
+          class="nav-bar__mobile-icon-btn"
+          :class="{ 'nav-bar__mobile-icon-btn--active': $route.path === '/community' }"
+          aria-label="Comunidad"
+        >
+          <SparklesIcon :size="20" />
+        </router-link>
+        <div v-if="authStore.user" class="nav-bar__mobile-avatar">
+          <UserIcon :size="20" />
+        </div>
       </div>
     </div>
   </nav>
@@ -88,6 +98,17 @@
       >
         <UsersIcon :size="24" />
         <span>Amigos</span>
+        <ChevronRightIcon :size="20" class="drawer__nav-chevron" />
+      </router-link>
+
+      <router-link
+        to="/community"
+        class="drawer__nav-item"
+        :class="{ 'drawer__nav-item--active': $route.path === '/community' }"
+        @click="closeDrawer"
+      >
+        <SparklesIcon :size="24" />
+        <span>Comunidad</span>
         <ChevronRightIcon :size="20" class="drawer__nav-chevron" />
       </router-link>
 
@@ -201,6 +222,15 @@
           >
             <UsersIcon :size="20" />
             <span>Amigos</span>
+          </router-link>
+
+          <router-link
+            to="/community"
+            class="nav-link nav-link--horizontal"
+            :class="{ 'nav-link--active': $route.path === '/community' }"
+          >
+            <SparklesIcon :size="20" />
+            <span>Comunidad</span>
           </router-link>
 
           <!-- Admin Panel (solo visible para admins) -->
@@ -320,7 +350,8 @@ import {
   UsersIcon,
   ChevronRightIcon,
   MoonIcon,
-  SunIcon
+  SunIcon,
+  SparklesIcon
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
@@ -426,6 +457,32 @@ const handleLogout = () => {
 
 .nav-bar__mobile-logo:hover {
   opacity: 0.8;
+}
+
+.nav-bar__mobile-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-bar__mobile-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--color-text-muted);
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.nav-bar__mobile-icon-btn:hover,
+.nav-bar__mobile-icon-btn--active {
+  background-color: var(--color-accent);
+  color: var(--color-primary);
+  transform: scale(1.05);
 }
 
 .nav-bar__mobile-avatar {

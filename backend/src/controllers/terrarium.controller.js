@@ -1,6 +1,7 @@
 import Terrarium from '../models/Terrarium.js'
 import Animal from '../models/Animal.js'
 import User from '../models/User.js'
+import Activity from '../models/Activity.js'
 
 const hasPermission = async (resource, user) => {
   // Admin/Super Admin tienen acceso total (maestro), sin importar propietario
@@ -132,6 +133,19 @@ export const createTerrarium = async (req, res) => {
       biome,
       notes
     })
+
+    // Crear actividad en el feed
+    try {
+      await Activity.create({
+        user: req.user._id,
+        type: 'new_terrarium',
+        terrarium: terrarium._id,
+        content: `${req.user.name} ha creado un nuevo terrario: ${terrarium.name}`
+      })
+    } catch (activityError) {
+      console.error('Error al crear actividad:', activityError)
+      // No bloqueamos la respuesta si falla la actividad
+    }
 
     res.status(201).json({
       success: true,

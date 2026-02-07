@@ -15,6 +15,7 @@ import adminRoutes from './routes/admin.routes.js'
 import roleRoutes from './routes/role.routes.js'
 import friendshipRoutes from './routes/friendship.routes.js'
 import userRoutes from './routes/user.routes.js'
+import activityRoutes from './routes/activity.routes.js'
 
 // Load environment variables
 dotenv.config()
@@ -58,6 +59,7 @@ app.use('/api/admin', adminRoutes)
 app.use('/api/admin/roles', roleRoutes)
 app.use('/api/friends', friendshipRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/activities', activityRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -72,7 +74,8 @@ app.get('/api/health', (req, res) => {
       animals: '/api/animals',
       admin: '/api/admin',
       roles: '/api/admin/roles',
-      users: '/api/users'
+      users: '/api/users',
+      activities: '/api/activities'
     }
   })
 })

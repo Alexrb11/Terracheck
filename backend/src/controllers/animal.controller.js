@@ -2,6 +2,7 @@ import Animal from '../models/Animal.js'
 import Species from '../models/Species.js'
 import Terrarium from '../models/Terrarium.js'
 import User from '../models/User.js'
+import Activity from '../models/Activity.js'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -176,6 +177,19 @@ export const createAnimal = async (req, res) => {
 
     await animal.populate('species', 'commonName scientificName biome')
     await animal.populate('terrarium', 'name')
+
+    // Crear actividad en el feed
+    try {
+      await Activity.create({
+        user: req.user._id,
+        type: 'new_animal',
+        animal: animal._id,
+        content: `¡${req.user.name} ha dado la bienvenida a un nuevo habitante: ${animal.name}!`
+      })
+    } catch (activityError) {
+      console.error('Error al crear actividad:', activityError)
+      // No bloqueamos la respuesta si falla la actividad
+    }
 
     res.status(201).json({
       success: true,
@@ -466,6 +480,20 @@ export const updateProfileImage = async (req, res) => {
     const imageUrl = `/uploads/animals/${req.file.filename}`
     animal.imageUrl = imageUrl
     await animal.save()
+
+    // Crear actividad en el feed
+    try {
+      await animal.populate('species', 'commonName')
+      await Activity.create({
+        user: req.user._id,
+        type: 'update_photo',
+        animal: animal._id,
+        content: `${req.user.name} ha actualizado la foto de ${animal.name}`
+      })
+    } catch (activityError) {
+      console.error('Error al crear actividad:', activityError)
+      // No bloqueamos la respuesta si falla la actividad
+    }
 
     res.json({
       success: true,
