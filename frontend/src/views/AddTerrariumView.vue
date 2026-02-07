@@ -1,7 +1,5 @@
 <template>
   <div class="add-terrarium-view">
-    <Navigation />
-
     <main class="container container--narrow">
       <!-- Botón volver -->
       <button
@@ -234,7 +232,6 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTerrariumStore } from '@/stores/terrarium'
-import Navigation from '@/components/Navigation.vue'
 import { ArrowLeftIcon, AlertCircleIcon, LoaderIcon } from 'lucide-vue-next'
 
 const router = useRouter()

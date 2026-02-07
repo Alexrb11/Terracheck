@@ -1,7 +1,5 @@
 <template>
   <div class="species-view">
-    <Navigation />
-
     <main class="container species-view__main">
       <!-- Header -->
       <header class="view-header">
@@ -152,7 +150,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useSpeciesStore, type Species } from '@/stores/species'
-import Navigation from '@/components/Navigation.vue'
 import { getImageUrl } from '@/utils/image'
 import {
   LoaderIcon,

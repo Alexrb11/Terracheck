@@ -1,7 +1,5 @@
 <template>
   <div class="friends-view">
-    <Navigation />
-
     <main class="container friends-view__main">
       <header class="friends-view__header">
         <h1 class="friends-view__title">
@@ -257,7 +255,6 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useFriendsStore, type FriendItem } from '@/stores/friends'
-import Navigation from '@/components/Navigation.vue'
 import {
   UsersIcon,
   UserCheckIcon,

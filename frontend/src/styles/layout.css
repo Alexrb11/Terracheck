@@ -33,11 +33,28 @@
   }
 }
 
-/* Grid Gallery */
+/* Grid Gallery - Anti-Grid con ritmo visual orgánico */
 .grid-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
+}
+
+/* Layout Anti-Grid: Desplazamiento eliminado para evitar mareo */
+.grid-gallery > *:nth-child(even) {
+  transform: none;
+  margin-top: 0;
+}
+
+.grid-gallery > *:nth-child(odd) {
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  /* En móvil, reducir el desplazamiento para mejor legibilidad */
+  .grid-gallery > *:nth-child(even) {
+    transform: none;
+  }
 }
 
 /* Flexbox utilities */
@@ -166,4 +183,24 @@
     padding-top: var(--header-height);
     padding-bottom: var(--bottom-nav-height); /* Será 0px */
   }
+}
+
+/* ============================================
+   TIPOGRAFÍA EXPRESIVA - Humano y Expresivo 2026
+   ============================================ */
+
+/* Importar Young Serif de Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Young+Serif&display=swap');
+
+/* Títulos con personalidad Serif */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* Excepciones: algunos elementos específicos mantienen sans-serif */
+.btn, .input-field, .badge, button, input, select, textarea {
+  font-family: var(--font-family);
 }

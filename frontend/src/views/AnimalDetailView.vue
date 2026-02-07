@@ -1,7 +1,5 @@
 <template>
   <div class="view-detail">
-    <Navigation />
-
     <main class="container view-detail__main">
       <!-- Loading -->
       <div v-if="loading" class="view-detail__loading">
@@ -358,7 +356,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAnimalStore } from '@/stores/animal'
-import Navigation from '@/components/Navigation.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import AddAnimalModal from '@/components/AddAnimalModal.vue'
 import { getImageUrl } from '@/utils/image'

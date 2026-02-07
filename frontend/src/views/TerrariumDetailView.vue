@@ -1,7 +1,5 @@
 <template>
   <div class="view-detail">
-    <Navigation />
-
     <main class="container view-detail__main">
       <!-- Loading -->
       <div v-if="loading" class="view-detail__loading">
@@ -357,7 +355,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTerrariumStore } from '@/stores/terrarium'
-import Navigation from '@/components/Navigation.vue'
 import SelectAnimalModal from '@/components/SelectAnimalModal.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import EditTerrariumModal from '@/components/EditTerrariumModal.vue'
@@ -579,23 +576,32 @@ onMounted(async () => {
   gap: 1.5rem;
 }
 
-/* Botón Volver */
+/* Botón Volver - Cálido y expresivo */
 .btn-text {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   color: var(--color-text-muted);
-  background: none;
-  border: none;
+  background: var(--color-accent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   font-weight: 500;
-  transition: color var(--transition-fast);
-  padding: 0.5rem 0;
+  transition: all var(--transition-base);
+  padding: 0.75rem 1.25rem;
   margin-bottom: 0.5rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-text:hover {
   color: var(--color-primary);
+  background: var(--color-primary-light);
+  transform: translateX(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-text:active {
+  transform: translateX(0) scale(0.98);
 }
 
 .view-detail__back-btn {
@@ -655,21 +661,35 @@ onMounted(async () => {
 }
 
 .detail-header__title {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 2.25rem;
+  font-weight: 400;
   color: var(--color-text-main);
   margin: 0;
+  font-family: var(--font-family-serif);
+  letter-spacing: -0.03em;
 }
 
 @media (min-width: 768px) {
   .detail-header__title {
-    font-size: 2.5rem;
+    font-size: 3rem;
   }
 }
 
 .detail-header__icon {
   color: var(--color-primary);
   flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
 }
 
 .detail-header__actions {
@@ -702,29 +722,39 @@ onMounted(async () => {
 }
 
 /* ============================================
-   TARJETA DE INFORMACIÓN
+   TARJETA DE INFORMACIÓN - Forma orgánica
    ============================================ */
 .detail-card {
-  padding: 2rem;
-  background: var(--color-surface);
+  padding: 2.5rem;
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-accent) 100%);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-float);
   height: fit-content;
+  border: 2px solid var(--color-border-light);
+  transition: all var(--transition-base);
+}
+
+.detail-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 48px rgba(74, 103, 65, 0.18);
+  border-color: var(--color-primary);
 }
 
 .detail-card--glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, var(--glass-bg) 0%, rgba(74, 103, 65, 0.7) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.15);
 }
 
 .detail-card__title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.75rem;
+  font-weight: 400;
   color: var(--color-text-main);
   margin: 0 0 1.5rem 0;
+  font-family: var(--font-family-serif);
+  letter-spacing: -0.02em;
 }
 
 .detail-card--glass .detail-card__title {
@@ -1119,13 +1149,15 @@ onMounted(async () => {
 }
 
 .animals-section__title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.75rem;
+  font-weight: 400;
   color: var(--color-text-main);
   margin: 0;
+  font-family: var(--font-family-serif);
+  letter-spacing: -0.02em;
 }
 
-/* Grid de Animales */
+/* Grid de Animales - Anti-Grid con ritmo orgánico */
 .animals-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -1136,25 +1168,41 @@ onMounted(async () => {
   .animals-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  
+  /* Layout Anti-Grid: Desplazamiento vertical alterno */
+  .animals-grid > .animal-card:nth-child(even) {
+    transform: translateY(20px);
+  }
+  
+  .animals-grid > .animal-card:nth-child(odd) {
+    transform: translateY(0);
+  }
+  
+  /* Mantener transformación en hover */
+  .animals-grid > .animal-card:hover {
+    transform: translateY(-2px) !important;
+  }
 }
 
 .animal-card {
   background: var(--color-surface);
-  padding: 1rem;
-  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 1rem;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-  border: 2px solid transparent;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+  border: 2px solid var(--color-border-light);
+  position: relative;
 }
 
 .animal-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-float);
+  border-color: var(--color-primary);
+  background: var(--color-accent);
 }
 
 .animal-card--incompatible {
@@ -1254,19 +1302,36 @@ onMounted(async () => {
 }
 
 .animal-avatar-large {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: var(--color-primary-light);
+  width: 130px;
+  height: 130px;
+  border-radius: 35% 65% 60% 40% / 45% 55% 45% 55%; /* Forma orgánica expresiva */
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-accent) 100%);
   color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 2.5rem;
+  font-size: 2.75rem;
   flex-shrink: 0;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-float);
   overflow: hidden;
+  border: 4px solid var(--color-surface);
+  transition: all var(--transition-base);
+  animation: morph 4s ease-in-out infinite;
+}
+
+@keyframes morph {
+  0%, 100% {
+    border-radius: 35% 65% 60% 40% / 45% 55% 45% 55%;
+  }
+  50% {
+    border-radius: 65% 35% 40% 60% / 55% 45% 55% 45%;
+  }
+}
+
+.animal-card:hover .animal-avatar-large {
+  transform: scale(1.05) rotate(2deg);
+  box-shadow: 0 24px 48px rgba(74, 103, 65, 0.25);
 }
 
 .animal-avatar-large img {
@@ -1276,63 +1341,112 @@ onMounted(async () => {
   display: block;
 }
 
-/* Badge de Sexo */
+/* Badge de Sexo - Formas orgánicas */
 .sex-badge {
-  padding: 0.25rem 0.75rem;
+  padding: 0.375rem 1rem;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  border: 2px solid;
+}
+
+.sex-badge:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
 }
 
 .sex-badge--male {
-  background-color: rgba(59, 130, 246, 0.15);
-  color: #1e40af;
+  background: linear-gradient(135deg, rgba(74, 103, 65, 0.15) 0%, rgba(74, 103, 65, 0.05) 100%);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .sex-badge--female {
-  background-color: rgba(236, 72, 153, 0.15);
-  color: #be185d;
+  background: linear-gradient(135deg, rgba(212, 163, 115, 0.15) 0%, rgba(212, 163, 115, 0.05) 100%);
+  color: var(--color-secondary);
+  border-color: var(--color-secondary);
 }
 
 .sex-badge--unknown {
-  background-color: rgba(0, 0, 0, 0.08);
-  color: var(--color-text-main);
+  background: linear-gradient(135deg, var(--color-accent) 0%, rgba(233, 237, 198, 0.5) 100%);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
 }
 
-/* Botón Añadir Animal */
+/* Botón Añadir Animal - Invitación cálida */
 .btn-add-animal {
-  border: 2px dashed rgba(0, 0, 0, 0.1);
-  background: transparent;
-  border-radius: var(--radius-lg);
+  border: 3px dashed var(--color-border);
+  background: var(--color-accent);
+  border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   color: var(--color-primary);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-base);
-  min-height: 100px;
-  padding: 1rem;
+  min-height: 140px;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-add-animal::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--color-primary-light);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: 0;
+}
+
+.btn-add-animal:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .btn-add-animal:hover {
-  background: var(--color-primary-light);
   border-color: var(--color-primary);
-  transform: translateY(-2px);
+  border-style: solid;
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-float);
+}
+
+.btn-add-animal span,
+.btn-add-animal svg {
+  position: relative;
+  z-index: 1;
 }
 
 .btn-add-animal svg {
   color: var(--color-primary);
+  transition: transform var(--transition-base);
 }
 
-/* Estado Vacío */
+.btn-add-animal:hover svg {
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* Estado Vacío - Cálido e invitador */
 .animals-section__empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
+  min-height: 400px;
+  background: linear-gradient(135deg, var(--color-accent) 0%, transparent 100%);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
 }
 
 .empty-state {
@@ -1340,24 +1454,38 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .empty-state__icon {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 50%;
-  background: var(--color-primary-light);
+  width: 6rem;
+  height: 6rem;
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; /* Forma orgánica */
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-primary);
+  color: white;
   margin-bottom: 0.5rem;
+  box-shadow: var(--shadow-float);
+  animation: wiggle 3s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(-3deg);
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  }
+  50% {
+    transform: rotate(3deg);
+    border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%;
+  }
 }
 
 .empty-state__text {
-  font-size: 1rem;
+  font-size: 1.125rem;
   color: var(--color-text-muted);
   margin: 0;
+  font-style: italic;
 }
 </style>

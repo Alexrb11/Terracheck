@@ -1,7 +1,5 @@
 <template>
   <div class="settings-view">
-    <Navigation />
-
     <!-- Contenido Principal -->
     <main class="container settings-view__main">
       <div class="settings-view__header">
@@ -281,7 +279,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import Navigation from '@/components/Navigation.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import {
   SettingsIcon,

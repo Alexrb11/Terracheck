@@ -1,7 +1,5 @@
 <template>
   <div class="my-animals-view">
-    <Navigation />
-
     <!-- Contenido Principal -->
     <main class="container my-animals-view__main">
       <div class="my-animals-view__header">
@@ -152,7 +150,6 @@
 import { onMounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAnimalStore } from '@/stores/animal'
-import Navigation from '@/components/Navigation.vue'
 import AddAnimalModal from '@/components/AddAnimalModal.vue'
 import { getImageUrl } from '@/utils/image'
 import {

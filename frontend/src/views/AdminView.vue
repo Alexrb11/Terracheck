@@ -1,7 +1,5 @@
 <template>
   <div class="admin-view">
-    <Navigation />
-
     <main class="container admin-view__main">
       <!-- Header -->
       <header class="view-header">
@@ -472,7 +470,6 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useRolesStore, type Role } from '@/stores/roles'
-import Navigation from '@/components/Navigation.vue'
 import ConfirmationModal from '@/components/ConfirmationModal.vue'
 import {
   ShieldIcon,

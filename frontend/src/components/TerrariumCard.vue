@@ -130,31 +130,37 @@ const getFooterStyle = (biome: string = 'tropical'): { backgroundImage: string; 
 
 <style scoped>
 /* ============================================
-   BLOQUE PRINCIPAL: Terrarium Card
+   BLOQUE PRINCIPAL: Terrarium Card - Forma Orgánica
    ============================================ */
 .terrarium-card {
   position: relative;
   display: flex;
   flex-direction: column;
   height: 280px;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-blob); /* Forma orgánica viva */
   overflow: hidden;
   cursor: pointer;
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-radius var(--transition-base);
   /* Por defecto (Standard) */
   background: var(--color-surface);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  
+  /* Micro-interacción: Estable y legible */
+  /* Eliminada rotación por defecto para evitar mareo */
 }
 
+/* Al hacer hover: Se endereza y levanta (reacción humana) */
 .terrarium-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(1.02);
   box-shadow: var(--shadow-float);
+  border-radius: var(--radius-xl); /* Se suaviza más al hover */
 }
 
 .terrarium-card:focus {
   outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline-offset: 4px;
+  border-radius: var(--radius-xl);
 }
 
 /* Modificador: Glass (Modo Oscuro/Cristal Premium) */
@@ -200,27 +206,33 @@ const getFooterStyle = (biome: string = 'tropical'): { backgroundImage: string; 
 }
 
 /* ============================================
-   ELEMENTO: Header
+   ELEMENTO: Header - Suave y cálido
    ============================================ */
 .terrarium-card__header {
   position: relative;
   z-index: 2;
-  padding: 1.25rem;
+  padding: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 2px solid var(--color-border-light);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all var(--transition-base);
+}
+
+.terrarium-card:hover .terrarium-card__header {
+  background-color: rgba(233, 237, 198, 0.3);
+  border-bottom-color: var(--color-primary);
 }
 
 .terrarium-card--standard .terrarium-card__header {
-  background-color: rgba(242, 241, 238, 0.5);
+  background-color: rgba(249, 247, 242, 0.6);
 }
 
 .terrarium-card--glass .terrarium-card__header {
-  background-color: rgba(30, 41, 59, 0.3);
-  border-bottom-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(74, 103, 65, 0.3);
+  border-bottom-color: rgba(255, 255, 255, 0.15);
 }
 
 .header-info {
@@ -237,13 +249,15 @@ const getFooterStyle = (biome: string = 'tropical'): { backgroundImage: string; 
 }
 
 .terrarium-name {
-  font-weight: 700;
-  font-size: 1.1rem;
+  font-weight: 400;
+  font-size: 1.25rem;
   color: var(--color-text-main);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-family-serif);
+  letter-spacing: -0.02em;
 }
 
 .header-actions {
@@ -312,23 +326,27 @@ const getFooterStyle = (biome: string = 'tropical'): { backgroundImage: string; 
 }
 
 .animal-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--color-primary-light);
+  width: 52px;
+  height: 52px;
+  border-radius: 40% 60% 60% 40% / 50% 50% 50% 50%; /* Forma orgánica suave */
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-accent) 100%);
   color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
+  font-weight: 700;
   border: 3px solid var(--color-surface);
   font-size: 1.2rem;
-  box-shadow: var(--shadow-sm);
-  margin-left: 0.5rem; /* Compensar el gap negativo */
-  transition: transform var(--transition-base);
-  overflow: hidden; /* Importante para recortar la imagen */
-  padding: 0; /* Quitar padding para que la imagen toque los bordes */
+  box-shadow: var(--shadow-md);
+  margin-left: 0.5rem;
+  transition: all var(--transition-base);
+  overflow: hidden;
+  padding: 0;
   position: relative;
+}
+
+.animal-avatar:hover {
+  border-radius: 50%; /* Se redondea al hover */
 }
 
 .avatar-img {
@@ -346,14 +364,15 @@ const getFooterStyle = (biome: string = 'tropical'): { backgroundImage: string; 
 }
 
 .terrarium-card--glass .animal-avatar {
-  border-color: #1e293b; /* Ajustar según el color de fondo glass */
-  background: rgba(46, 125, 50, 0.3);
-  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(74, 103, 65, 0.5);
+  background: linear-gradient(135deg, rgba(139, 168, 136, 0.4) 0%, rgba(74, 103, 65, 0.3) 100%);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .animal-avatar:hover {
-  transform: scale(1.1);
+  transform: scale(1.15) rotate(5deg);
   z-index: 3;
+  box-shadow: var(--shadow-float);
 }
 
 .animal-avatar--more {

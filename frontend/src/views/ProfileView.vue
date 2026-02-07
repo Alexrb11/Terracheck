@@ -1,7 +1,5 @@
 <template>
   <div class="profile-view">
-    <Navigation />
-
     <main class="container profile-view__main">
       <!-- Loading -->
       <div v-if="loading" class="profile-view__loading">
@@ -199,7 +197,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTerrariumStore } from '@/stores/terrarium'
 import { useAnimalStore } from '@/stores/animal'
-import Navigation from '@/components/Navigation.vue'
 import TerrariumCard from '@/components/TerrariumCard.vue'
 import { getImageUrl } from '@/utils/image'
 import {
@@ -305,32 +302,49 @@ onMounted(async () => {
   padding-bottom: 3rem;
 }
 
-/* Loading */
+/* Loading - Animación orgánica */
 .profile-view__loading {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 6rem 0;
+  gap: 1.5rem;
 }
 
 .profile-view__loader-icon {
   color: var(--color-primary);
-  animation: spin 1s linear infinite;
+  animation: spin-bounce 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  filter: drop-shadow(0 8px 16px rgba(74, 103, 65, 0.3));
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes spin-bounce {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
 }
 
-/* Tarjeta de Perfil */
+/* Tarjeta de Perfil - Forma orgánica y cálida */
 .profile-card {
-  background: var(--color-surface);
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-accent) 100%);
   border-radius: var(--radius-xl);
-  padding: 2rem;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-border-light);
+  padding: 2.5rem;
+  box-shadow: var(--shadow-float);
+  border: 2px solid var(--color-border-light);
   margin-bottom: 2rem;
+  transition: all var(--transition-base);
+}
+
+.profile-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 48px rgba(74, 103, 65, 0.2);
+  border-color: var(--color-primary);
 }
 
 .profile-card__header {
@@ -342,21 +356,39 @@ onMounted(async () => {
 }
 
 .profile-card__avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
+  width: 110px;
+  height: 110px;
+  border-radius: 35% 65% 60% 40% / 45% 55% 45% 55%; /* Forma orgánica expresiva */
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-float);
+  border: 4px solid white;
+  transition: all var(--transition-base);
+  animation: morph-avatar 5s ease-in-out infinite;
+}
+
+@keyframes morph-avatar {
+  0%, 100% {
+    border-radius: 35% 65% 60% 40% / 45% 55% 45% 55%;
+  }
+  50% {
+    border-radius: 65% 35% 40% 60% / 55% 45% 55% 45%;
+  }
+}
+
+.profile-card:hover .profile-card__avatar {
+  transform: scale(1.08) rotate(3deg);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
 }
 
 .profile-card__initial {
-  font-size: 2.5rem;
+  font-size: 2.75rem;
   font-weight: 700;
   color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-family: var(--font-family-serif);
 }
 
 .profile-card__info {
@@ -364,16 +396,19 @@ onMounted(async () => {
 }
 
 .profile-card__name {
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 400;
   color: var(--color-text-main);
   margin: 0 0 0.25rem 0;
+  font-family: var(--font-family-serif);
+  letter-spacing: -0.03em;
 }
 
 .profile-card__username {
-  font-size: 1rem;
+  font-size: 1.125rem;
   color: var(--color-text-muted);
   margin: 0 0 1rem 0;
+  font-style: italic;
 }
 
 .profile-card__meta {
@@ -386,21 +421,33 @@ onMounted(async () => {
 .profile-card__badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: var(--radius-full);
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
   font-size: 0.8rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  border: 2px solid;
+}
+
+.profile-card__badge:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
 }
 
 .profile-card__badge--admin {
-  background: rgba(147, 51, 234, 0.15);
-  color: #9333ea;
+  background: linear-gradient(135deg, rgba(212, 163, 115, 0.2) 0%, rgba(212, 163, 115, 0.1) 100%);
+  color: var(--color-secondary);
+  border-color: var(--color-secondary);
 }
 
 .profile-card__badge--user {
-  background: var(--color-primary-light);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, rgba(233, 237, 198, 0.5) 100%);
   color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .profile-card__date {
@@ -420,68 +467,86 @@ onMounted(async () => {
   justify-content: center;
 }
 
-/* Grid de Estadísticas */
+/* Grid de Estadísticas - Anti-Grid */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .stat-card {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-accent) 100%);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  border: 1px solid var(--color-border-light);
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-fast);
+  gap: 1.5rem;
+  border: 2px solid var(--color-border-light);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-float);
+  border-color: var(--color-primary);
+}
+
+/* Anti-Grid: Desplazamiento alterno en desktop */
+@media (min-width: 640px) {
+  .stats-grid > .stat-card:nth-child(2) {
+    transform: translateY(15px);
+  }
+  
+  .stats-grid > .stat-card:nth-child(2):hover {
+    transform: translateY(11px) scale(1.02);
+  }
 }
 
 .stat-card__icon {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-lg);
+  width: 64px;
+  height: 64px;
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; /* Forma orgánica */
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+}
+
+.stat-card:hover .stat-card__icon {
+  transform: rotate(10deg) scale(1.1);
 }
 
 .stat-card__icon--terrarium {
-  background: rgba(59, 130, 246, 0.15);
-  color: #3b82f6;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  color: white;
 }
 
 .stat-card__icon--animal {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-accent) 100%);
+  color: var(--color-primary);
 }
 
 .stat-card__icon--tropical {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #8ba888 100%);
+  color: white;
 }
 
 .stat-card__icon--desert {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: linear-gradient(135deg, var(--color-secondary) 0%, #e9c896 100%);
+  color: white;
 }
 
 .stat-card__icon--temperate {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  background: linear-gradient(135deg, #8ba888 0%, var(--color-accent) 100%);
+  color: var(--color-primary);
 }
 
 .stat-card__icon--none {
-  background: rgba(148, 163, 184, 0.15);
-  color: #94a3b8;
+  background: linear-gradient(135deg, var(--color-text-muted) 0%, var(--color-border) 100%);
+  color: white;
 }
 
 .stat-card__content {
@@ -489,16 +554,19 @@ onMounted(async () => {
 }
 
 .stat-card__value {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 400;
   color: var(--color-text-main);
   margin: 0;
+  font-family: var(--font-family-serif);
+  letter-spacing: -0.02em;
 }
 
 .stat-card__label {
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   color: var(--color-text-muted);
   margin: 0;
+  font-weight: 500;
 }
 
 /* Responsive */
@@ -576,42 +644,48 @@ onMounted(async () => {
   background: rgba(148, 163, 184, 0.2);
 }
 
-/* Tabs */
+/* Tabs - Formas orgánicas */
 .profile-view__tabs {
   display: flex;
-  gap: 0.25rem;
-  margin-bottom: 1.5rem;
-  padding: 0.25rem;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  padding: 0.5rem;
   background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  border: 2px solid var(--color-border-light);
   overflow-x: auto;
+  box-shadow: var(--shadow-sm);
 }
 
 .profile-view__tab {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  border: none;
-  border-radius: var(--radius-md);
+  gap: 0.625rem;
+  padding: 0.875rem 1.5rem;
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
   background: transparent;
   color: var(--color-text-muted);
-  font-weight: 500;
-  font-size: 0.95rem;
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-base);
   white-space: nowrap;
 }
 
 .profile-view__tab:hover {
-  color: var(--color-text-main);
-  background: rgba(0, 0, 0, 0.04);
+  color: var(--color-primary);
+  background: var(--color-accent);
+  transform: translateY(-2px);
+  border-color: var(--color-border);
 }
 
 .profile-view__tab--active {
-  background: var(--color-primary-light);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-accent) 100%);
   color: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .profile-view__panel {
@@ -628,10 +702,12 @@ onMounted(async () => {
 }
 
 .profile-view__panel-title {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.75rem;
+  font-weight: 400;
   color: var(--color-text-main);
   margin: 0;
+  font-family: var(--font-family-serif);
+  letter-spacing: -0.02em;
 }
 
 .profile-view__empty {
@@ -639,28 +715,52 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
+  padding: 4rem 1rem;
   text-align: center;
-  background: var(--color-surface);
+  background: linear-gradient(135deg, var(--color-accent) 0%, transparent 100%);
   border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-light);
+  border: 2px solid var(--color-border-light);
+  box-shadow: var(--shadow-md);
 }
 
 .profile-view__empty-icon {
-  color: var(--color-text-muted);
-  opacity: 0.7;
-  margin-bottom: 1rem;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 4px 8px rgba(74, 103, 65, 0.2));
+  animation: float-gentle 3s ease-in-out infinite;
+}
+
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .profile-view__empty-text {
   color: var(--color-text-muted);
-  margin: 0 0 1rem 0;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.125rem;
+  font-style: italic;
 }
 
 .profile-view__animals-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Anti-Grid para animales en desktop */
+@media (min-width: 768px) {
+  .profile-view__animals-grid > .profile-view__animal-card:nth-child(even) {
+    transform: translateY(20px);
+  }
+  
+  .profile-view__animals-grid > .profile-view__animal-card:nth-child(even):hover {
+    transform: translateY(16px) scale(1.02);
+  }
 }
 
 .profile-view__animal-card {
@@ -668,26 +768,39 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 1rem;
+  padding: 1.5rem;
   cursor: pointer;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition: all var(--transition-base);
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-accent) 100%);
+  border-radius: var(--radius-xl);
+  border: 2px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .profile-view__animal-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-float);
+  border-color: var(--color-primary);
 }
 
 .profile-view__animal-card__avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: var(--color-primary-light);
+  width: 80px;
+  height: 80px;
+  border-radius: 35% 65% 60% 40% / 45% 55% 45% 55%; /* Forma orgánica */
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-accent) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+  border: 3px solid white;
+}
+
+.profile-view__animal-card:hover .profile-view__animal-card__avatar {
+  transform: rotate(5deg) scale(1.1);
+  border-radius: 50%;
 }
 
 .profile-view__animal-card__image {
@@ -697,9 +810,10 @@ onMounted(async () => {
 }
 
 .profile-view__animal-card__initial {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--color-primary);
+  font-family: var(--font-family-serif);
 }
 
 .profile-view__animal-card__info {
@@ -707,10 +821,10 @@ onMounted(async () => {
 }
 
 .profile-view__animal-card__name {
-  font-size: 1rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--color-text-main);
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.375rem 0;
 }
 
 .profile-view__animal-card__species,

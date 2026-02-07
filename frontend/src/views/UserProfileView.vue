@@ -1,7 +1,5 @@
 <template>
   <div class="user-profile-view">
-    <Navigation />
-
     <main class="container user-profile-view__main">
       <button @click="$router.back()" class="btn-text mb-md">
         <ArrowLeftIcon :size="20" />
@@ -263,7 +261,6 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useFriendsStore } from '@/stores/friends'
-import Navigation from '@/components/Navigation.vue'
 import TerrariumCard from '@/components/TerrariumCard.vue'
 import { getImageUrl } from '@/utils/image'
 import {
