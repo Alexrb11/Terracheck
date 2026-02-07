@@ -1,6 +1,7 @@
 import Activity from '../models/Activity.js'
 import Friendship from '../models/Friendship.js'
 import User from '../models/User.js'
+import Notification from '../models/Notification.js'
 
 // GET /api/activities - Obtener feed de actividades
 export const getFeed = async (req, res) => {
@@ -143,6 +144,25 @@ export const toggleLike = async (req, res) => {
     } else {
       // Agregar like
       activity.likes.push(userId)
+      
+      // Notificar al dueño de la actividad (si no es el mismo usuario)
+      if (activity.user.toString() !== req.user._id.toString()) {
+        // Verificar si ya existe para no duplicar spam de likes
+        const exists = await Notification.findOne({
+          recipient: activity.user,
+          sender: req.user._id,
+          type: 'like_post',
+          activity: activity._id
+        })
+        if (!exists) {
+          await Notification.create({
+            recipient: activity.user,
+            sender: req.user._id,
+            type: 'like_post',
+            activity: activity._id
+          })
+        }
+      }
     }
 
     await activity.save()

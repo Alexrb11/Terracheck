@@ -21,6 +21,21 @@
         >
           <SparklesIcon :size="20" />
         </router-link>
+        <div v-if="authStore.user" class="nav-bar__notification-btn-wrapper">
+          <button
+            @click="toggleNotificationsDropdown"
+            class="nav-bar__mobile-icon-btn"
+            aria-label="Notificaciones"
+          >
+            <BellIcon :size="20" />
+            <span
+              v-if="notificationStore.unreadCount > 0"
+              class="nav-bar__notification-badge"
+            >
+              {{ notificationStore.unreadCount > 9 ? '9+' : notificationStore.unreadCount }}
+            </span>
+          </button>
+        </div>
         <div v-if="authStore.user" class="nav-bar__mobile-avatar">
           <UserIcon :size="20" />
         </div>
@@ -247,6 +262,76 @@
           <!-- Separador -->
           <div class="nav-bar__separator"></div>
 
+          <!-- Notificaciones -->
+          <div class="nav-bar__notifications" ref="notificationsDropdownRef">
+            <button
+              @click="toggleNotificationsDropdown"
+              class="nav-bar__notification-btn"
+              :class="{ 'nav-bar__notification-btn--active': showNotificationsDropdown }"
+              aria-label="Notificaciones"
+              :aria-expanded="showNotificationsDropdown"
+            >
+              <BellIcon :size="20" />
+              <span
+                v-if="notificationStore.unreadCount > 0"
+                class="nav-bar__notification-badge"
+              >
+                {{ notificationStore.unreadCount > 9 ? '9+' : notificationStore.unreadCount }}
+              </span>
+            </button>
+
+            <!-- Dropdown de Notificaciones -->
+            <div
+              v-if="showNotificationsDropdown"
+              class="nav-bar__notifications-dropdown"
+            >
+              <div class="nav-bar__notifications-header">
+                <h3>Notificaciones</h3>
+                <button
+                  v-if="notificationStore.hasUnread"
+                  @click="notificationStore.markAsRead('all')"
+                  class="nav-bar__notifications-mark-all"
+                >
+                  Marcar todas como leídas
+                </button>
+              </div>
+
+              <div class="nav-bar__notifications-list">
+                <div
+                  v-if="notificationStore.items.length === 0"
+                  class="nav-bar__notifications-empty"
+                >
+                  <BellIcon :size="48" />
+                  <p>No tienes notificaciones</p>
+                </div>
+
+                <button
+                  v-for="notification in notificationStore.items"
+                  :key="notification._id"
+                  @click="handleNotificationClick(notification)"
+                  class="nav-bar__notification-item"
+                  :class="{ 'nav-bar__notification-item--unread': !notification.isRead }"
+                >
+                  <div class="nav-bar__notification-avatar">
+                    <UserIcon :size="20" />
+                  </div>
+                  <div class="nav-bar__notification-content">
+                    <p class="nav-bar__notification-text">
+                      {{ notificationStore.getNotificationText(notification) }}
+                    </p>
+                    <p class="nav-bar__notification-time">
+                      {{ getRelativeTime(notification.createdAt) }}
+                    </p>
+                  </div>
+                  <div
+                    v-if="!notification.isRead"
+                    class="nav-bar__notification-dot"
+                  ></div>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- Botón de cambio de tema -->
           <button
             @click="toggleTheme"
@@ -334,7 +419,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notifications'
 import { useTheme } from '@/composables/useTheme'
 import {
   LayoutGridIcon,
@@ -351,11 +438,14 @@ import {
   ChevronRightIcon,
   MoonIcon,
   SunIcon,
-  SparklesIcon
+  SparklesIcon,
+  BellIcon
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
 const { theme, toggleTheme } = useTheme()
+const router = useRouter()
 
 // Estado del drawer móvil
 const isDrawerOpen = ref(false)
@@ -376,15 +466,60 @@ const closeDropdown = () => {
   showDropdown.value = false
 }
 
+// Estado del dropdown de notificaciones
+const showNotificationsDropdown = ref(false)
+const notificationsDropdownRef = ref<HTMLElement | null>(null)
+
+const toggleNotificationsDropdown = async () => {
+  showNotificationsDropdown.value = !showNotificationsDropdown.value
+  if (showNotificationsDropdown.value) {
+    await notificationStore.fetchNotifications()
+  }
+}
+
+const closeNotificationsDropdown = () => {
+  showNotificationsDropdown.value = false
+}
+
+const handleNotificationClick = async (notification: any) => {
+  try {
+    await notificationStore.markAsRead(notification._id)
+    const route = notificationStore.getNotificationRoute(notification)
+    closeNotificationsDropdown()
+    router.push(route)
+  } catch (error) {
+    console.error('Error al procesar notificación:', error)
+  }
+}
+
+const getRelativeTime = (dateString: string): string => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  if (diffInSeconds < 60) return 'Ahora'
+  if (diffInSeconds < 3600) return `Hace ${Math.floor(diffInSeconds / 60)}m`
+  if (diffInSeconds < 86400) return `Hace ${Math.floor(diffInSeconds / 3600)}h`
+  if (diffInSeconds < 604800) return `Hace ${Math.floor(diffInSeconds / 86400)}d`
+  return `Hace ${Math.floor(diffInSeconds / 604800)}sem`
+}
+
 // Cerrar dropdown al hacer clic fuera
 const handleClickOutside = (event: MouseEvent) => {
   if (userDropdownRef.value && !userDropdownRef.value.contains(event.target as Node)) {
     closeDropdown()
   }
+  if (notificationsDropdownRef.value && !notificationsDropdownRef.value.contains(event.target as Node)) {
+    closeNotificationsDropdown()
+  }
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  // Inicializar notificaciones
+  if (authStore.isAuthenticated) {
+    await notificationStore.initialize()
+  }
 })
 
 onUnmounted(() => {
@@ -494,6 +629,28 @@ const handleLogout = () => {
   border-radius: 50%;
   background-color: var(--color-primary-light);
   color: var(--color-primary);
+}
+
+.nav-bar__notification-btn-wrapper {
+  position: relative;
+}
+
+.nav-bar__notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.125rem 0.375rem;
+  border-radius: 9999px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px var(--color-surface);
 }
 
 /* Drawer Overlay */
@@ -768,6 +925,176 @@ const handleLogout = () => {
   width: 1px;
   height: 32px;
   background-color: var(--color-border);
+}
+
+.nav-bar__notifications {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-bar__notification-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: var(--color-text-main);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.nav-bar__notification-btn:hover {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.nav-bar__notification-btn--active {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.nav-bar__notifications-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  width: 380px;
+  max-height: 500px;
+  z-index: 1000;
+  border: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-bar__notifications-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.nav-bar__notifications-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.nav-bar__notifications-mark-all {
+  font-size: 0.8rem;
+  color: var(--color-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.nav-bar__notifications-mark-all:hover {
+  background-color: var(--color-primary-light);
+}
+
+.nav-bar__notifications-list {
+  overflow-y: auto;
+  max-height: 420px;
+}
+
+.nav-bar__notifications-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.nav-bar__notifications-empty svg {
+  margin-bottom: 1rem;
+  opacity: 0.3;
+}
+
+.nav-bar__notifications-empty p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.nav-bar__notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border-light);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+  text-align: left;
+  position: relative;
+}
+
+.nav-bar__notification-item:last-child {
+  border-bottom: none;
+}
+
+.nav-bar__notification-item:hover {
+  background-color: var(--color-primary-light);
+}
+
+.nav-bar__notification-item--unread {
+  background-color: rgba(34, 139, 34, 0.05);
+}
+
+.nav-bar__notification-item--unread:hover {
+  background-color: rgba(34, 139, 34, 0.1);
+}
+
+.nav-bar__notification-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.nav-bar__notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-bar__notification-text {
+  font-size: 0.875rem;
+  color: var(--color-text-main);
+  margin: 0 0 0.25rem 0;
+  line-height: 1.4;
+}
+
+.nav-bar__notification-time {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.nav-bar__notification-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 0.5rem;
 }
 
 .nav-bar__theme-toggle {

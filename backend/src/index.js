@@ -16,6 +16,7 @@ import roleRoutes from './routes/role.routes.js'
 import friendshipRoutes from './routes/friendship.routes.js'
 import userRoutes from './routes/user.routes.js'
 import activityRoutes from './routes/activity.routes.js'
+import notificationRoutes from './routes/notification.routes.js'
 
 // Load environment variables
 dotenv.config()
@@ -60,6 +61,7 @@ app.use('/api/admin/roles', roleRoutes)
 app.use('/api/friends', friendshipRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/activities', activityRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -75,7 +77,8 @@ app.get('/api/health', (req, res) => {
       admin: '/api/admin',
       roles: '/api/admin/roles',
       users: '/api/users',
-      activities: '/api/activities'
+      activities: '/api/activities',
+      notifications: '/api/notifications'
     }
   })
 })
